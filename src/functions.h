@@ -54,3 +54,42 @@ void RenderText(SDL_Renderer* renderer, const char* texto, const Color color, fl
         }
     }
 }
+
+SDL_FRect PlayerToRect(PlayerPosition player, int playerSize) {
+    SDL_FRect rect = {
+        player.x,
+        player.y,
+        playerSize,
+        playerSize
+    };
+
+    return rect;
+}
+
+void DrawRect(SDL_Renderer* renderer, SDL_FRect tile, Color color) {
+     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+    SDL_RenderFillRect(renderer, &tile);
+}
+
+void RenderMap(SDL_Renderer* renderer, const int map[MAP_HEIGHT][MAP_WIDTH], int height, int width, int titleSize) {    
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            SDL_FRect tile = {
+                x * titleSize,
+                y * titleSize,
+                titleSize,
+                titleSize
+            };
+
+            if (map[y][x] == 1) {
+                DrawRect(renderer, tile, COLOR_GREY_WALL);
+                DrawRect(renderer, tile, COLOR_GREY_WALL_BORDER);
+            } else {
+                DrawRect(renderer, tile, COLOR_GREEN_GROUND);
+                DrawRect(renderer, tile, COLOR_GREEN_GROUND_DETAILS);
+            }
+        }
+    }
+}
+

@@ -5,11 +5,6 @@
 #include "game.h"
 #include "functions.h"
 
-#define SCREEN_WIDTH  800
-#define SCREEN_HEIGHT 600
-#define PLAYER_SIZE   40.0f
-#define SPEED         5.0f
-
 int main(int argc, char* argv[]) {
     // 1. Inicializa o SDL3
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
@@ -41,11 +36,11 @@ int main(int argc, char* argv[]) {
     }
 
     // Posicao do jogador (SDL3 usa float para retângulos)
-    SDL_FRect player = {
+    
+
+    PlayerPosition player = {
         (SCREEN_WIDTH - PLAYER_SIZE) / 2.0f,
         (SCREEN_HEIGHT - PLAYER_SIZE) / 2.0f,
-        PLAYER_SIZE,
-        PLAYER_SIZE
     };
 
     bool running = true;
@@ -66,8 +61,29 @@ int main(int argc, char* argv[]) {
     // Trava simples para evitar navegação ultra-rápida (pode usar eventos ou flag de liberação)
     static bool tecla_pressionada = false;
 
-    Color COLOR_WHITE = { 255,255,255,255 };
-    Color COLOR_GREY = {150, 150, 150, 255};
+    
+
+    // 0 = Chão (cor azul-escuro/cinza), 1 = Parede (cor cinza-claro/vermelho)
+    static const int FIRST_MAP[MAP_HEIGHT][MAP_WIDTH] = {
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1},
+        {1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+        {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+    };
 
     // Loop principal
     while (running) {
@@ -199,9 +215,13 @@ int main(int argc, char* argv[]) {
             RenderText(renderer, "CONTINUAR", COLOR_GREY, ((SCREEN_WIDTH - 300) / 2.0f) + 40.0f, 298.0f, 4.0f);
         }
         else if (estado_atual == STATE_MAP) {
+
+            RenderMap(renderer, FIRST_MAP, MAP_HEIGHT, MAP_WIDTH, TILE_SIZE);
+
             // Desenha o jogador (quadrado azul no centro por enquanto)
-            SDL_SetRenderDrawColor(renderer, 0, 150, 255, 255);
-            SDL_RenderFillRect(renderer, &player);
+            SDL_FRect playerRect = PlayerToRect(player, PLAYER_SIZE);
+            SDL_SetRenderDrawColor(renderer, 0, 150, 255, 255);            
+            SDL_RenderFillRect(renderer, &playerRect);
         }
 
         // 3. Apresenta o buffer renderizado na janela (ESSENCIAL!)
