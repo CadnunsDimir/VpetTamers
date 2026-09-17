@@ -34,6 +34,11 @@ typedef struct {
     int a;
 } Color;
 
+typedef struct {
+    int x;
+    int y;
+} GamePadDelta;
+
 static const Color COLOR_GREY_WALL = {60, 60, 75, 255};
 static const Color COLOR_GREY_WALL_BORDER = { 40, 40, 50, 255};
 static const Color COLOR_GREEN_GROUND = {25, 45, 30, 255};

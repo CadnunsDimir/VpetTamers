@@ -37,11 +37,9 @@ int main(int argc, char* argv[]) {
     }
 
     // Posicao do jogador (SDL3 usa float para retângulos)
-    
-
     PlayerPosition player = {
-        (SCREEN_WIDTH - PLAYER_SIZE) / 2.0f,
-        (SCREEN_HEIGHT - PLAYER_SIZE) / 2.0f,
+        FIRST_MAP_SPAWN_POINT[0],
+        FIRST_MAP_SPAWN_POINT[1]
     };
 
     bool running = true;
@@ -81,32 +79,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        // Teclado (fallback)
-        const bool* state = SDL_GetKeyboardState(NULL);
-        if (state[SDL_SCANCODE_LEFT] && player.x > 0) player.x -= SPEED;
-        if (state[SDL_SCANCODE_RIGHT] && player.x < SCREEN_WIDTH - PLAYER_SIZE) player.x += SPEED;
-        if (state[SDL_SCANCODE_UP] && player.y > 0) player.y -= SPEED;
-        if (state[SDL_SCANCODE_DOWN] && player.y < SCREEN_HEIGHT - PLAYER_SIZE) player.y += SPEED;
 
-        // Joystick / Gamepad (Digital / D-Pad ou Analógico)
-        if (gamepad) {
-            // Eixos analogicos
-            Sint16 axisX = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTX);
-            Sint16 axisY = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTY);
-
-            if (axisX < -8000 && player.x > 0) player.x -= SPEED;
-            if (axisX > 8000 && player.x < SCREEN_WIDTH - PLAYER_SIZE) player.x += SPEED;
-            if (axisY < -8000 && player.y > 0) player.y -= SPEED;
-            if (axisY > 8000 && player.y < SCREEN_HEIGHT - PLAYER_SIZE) player.y += SPEED;
-
-            // D-Pad / Botões direcionais
-            if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_LEFT) && player.x > 0) player.x -= SPEED;
-            if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_RIGHT) && player.x < SCREEN_WIDTH - PLAYER_SIZE) player.x += SPEED;
-            if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_UP) && player.y > 0) player.y -= SPEED;
-            if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_DOWN) && player.y < SCREEN_HEIGHT - PLAYER_SIZE) player.y += SPEED;
-        }
-
-        
         // --- Atualização do Menu ---
         if (estado_atual == STATE_MENU)
         {
@@ -192,11 +165,25 @@ int main(int argc, char* argv[]) {
             RenderText(renderer, "CONTINUAR", COLOR_GREY, ((SCREEN_WIDTH - 300) / 2.0f) + 40.0f, 298.0f, 4.0f);
         }
         else if (estado_atual == STATE_MAP) {
+            GamePadDelta gamepad_delta = GetGamePadDelta(gamepad);
+
+            // Executa movimento único quando a tecla é pressionada
+            if ((gamepad_delta.x != 0 || gamepad_delta.y != 0) && !tecla_pressionada)
+            {
+                MovePlayer(&player, gamepad_delta.x, gamepad_delta.y, FIRST_MAP);
+                tecla_pressionada = true; // Trava para não andar continuamente
+            }
+
+            // Libera a trava quando solta o botão
+            if (gamepad_delta.x == 0 && gamepad_delta.y == 0)
+            {
+                tecla_pressionada = false;
+            }
 
             RenderMap(renderer, FIRST_MAP, MAP_HEIGHT, MAP_WIDTH, TILE_SIZE);
 
             // Desenha o jogador (quadrado azul no centro por enquanto)
-            SDL_FRect playerRect = PlayerToRect(player, PLAYER_SIZE);
+            SDL_FRect playerRect = PlayerToRect(player, TILE_SIZE);
             SDL_SetRenderDrawColor(renderer, 0, 150, 255, 255);            
             SDL_RenderFillRect(renderer, &playerRect);
         }

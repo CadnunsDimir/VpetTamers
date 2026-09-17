@@ -57,8 +57,8 @@ void RenderText(SDL_Renderer* renderer, const char* texto, const Color color, fl
 
 SDL_FRect PlayerToRect(PlayerPosition player, int playerSize) {
     SDL_FRect rect = {
-        player.x,
-        player.y,
+        player.x  * playerSize,
+        player.y * playerSize,
         playerSize,
         playerSize
     };
@@ -71,8 +71,7 @@ void DrawRect(SDL_Renderer* renderer, SDL_FRect tile, Color color) {
     SDL_RenderFillRect(renderer, &tile);
 }
 
-void RenderMap(SDL_Renderer* renderer, const int map[MAP_HEIGHT][MAP_WIDTH], int height, int width, int titleSize) {    
-
+void RenderMap(SDL_Renderer* renderer, const int map[MAP_HEIGHT][MAP_WIDTH], int height, int width, int titleSize) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             SDL_FRect tile = {
@@ -93,3 +92,64 @@ void RenderMap(SDL_Renderer* renderer, const int map[MAP_HEIGHT][MAP_WIDTH], int
     }
 }
 
+void MovePlayer(PlayerPosition* player, int delta_x, int delta_y, const int map[MAP_HEIGHT][MAP_WIDTH]) {
+    int next_x = player->x + delta_x;
+    int next_y = player->y + delta_y;
+
+    // 1. Checa limites do mapa (para não tentar ler fora do array na RAM)
+    if (next_x < 0 || next_x >= MAP_WIDTH || next_y < 0 || next_y >= MAP_HEIGHT) {
+        return; // Fora do mapa -> Bloqueia
+    }
+
+    // 2. Checa colisão com parede (1 = Parede)
+    if (map[next_y][next_x] == 1) {
+        return; // Colisão detectada -> Bloqueia
+    }
+
+    // 3. Movimento válido -> Atualiza a posição
+    player->x = next_x;
+    player->y = next_y;
+}
+
+GamePadDelta GetGamePadDelta(SDL_Gamepad* gamepad) {
+    const bool *state = SDL_GetKeyboardState(NULL);
+
+    GamePadDelta gamepad_delta = {0, 0};
+
+    // Captura entrada (Teclado)
+    if (state[SDL_SCANCODE_LEFT] || state[SDL_SCANCODE_A])
+        gamepad_delta.x = -1;
+    if (state[SDL_SCANCODE_RIGHT] || state[SDL_SCANCODE_D])
+        gamepad_delta.x = 1;
+    if (state[SDL_SCANCODE_UP] || state[SDL_SCANCODE_W])
+        gamepad_delta.y = -1;
+    if (state[SDL_SCANCODE_DOWN] || state[SDL_SCANCODE_S])
+        gamepad_delta.y = 1;
+
+    // Captura entrada (Gamepad D-Pad)
+    if (gamepad)
+    {
+        Sint16 axisX = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTX);
+        Sint16 axisY = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTY);
+
+        if (axisX < -8000)
+            gamepad_delta.x = -1;
+        if (axisX > 8000)
+            gamepad_delta.x = 1;
+        if (axisY < -8000)
+            gamepad_delta.y = -1;
+        if (axisY > 8000)
+            gamepad_delta.y = 1;
+
+        if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_LEFT))
+            gamepad_delta.x = -1;
+        if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_RIGHT))
+            gamepad_delta.x = 1;
+        if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_UP))
+            gamepad_delta.y = -1;
+        if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_DOWN))
+            gamepad_delta.y = 1;
+    }
+    
+    return gamepad_delta;
+}
