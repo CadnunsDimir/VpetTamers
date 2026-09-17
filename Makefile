@@ -2,7 +2,7 @@
 CC = gcc
 
 # Nome do executavel final
-TARGET = build/CppCardGame
+TARGET = build/VPetTamers
 
 # Arquivos fonte
 SRCS = src/main.c
