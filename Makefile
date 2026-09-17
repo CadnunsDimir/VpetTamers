@@ -26,7 +26,7 @@ else
 endif
 
 # Flags de otimização e avisos do compilador
-CFLAGS = -Wall -Wextra -O2 $(INCLUDES)
+CFLAGS = -Wall -Wextra -g -O0 -O2 $(INCLUDES)
 
 # Regra padrao (executada ao rodar apenas 'make')
 all: $(EXE)
