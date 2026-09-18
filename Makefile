@@ -6,6 +6,7 @@ TARGET = build/VPetTamers
 
 # Arquivos fonte
 SRCS = src/main.c
+HDRS = src/game.h src/functions.h
 
 # Detecta se o SO eh Windows ou Linux
 ifeq ($(OS),Windows_NT)
@@ -32,7 +33,7 @@ CFLAGS = -Wall -Wextra -g -O0 -O2 $(INCLUDES)
 all: $(EXE)
 
 # Compilacao do executavel
-$(EXE): $(SRCS)
+$(EXE): $(SRCS) $(HDRS)
 	$(CC) $(CFLAGS) $(SRCS) -o $(EXE) $(LIBS)
 
 # Limpeza dos binarios gerados
