@@ -26,13 +26,13 @@ int main(int argc, char* argv[]) {
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
     // 3. Abre o primeiro Gamepad/Joystick disponível
-    SDL_Gamepad* gamepad = NULL;
+    SDL_Gamepad* gamepad_connection = NULL;
     int count = 0;
     SDL_JoystickID* joysticks = SDL_GetJoysticks(&count);
     if (count > 0 && joysticks) {
-        gamepad = SDL_OpenGamepad(joysticks[0]);
-        if (gamepad) {
-            printf("Gamepad conectado: %s\n", SDL_GetGamepadName(gamepad));
+        gamepad_connection = SDL_OpenGamepad(joysticks[0]);
+        if (gamepad_connection) {
+            printf("Gamepad conectado: %s\n", SDL_GetGamepadName(gamepad_connection));
         }
     }
     if (joysticks) {
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
     SDL_Event event;
     GameState current_state = STATE_MENU;
     VPet my_vpet = {
-        .name = "Agumon",
+        .name = "BkMbaracajamon",
         .level = 1,
         .hp = 20,
         .hp_max = 20,
@@ -72,22 +72,22 @@ int main(int argc, char* argv[]) {
             if (event.type == SDL_EVENT_QUIT) {
                 running = false;
             }
-            else if (event.type == SDL_EVENT_GAMEPAD_ADDED && !gamepad) {
-                gamepad = SDL_OpenGamepad(event.gdevice.which);
-                if (gamepad) {
-                    printf("Gamepad conectado: %s\n", SDL_GetGamepadName(gamepad));
+            else if (event.type == SDL_EVENT_GAMEPAD_ADDED && !gamepad_connection) {
+                gamepad_connection = SDL_OpenGamepad(event.gdevice.which);
+                if (gamepad_connection) {
+                    printf("Gamepad conectado: %s\n", SDL_GetGamepadName(gamepad_connection));
                 }
             }
-            else if (event.type == SDL_EVENT_GAMEPAD_REMOVED && gamepad) {
-                SDL_CloseGamepad(gamepad);
-                gamepad = NULL;
+            else if (event.type == SDL_EVENT_GAMEPAD_REMOVED && gamepad_connection) {
+                SDL_CloseGamepad(gamepad_connection);
+                gamepad_connection = NULL;
                 printf("Gamepad desconectado.\n");
             }
         }
 
-        GamePadDelta gamepad_delta = GetGamePadDelta(gamepad);
+        PlayerGamePad gamepad = GetPlayerGamePad(gamepad_connection);
 
-        if (gamepad_delta.triggered_pause && !pause_key_pressed)
+        if (gamepad.triggered_pause && !pause_key_pressed)
         {
             if (current_state == STATE_MAP)
             {
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
         }
 
         // Libera a trava quando solta o botão
-        if (!gamepad_delta.triggered_pause)
+        if (!gamepad.triggered_pause)
         {
             pause_key_pressed = false;
         }
@@ -109,8 +109,8 @@ int main(int argc, char* argv[]) {
         // --- Atualização do Menu ---
         if (current_state == STATE_MENU)
         {
-            bool moveu_baixo = gamepad_delta.y == 1;
-            bool moveu_cima = gamepad_delta.y == -1;
+            bool moveu_baixo = gamepad.y == 1;
+            bool moveu_cima = gamepad.y == -1;
 
             if (moveu_baixo && !key_pressed)
             {
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
                 key_pressed = false;
             }
 
-            if (gamepad_delta.triggered_confirm)
+            if (gamepad.triggered_confirm)
             {
                 if (menu_opcao == 0)
                 {
@@ -154,14 +154,14 @@ int main(int argc, char* argv[]) {
             
 
             // Executa movimento único quando a tecla é pressionada
-            if ((gamepad_delta.x != 0 || gamepad_delta.y != 0) && !key_pressed && current_state == STATE_MAP)
+            if ((gamepad.delta_x != 0 || gamepad.y != 0) && !key_pressed && current_state == STATE_MAP)
             {
-                MovePlayer(&player, gamepad_delta.x, gamepad_delta.y, FIRST_MAP);
+                MovePlayer(&player, &current_state, gamepad.delta_x, gamepad.y, FIRST_MAP);
                 key_pressed = true; // Trava para não andar continuamente
             }
 
             // Libera a trava quando solta o botão
-            if (gamepad_delta.x == 0 && gamepad_delta.y == 0)
+            if (gamepad.delta_x == 0 && gamepad.y == 0)
             {
                 key_pressed = false;
             }
@@ -185,8 +185,8 @@ int main(int argc, char* argv[]) {
         SDL_Delay(16);
     }
 
-    if (gamepad) {
-        SDL_CloseGamepad(gamepad);
+    if (gamepad_connection) {
+        SDL_CloseGamepad(gamepad_connection);
     }
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);

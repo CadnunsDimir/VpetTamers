@@ -114,32 +114,84 @@ SDL_FRect PlayerToRect(PlayerPosition player, int playerSize) {
 }
 
 void DrawRect(SDL_Renderer* renderer, SDL_FRect tile, Color color) {
-     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
     SDL_RenderFillRect(renderer, &tile);
 }
 
-void RenderMap(SDL_Renderer* renderer, const int map[MAP_HEIGHT][MAP_WIDTH], int height, int width, int titleSize) {
+void RenderVPetEnemy(SDL_Renderer* renderer, int vpet_code, int x, int y, int title_size) {
+    Color enemy_color;
+    //TODO: criar um array que o indice eh o codigo do vpet
+    switch (vpet_code)
+    {
+    case 2:
+        enemy_color = COLOR_ENEMY_2;
+        break;
+    case 3:
+    default:
+        // codigo 3 é default
+        enemy_color = COLOR_ENEMY_3;
+        break;
+    }
+
+    SDL_FRect tile = {
+        x * title_size,
+        y * title_size,
+        title_size,
+        title_size
+    };
+
+    DrawRect(renderer, tile, enemy_color);
+}
+
+void RenderMap(SDL_Renderer* renderer, const int map[MAP_HEIGHT][MAP_WIDTH], int height, int width, int title_size) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             SDL_FRect tile = {
-                x * titleSize,
-                y * titleSize,
-                titleSize,
-                titleSize
+                x * title_size,
+                y * title_size,
+                title_size,
+                title_size
             };
 
-            if (map[y][x] == 1) {
-                DrawRect(renderer, tile, COLOR_GREY_WALL);
-                DrawRect(renderer, tile, COLOR_GREY_WALL_BORDER);
-            } else {
-                DrawRect(renderer, tile, COLOR_GREEN_GROUND);
-                DrawRect(renderer, tile, COLOR_GREEN_GROUND_DETAILS);
+            int cell_code = map[y][x];
+
+            switch (cell_code)
+            {
+                case 1:
+                    DrawRect(renderer, tile, COLOR_GREY_WALL);
+                    // DrawRect(renderer, tile, COLOR_GREY_WALL_BORDER);
+                    break;
+                case 2:
+                case 3:
+                    RenderVPetEnemy(renderer, cell_code, x, y, title_size);
+                    break;
+                default:
+                    DrawRect(renderer, tile, COLOR_GREEN_GROUND);
+                    // DrawRect(renderer, tile, COLOR_GREEN_GROUND_DETAILS);
+                    break;
             }
         }
     }
 }
 
-void MovePlayer(PlayerPosition* player, int delta_x, int delta_y, const int map[MAP_HEIGHT][MAP_WIDTH]) {
+bool CheckIfFindEnemy(int enemy_code){
+    if (enemy_code == 0 || enemy_code == 1)
+    {
+        return false;
+    }
+    
+    for (size_t i = 0; i < sizeof(ENEMY_LIST); i++)
+    {
+        VPetEnemy enemy = ENEMY_LIST[i];
+        if (enemy.vpet_id == enemy_code) {
+            printf(enemy.name);
+            return true; // Encontrou o elemento
+        } 
+    }
+    return false;
+}
+
+void MovePlayer(PlayerPosition* player, GameState* game_state, int delta_x, int delta_y, const int map[MAP_HEIGHT][MAP_WIDTH]) {
     int next_x = player->x + delta_x;
     int next_y = player->y + delta_y;
 
@@ -148,26 +200,32 @@ void MovePlayer(PlayerPosition* player, int delta_x, int delta_y, const int map[
         return; // Fora do mapa -> Bloqueia
     }
 
-    // 2. Checa colisão com parede (1 = Parede)
-    if (map[next_y][next_x] == 1) {
-        return; // Colisão detectada -> Bloqueia
+    int location = map[next_y][next_x];
+
+    // 2. Chão -> Atualiza a posição
+    if(location == 0) {
+        player->x = next_x;
+        player->y = next_y;
+        return;
     }
 
-    // 3. Movimento válido -> Atualiza a posição
-    player->x = next_x;
-    player->y = next_y;
+    // 3. Encontrou inimigo -> Batalha
+    if(CheckIfFindEnemy(location)){
+        *game_state = STATE_BATTLE;
+        return;
+    }
 }
 
-GamePadDelta GetGamePadDelta(SDL_Gamepad* gamepad) {
+PlayerGamePad GetPlayerGamePad(SDL_Gamepad* gamepad) {
     const bool *state = SDL_GetKeyboardState(NULL);
 
-    GamePadDelta gamepad_delta = {0, 0, false, false};
+    PlayerGamePad gamepad_delta = {0, 0, false, false};
 
     // Captura entrada (Teclado)
     if (state[SDL_SCANCODE_LEFT] || state[SDL_SCANCODE_A])
-        gamepad_delta.x = -1;
+        gamepad_delta.delta_x = -1;
     if (state[SDL_SCANCODE_RIGHT] || state[SDL_SCANCODE_D])
-        gamepad_delta.x = 1;
+        gamepad_delta.delta_x = 1;
     if (state[SDL_SCANCODE_UP] || state[SDL_SCANCODE_W])
         gamepad_delta.y = -1;
     if (state[SDL_SCANCODE_DOWN] || state[SDL_SCANCODE_S])
@@ -183,18 +241,18 @@ GamePadDelta GetGamePadDelta(SDL_Gamepad* gamepad) {
         Sint16 axisY = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTY);
 
         if (axisX < -8000)
-            gamepad_delta.x = -1;
+            gamepad_delta.delta_x = -1;
         if (axisX > 8000)
-            gamepad_delta.x = 1;
+            gamepad_delta.delta_x = 1;
         if (axisY < -8000)
             gamepad_delta.y = -1;
         if (axisY > 8000)
             gamepad_delta.y = 1;
 
         if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_LEFT))
-            gamepad_delta.x = -1;
+            gamepad_delta.delta_x = -1;
         if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_RIGHT))
-            gamepad_delta.x = 1;
+            gamepad_delta.delta_x = 1;
         if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_UP))
             gamepad_delta.y = -1;
         if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_DOWN))
