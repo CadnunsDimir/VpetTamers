@@ -58,7 +58,9 @@ int main(int argc, char* argv[]) {
     int menu_opcao = 0;
 
     // Trava simples para evitar navegação ultra-rápida (pode usar eventos ou flag de liberação)
-    static bool tecla_pressionada = false;
+    static bool key_pressed = false;
+
+    static bool pause_key_pressed = false;
 
     // Loop principal
     while (running) {
@@ -79,44 +81,50 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        GamePadDelta gamepad_delta = GetGamePadDelta(gamepad);
+
+        if (gamepad_delta.triggered_pause && !pause_key_pressed)
+        {
+            if (estado_atual == STATE_MAP)
+            {
+                estado_atual = STATE_PAUSE;
+            }
+            else if (estado_atual == STATE_PAUSE)
+            {
+                estado_atual = STATE_MAP;
+            }
+            pause_key_pressed = true;
+        }
+
+        // Libera a trava quando solta o botão
+        if (!gamepad_delta.triggered_pause)
+        {
+            pause_key_pressed = false;
+        }
 
         // --- Atualização do Menu ---
         if (estado_atual == STATE_MENU)
         {
-            const bool *state = SDL_GetKeyboardState(NULL);
+            bool moveu_baixo = gamepad_delta.y == 1;
+            bool moveu_cima = gamepad_delta.y == -1;
 
-            bool moveu_baixo = state[SDL_SCANCODE_DOWN];
-            bool moveu_cima = state[SDL_SCANCODE_UP];
-
-            if (gamepad)
-            {
-                moveu_baixo |= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_DOWN);
-                moveu_cima |= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_UP);
-            }
-
-            if (moveu_baixo && !tecla_pressionada)
+            if (moveu_baixo && !key_pressed)
             {
                 menu_opcao = 1; // Seleciona "Continuar"
-                tecla_pressionada = true;
+                key_pressed = true;
             }
-            else if (moveu_cima && !tecla_pressionada)
+            else if (moveu_cima && !key_pressed)
             {
                 menu_opcao = 0; // Seleciona "Novo Jogo"
-                tecla_pressionada = true;
+                key_pressed = true;
             }
 
             if (!moveu_baixo && !moveu_cima)
             {
-                tecla_pressionada = false;
+                key_pressed = false;
             }
 
-            bool confirma = state[SDL_SCANCODE_RETURN];
-            if (gamepad)
-            {
-                confirma |= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_SOUTH);
-            }
-
-            if (confirma)
+            if (gamepad_delta.triggered_confirm)
             {
                 if (menu_opcao == 0)
                 {
@@ -133,51 +141,25 @@ int main(int argc, char* argv[]) {
         // 2. Desenha o estado atual
         if (estado_atual == STATE_MENU) {
             // Opção 1: NOVO JOGO
-            SDL_FRect btn_novo_jogo = {
-                (SCREEN_WIDTH - 300) / 2.0f,
-                200.0f,
-                300.0f,
-                60.0f
-            };
-
-            if (menu_opcao == 0) {
-                SDL_SetRenderDrawColor(renderer, 0, 180, 255, 255); // Selecionado
-            } else {
-                SDL_SetRenderDrawColor(renderer, 0, 70, 130, 255);  // Não Selecionado
-            }
-            SDL_RenderFillRect(renderer, &btn_novo_jogo);
-            RenderText(renderer, "NOVO JOGO", COLOR_WHITE, ((SCREEN_WIDTH - 300) / 2.0f) + 40.0f, 218.0f, 4.0f);
+            RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, 200, "NOVO JOGO", menu_opcao == 0, false);
 
             // Opção 2: CONTINUAR (DESABILITADO)
-            SDL_FRect btn_continuar = {
-                (SCREEN_WIDTH - 300) / 2.0f,
-                280.0f,
-                300.0f,
-                60.0f
-            };
-
-            if (menu_opcao == 1) {
-                SDL_SetRenderDrawColor(renderer, 120, 120, 120, 255); // Focado (Desabilitado)
-            } else {
-                SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);   // Apagado
-            }
-            SDL_RenderFillRect(renderer, &btn_continuar);
-            RenderText(renderer, "CONTINUAR", COLOR_GREY, ((SCREEN_WIDTH - 300) / 2.0f) + 40.0f, 298.0f, 4.0f);
+            RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, 280.0f, "CONTINUAR", menu_opcao == 1, true);
         }
         else if (estado_atual == STATE_MAP) {
-            GamePadDelta gamepad_delta = GetGamePadDelta(gamepad);
+            
 
             // Executa movimento único quando a tecla é pressionada
-            if ((gamepad_delta.x != 0 || gamepad_delta.y != 0) && !tecla_pressionada)
+            if ((gamepad_delta.x != 0 || gamepad_delta.y != 0) && !key_pressed)
             {
                 MovePlayer(&player, gamepad_delta.x, gamepad_delta.y, FIRST_MAP);
-                tecla_pressionada = true; // Trava para não andar continuamente
+                key_pressed = true; // Trava para não andar continuamente
             }
 
             // Libera a trava quando solta o botão
             if (gamepad_delta.x == 0 && gamepad_delta.y == 0)
             {
-                tecla_pressionada = false;
+                key_pressed = false;
             }
 
             RenderMap(renderer, FIRST_MAP, MAP_HEIGHT, MAP_WIDTH, TILE_SIZE);

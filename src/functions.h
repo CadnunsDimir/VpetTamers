@@ -114,7 +114,7 @@ void MovePlayer(PlayerPosition* player, int delta_x, int delta_y, const int map[
 GamePadDelta GetGamePadDelta(SDL_Gamepad* gamepad) {
     const bool *state = SDL_GetKeyboardState(NULL);
 
-    GamePadDelta gamepad_delta = {0, 0};
+    GamePadDelta gamepad_delta = {0, 0, false, false};
 
     // Captura entrada (Teclado)
     if (state[SDL_SCANCODE_LEFT] || state[SDL_SCANCODE_A])
@@ -125,6 +125,9 @@ GamePadDelta GetGamePadDelta(SDL_Gamepad* gamepad) {
         gamepad_delta.y = -1;
     if (state[SDL_SCANCODE_DOWN] || state[SDL_SCANCODE_S])
         gamepad_delta.y = 1;
+
+    gamepad_delta.triggered_pause = state[SDL_SCANCODE_ESCAPE];
+    gamepad_delta.triggered_confirm = state[SDL_SCANCODE_RETURN];
 
     // Captura entrada (Gamepad D-Pad)
     if (gamepad)
@@ -149,7 +152,36 @@ GamePadDelta GetGamePadDelta(SDL_Gamepad* gamepad) {
             gamepad_delta.y = -1;
         if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_DOWN))
             gamepad_delta.y = 1;
+        
+         gamepad_delta.triggered_pause |= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_START);
+         gamepad_delta.triggered_confirm  |= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_SOUTH);
     }
     
     return gamepad_delta;
+}
+
+void RenderMenuButton(SDL_Renderer* renderer, float x, float y, const char *text, bool selected, bool disabled) {
+    SDL_FRect btn_novo_jogo = {
+        x,
+        y,
+        300.0f,
+        60.0f};
+    
+    Color background_color;
+    Color text_color = disabled ? COLOR_GREY: COLOR_WHITE;
+
+    if (selected && !disabled)
+    {
+       background_color = COLOR_MENU_BUTTON_SELECTED;
+    } else if(selected && disabled) {
+        background_color = COLOR_MENU_BUTTON_DISABLED_SELECTED;
+    } else if(disabled) {
+        background_color = COLOR_MENU_BUTTON_DISABLED;
+    } else {
+        background_color = COLOR_MENU_BUTTON_NOT_SELECTED;
+    }
+
+    SDL_SetRenderDrawColor(renderer, background_color.r, background_color.g, background_color.b, background_color.a);
+    SDL_RenderFillRect(renderer, &btn_novo_jogo);
+    RenderText(renderer, text, text_color, x + 40.0f, y + 18.0f, 4.0f);
 }
