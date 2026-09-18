@@ -31,9 +31,56 @@ void RenderText(SDL_Renderer* renderer, const char* texto, const Color color, fl
                 glyph[0] = 0b11110; glyph[1] = 0b10001; glyph[2] = 0b11110; glyph[3] = 0b10010; glyph[4] = 0b10001; break;
             case 'U': case 'u':
                 glyph[0] = 0b10001; glyph[1] = 0b10001; glyph[2] = 0b10001; glyph[3] = 0b10001; glyph[4] = 0b01110; break;
+            case 'P': case 'p':
+                glyph[0] = 0b11110; glyph[1] = 0b10001; glyph[2] = 0b11110; glyph[3] = 0b10000; glyph[4] = 0b10000; break;
+            case 'S': case 's':
+                glyph[0] = 0b01111; glyph[1] = 0b10000; glyph[2] = 0b01110; glyph[3] = 0b00001; glyph[4] = 0b11110; break;
+            case 'E': case 'e':
+                glyph[0] = 0b11111; glyph[1] = 0b10000; glyph[2] = 0b11110; glyph[3] = 0b10000; glyph[4] = 0b11111; break;
+            case 'L': case 'l':
+                glyph[0] = 0b10000; glyph[1] = 0b10000; glyph[2] = 0b10000; glyph[3] = 0b10000; glyph[4] = 0b11111; break;
+            case 'H': case 'h':
+                glyph[0] = 0b10001; glyph[1] = 0b10001; glyph[2] = 0b11111; glyph[3] = 0b10001; glyph[4] = 0b10001; break;
+            case 'F': case 'f':
+                glyph[0] = 0b11111; glyph[1] = 0b10000; glyph[2] = 0b11110; glyph[3] = 0b10000; glyph[4] = 0b10000; break;
+            case 'K': case 'k':
+                glyph[0] = 0b10001; glyph[1] = 0b10010; glyph[2] = 0b11100; glyph[3] = 0b10010; glyph[4] = 0b10001; break;
+            case 'D': case 'd':
+                glyph[0] = 0b11100; glyph[1] = 0b10010; glyph[2] = 0b10010; glyph[3] = 0b10010; glyph[4] = 0b11100; break;
+            case 'B': case 'b':
+                glyph[0] = 0b11110; glyph[1] = 0b10001; glyph[2] = 0b11110; glyph[3] = 0b10001; glyph[4] = 0b11110; break;
+            case 'M': case 'm':
+                glyph[0] = 0b10001; glyph[1] = 0b11011; glyph[2] = 0b10101; glyph[3] = 0b10001; glyph[4] = 0b10001; break;
+            case 'X': case 'x':
+                glyph[0] = 0b10001; glyph[1] = 0b01010; glyph[2] = 0b00100; glyph[3] = 0b01010; glyph[4] = 0b10001; break;
+            case ':':
+                glyph[0] = 0b00000; glyph[1] = 0b01100; glyph[2] = 0b00000; glyph[3] = 0b01100; glyph[4] = 0b00000; break;
+            case '/':
+                glyph[0] = 0b00001; glyph[1] = 0b00010; glyph[2] = 0b00100; glyph[3] = 0b01000; glyph[4] = 0b10000; break;
+            case '0':
+                glyph[0] = 0b01110; glyph[1] = 0b10001; glyph[2] = 0b10001; glyph[3] = 0b10001; glyph[4] = 0b01110; break;
+            case '1':
+                glyph[0] = 0b00100; glyph[1] = 0b01100; glyph[2] = 0b00100; glyph[3] = 0b00100; glyph[4] = 0b01110; break;
+            case '2':
+                glyph[0] = 0b01110; glyph[1] = 0b00001; glyph[2] = 0b01110; glyph[3] = 0b10000; glyph[4] = 0b11111; break;
+            case '3':
+                glyph[0] = 0b11110; glyph[1] = 0b00001; glyph[2] = 0b00110; glyph[3] = 0b00001; glyph[4] = 0b11110; break;
+            case '4':
+                glyph[0] = 0b10001; glyph[1] = 0b10001; glyph[2] = 0b11111; glyph[3] = 0b00001; glyph[4] = 0b00001; break;
+            case '5':
+                glyph[0] = 0b11111; glyph[1] = 0b10000; glyph[2] = 0b11110; glyph[3] = 0b00001; glyph[4] = 0b11110; break;
+            case '6':
+                glyph[0] = 0b01110; glyph[1] = 0b10000; glyph[2] = 0b11110; glyph[3] = 0b10001; glyph[4] = 0b01110; break;
+            case '7':
+                glyph[0] = 0b11111; glyph[1] = 0b00001; glyph[2] = 0b00010; glyph[3] = 0b00100; glyph[4] = 0b00100; break;
+            case '8':
+                glyph[0] = 0b01110; glyph[1] = 0b10001; glyph[2] = 0b01110; glyph[3] = 0b10001; glyph[4] = 0b01110; break;
+            case '9':
+                glyph[0] = 0b01110; glyph[1] = 0b10001; glyph[2] = 0b01111; glyph[3] = 0b00001; glyph[4] = 0b01110; break;
             case ' ':
                 continue; // Espaço em branco
             default: // Caractere desconhecido vira um bloco sólido
+                printf("[RenderText] Letra não mapeada: " + c);
                 glyph[0] = 0b11111; glyph[1] = 0b11111; glyph[2] = 0b11111; glyph[3] = 0b11111; glyph[4] = 0b11111; break;
         }
 
@@ -184,4 +231,86 @@ void RenderMenuButton(SDL_Renderer* renderer, float x, float y, const char *text
     SDL_SetRenderDrawColor(renderer, background_color.r, background_color.g, background_color.b, background_color.a);
     SDL_RenderFillRect(renderer, &btn_novo_jogo);
     RenderText(renderer, text, text_color, x + 40.0f, y + 18.0f, 4.0f);
+}
+
+void RenderVPetStats(SDL_Renderer* renderer, VPet *vpet, float panel_x, float panel_y) {
+    // Buffer de texto temporário
+    char buffer[32];
+
+    // Nome do V-Pet e Nível
+    snprintf(buffer, sizeof(buffer), "NOME: %s", vpet->name);
+    RenderText(renderer, buffer, COLOR_WHITE, panel_x + 30.0f, panel_y + 80.0f, 3.0f);
+
+    snprintf(buffer, sizeof(buffer), "LVL : %d", vpet->level);
+    RenderText(renderer, buffer, COLOR_WHITE, panel_x + 30.0f, panel_y + 120.0f, 3.0f);
+
+    // HP Numérico
+    snprintf(buffer, sizeof(buffer), "HP  : %d/%d", vpet->hp, vpet->hp_max);
+    RenderText(renderer, buffer, COLOR_WHITE, panel_x + 30.0f, panel_y + 160.0f, 3.0f);
+
+    // --- Barra Visual de HP ---
+    float bar_x = panel_x + 230.0f;
+    float bar_y = panel_y + 160.0f;
+    float bar_w = 140.0f;
+    float bar_h = 16.0f;
+
+    // Fundo da Barra (Vermelho/Escuro - HP Faltante)
+    SDL_FRect hp_bg = {bar_x, bar_y, bar_w, bar_h};
+    SDL_SetRenderDrawColor(renderer, 80, 20, 20, 255);
+    SDL_RenderFillRect(renderer, &hp_bg);
+
+    // Preenchimento da Barra (Verde - HP Atual)
+    float hp_ratio = (float)vpet->hp / (float)vpet->hp_max;
+    if (hp_ratio < 0.0f)
+        hp_ratio = 0.0f;
+    if (hp_ratio > 1.0f)
+        hp_ratio = 1.0f;
+
+    SDL_FRect hp_fill = {bar_x, bar_y, bar_w * hp_ratio, bar_h};
+    SDL_SetRenderDrawColor(renderer, 40, 200, 80, 255);
+    SDL_RenderFillRect(renderer, &hp_fill);
+
+    // Borda da Barra
+    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+    SDL_RenderRect(renderer, &hp_bg);
+
+    // Ataque e Defesa
+    snprintf(buffer, sizeof(buffer), "ATK : %d", vpet->strength);
+    RenderText(renderer, buffer, COLOR_WHITE, panel_x + 30.0f, panel_y + 200.0f, 3.0f);
+
+    snprintf(buffer, sizeof(buffer), "DEF : %d", vpet->defense);
+    RenderText(renderer, buffer, COLOR_WHITE, panel_x + 30.0f, panel_y + 240.0f, 3.0f);
+}
+
+void RenderPauseOverlay(SDL_Renderer* renderer, VPet *vpet, float screenWidth, float screenHeight) {
+    // 1. Escurece a tela toda com um preto semi-transparente (Alpha = 150)
+    SDL_FRect overlay = { 0.0f, 0.0f, screenWidth, screenHeight };
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 150);
+    SDL_RenderFillRect(renderer, &overlay);
+
+    // 2. Janela Central de Status (Tamanho: 400x320, Centralizada)
+    float panel_w = 400.0f;
+    float panel_h = 320.0f;
+    float panel_x = (screenWidth - panel_w) / 2.0f;
+    float panel_y = (screenHeight - panel_h) / 2.0f;
+
+    SDL_FRect panel = { panel_x, panel_y, panel_w, panel_h };
+
+    // Fundo da Janela (Azul escuro com transparência)
+    SDL_SetRenderDrawColor(renderer, 20, 25, 40, 230);
+    SDL_RenderFillRect(renderer, &panel);
+
+    // Borda da Janela (Cinza claro/Branco)
+    SDL_SetRenderDrawColor(renderer, 200, 200, 220, 255);
+    SDL_RenderRect(renderer, &panel);
+
+    // Título da Janela
+    RenderText(renderer, "PAUSE", COLOR_WHITE, panel_x + 160.0f, panel_y + 20.0f, 4.0f);
+
+    // Linha Divisória Horizontal sob o Título
+    SDL_FRect line = { panel_x + 20.0f, panel_y + 60.0f, panel_w - 40.0f, 2.0f };
+    SDL_SetRenderDrawColor(renderer, 100, 100, 130, 255);
+    SDL_RenderFillRect(renderer, &line);
+
+    RenderVPetStats(renderer, vpet, panel_x, panel_y);
 }

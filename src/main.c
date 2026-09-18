@@ -22,6 +22,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    //habilita Blend para criar transparencias
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
     // 3. Abre o primeiro Gamepad/Joystick disponível
     SDL_Gamepad* gamepad = NULL;
     int count = 0;
@@ -44,8 +47,8 @@ int main(int argc, char* argv[]) {
 
     bool running = true;
     SDL_Event event;
-    GameState estado_atual = STATE_MENU;
-    VPet meu_vpet = {
+    GameState current_state = STATE_MENU;
+    VPet my_vpet = {
         .name = "Agumon",
         .level = 1,
         .hp = 20,
@@ -58,6 +61,7 @@ int main(int argc, char* argv[]) {
     int menu_opcao = 0;
 
     // Trava simples para evitar navegação ultra-rápida (pode usar eventos ou flag de liberação)
+    //TODO: ajustar comportamento para permitir botão mantido pressionado. hoje ele só permite 1 movimento por vez
     static bool key_pressed = false;
 
     static bool pause_key_pressed = false;
@@ -85,13 +89,13 @@ int main(int argc, char* argv[]) {
 
         if (gamepad_delta.triggered_pause && !pause_key_pressed)
         {
-            if (estado_atual == STATE_MAP)
+            if (current_state == STATE_MAP)
             {
-                estado_atual = STATE_PAUSE;
+                current_state = STATE_PAUSE;
             }
-            else if (estado_atual == STATE_PAUSE)
+            else if (current_state == STATE_PAUSE)
             {
-                estado_atual = STATE_MAP;
+                current_state = STATE_MAP;
             }
             pause_key_pressed = true;
         }
@@ -103,7 +107,7 @@ int main(int argc, char* argv[]) {
         }
 
         // --- Atualização do Menu ---
-        if (estado_atual == STATE_MENU)
+        if (current_state == STATE_MENU)
         {
             bool moveu_baixo = gamepad_delta.y == 1;
             bool moveu_cima = gamepad_delta.y == -1;
@@ -128,7 +132,7 @@ int main(int argc, char* argv[]) {
             {
                 if (menu_opcao == 0)
                 {
-                    estado_atual = STATE_MAP;
+                    current_state = STATE_MAP;
                 }
             }
         }
@@ -139,18 +143,18 @@ int main(int argc, char* argv[]) {
         SDL_RenderClear(renderer);
 
         // 2. Desenha o estado atual
-        if (estado_atual == STATE_MENU) {
+        if (current_state == STATE_MENU) {
             // Opção 1: NOVO JOGO
             RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, 200, "NOVO JOGO", menu_opcao == 0, false);
 
             // Opção 2: CONTINUAR (DESABILITADO)
             RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, 280.0f, "CONTINUAR", menu_opcao == 1, true);
         }
-        else if (estado_atual == STATE_MAP) {
+        else if (current_state == STATE_MAP || current_state == STATE_PAUSE) {
             
 
             // Executa movimento único quando a tecla é pressionada
-            if ((gamepad_delta.x != 0 || gamepad_delta.y != 0) && !key_pressed)
+            if ((gamepad_delta.x != 0 || gamepad_delta.y != 0) && !key_pressed && current_state == STATE_MAP)
             {
                 MovePlayer(&player, gamepad_delta.x, gamepad_delta.y, FIRST_MAP);
                 key_pressed = true; // Trava para não andar continuamente
@@ -168,6 +172,10 @@ int main(int argc, char* argv[]) {
             SDL_FRect playerRect = PlayerToRect(player, TILE_SIZE);
             SDL_SetRenderDrawColor(renderer, 0, 150, 255, 255);            
             SDL_RenderFillRect(renderer, &playerRect);
+            if (current_state == STATE_PAUSE)
+            {
+                RenderPauseOverlay(renderer, &my_vpet, SCREEN_WIDTH, SCREEN_HEIGHT);
+            }
         }
 
         // 3. Apresenta o buffer renderizado na janela (ESSENCIAL!)
