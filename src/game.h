@@ -19,22 +19,27 @@ typedef struct {
     int y; 
 } PlayerPosition;
 
+
+typedef enum {
+    PET_BK_MBARACAJAMON = 4,
+    PET_JAGUAPIRUMON = 2,
+    PET_RUGUASUMON = 3
+} VPetType;
+
 typedef struct { 
     char name[30]; 
     int level; 
-    int hp; 
-    int hp_max; 
-    int strength; 
-    int defense; 
-} VPet;
-
-typedef struct { 
-    char name[30];
+    int hp;
     int hp_max; 
     int strength; 
     int defense;
-    int vpet_id;
-} VPetEnemy;
+    VPetType type;
+} VPet;
+
+typedef struct {
+    bool is_found;
+    VPet enemy;
+} VPetEncounter;
 
 typedef struct {
     int r; 
@@ -50,6 +55,15 @@ typedef struct {
     bool triggered_confirm;
 } PlayerGamePad;
 
+typedef struct {
+    int x;
+    int y;
+} Coordinates;
+typedef struct {
+    Coordinates player;
+    Coordinates enemy;
+} OponentsPositioning;
+
 static const Color COLOR_GREY_WALL = {60, 60, 75, 255};
 static const Color COLOR_GREY_WALL_BORDER = { 40, 40, 50, 255};
 static const Color COLOR_GREEN_GROUND = {25, 45, 30, 255};
@@ -63,23 +77,25 @@ static const Color COLOR_MENU_BUTTON_DISABLED_SELECTED = {120, 120, 120, 255};
 static const Color COLOR_ENEMY_2 = {193, 114, 38, 255};
 static const Color COLOR_ENEMY_3 = {139, 69, 19, 255};
 
-static const VPetEnemy ENEMY_JAGUAPIRUMON = {
+static const VPet ENEMY_JAGUAPIRUMON = {
     .name = "Jaguapirumon", //cachoro feio
     .defense = 2,
     .strength = 3,
-    .hp_max = 10,
-    .vpet_id = 2
+    .hp = 20,
+    .hp_max = 20,
+    .type = PET_JAGUAPIRUMON
 };
 
-static const VPetEnemy ENEMY_RYGUASUMON = {
+static const VPet ENEMY_RYGUASUMON = {
     .name = "Ruguasumon", //galinha domestica
     .defense = 1,
     .strength = 1,
+    .hp = 10,
     .hp_max = 10,
-    .vpet_id = 3
+    .type = PET_RUGUASUMON
 };
 
-static const VPetEnemy ENEMY_LIST[2] = {
+static const VPet ENEMY_LIST[2] = {
     ENEMY_JAGUAPIRUMON,
     ENEMY_RYGUASUMON
 };

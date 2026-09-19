@@ -6,7 +6,7 @@ TARGET = build/VPetTamers
 
 # Arquivos fonte
 SRCS = src/main.c
-HDRS = src/game.h src/functions.h
+HDRS = src/game.h src/functions.h src/maps.h src/battle_mode.h
 
 # Detecta se o SO eh Windows ou Linux
 ifeq ($(OS),Windows_NT)

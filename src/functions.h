@@ -57,6 +57,10 @@ void RenderText(SDL_Renderer* renderer, const char* texto, const Color color, fl
                 glyph[0] = 0b00000; glyph[1] = 0b01100; glyph[2] = 0b00000; glyph[3] = 0b01100; glyph[4] = 0b00000; break;
             case '/':
                 glyph[0] = 0b00001; glyph[1] = 0b00010; glyph[2] = 0b00100; glyph[3] = 0b01000; glyph[4] = 0b10000; break;
+            case '(':
+                glyph[0] = 0b00010; glyph[1] = 0b00100; glyph[2] = 0b00100; glyph[3] = 0b00100; glyph[4] = 0b00010; break;
+            case ')':
+                glyph[0] = 0b01000; glyph[1] = 0b00100; glyph[2] = 0b00100; glyph[3] = 0b00100; glyph[4] = 0b01000; break;
             case '0':
                 glyph[0] = 0b01110; glyph[1] = 0b10001; glyph[2] = 0b10001; glyph[3] = 0b10001; glyph[4] = 0b01110; break;
             case '1':
@@ -80,7 +84,7 @@ void RenderText(SDL_Renderer* renderer, const char* texto, const Color color, fl
             case ' ':
                 continue; // Espaço em branco
             default: // Caractere desconhecido vira um bloco sólido
-                printf("[RenderText] Letra não mapeada: " + c);
+                // printf("[RenderText] Letra não mapeada: " + c);
                 glyph[0] = 0b11111; glyph[1] = 0b11111; glyph[2] = 0b11111; glyph[3] = 0b11111; glyph[4] = 0b11111; break;
         }
 
@@ -118,7 +122,7 @@ void DrawRect(SDL_Renderer* renderer, SDL_FRect tile, Color color) {
     SDL_RenderFillRect(renderer, &tile);
 }
 
-void RenderVPetEnemy(SDL_Renderer* renderer, int vpet_code, int x, int y, int title_size) {
+void RenderVPet(SDL_Renderer* renderer, int vpet_code, int x, int y, int title_size) {
     Color enemy_color;
     //TODO: criar um array que o indice eh o codigo do vpet
     switch (vpet_code)
@@ -163,7 +167,7 @@ void RenderMap(SDL_Renderer* renderer, const int map[MAP_HEIGHT][MAP_WIDTH], int
                     break;
                 case 2:
                 case 3:
-                    RenderVPetEnemy(renderer, cell_code, x, y, title_size);
+                    RenderVPet(renderer, cell_code, x, y, title_size);
                     break;
                 default:
                     DrawRect(renderer, tile, COLOR_GREEN_GROUND);
@@ -174,24 +178,30 @@ void RenderMap(SDL_Renderer* renderer, const int map[MAP_HEIGHT][MAP_WIDTH], int
     }
 }
 
-bool CheckIfFindEnemy(int enemy_code){
+VPetEncounter CheckIfFindEnemy(int enemy_code){
+    VPetEncounter encounter = {
+        .is_found = false
+    };
+
     if (enemy_code == 0 || enemy_code == 1)
     {
-        return false;
+        return encounter;
     }
     
     for (size_t i = 0; i < sizeof(ENEMY_LIST); i++)
     {
-        VPetEnemy enemy = ENEMY_LIST[i];
-        if (enemy.vpet_id == enemy_code) {
+        VPet enemy = ENEMY_LIST[i];
+        if (enemy.type == (VPetType)enemy_code) {
             printf(enemy.name);
-            return true; // Encontrou o elemento
+            encounter.is_found = true;
+            encounter.enemy = enemy;
+            return encounter;
         } 
     }
-    return false;
+    return encounter;
 }
 
-void MovePlayer(PlayerPosition* player, GameState* game_state, int delta_x, int delta_y, const int map[MAP_HEIGHT][MAP_WIDTH]) {
+void MovePlayer(PlayerPosition* player, GameState* game_state, VPet* enemy_found,int delta_x, int delta_y, const int map[MAP_HEIGHT][MAP_WIDTH]) {
     int next_x = player->x + delta_x;
     int next_y = player->y + delta_y;
 
@@ -210,8 +220,11 @@ void MovePlayer(PlayerPosition* player, GameState* game_state, int delta_x, int 
     }
 
     // 3. Encontrou inimigo -> Batalha
-    if(CheckIfFindEnemy(location)){
+    VPetEncounter encounter = CheckIfFindEnemy(location);
+
+    if(encounter.is_found){
         *game_state = STATE_BATTLE;
+        *enemy_found = encounter.enemy;
         return;
     }
 }

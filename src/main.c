@@ -5,6 +5,7 @@
 #include "game.h"
 #include "functions.h"
 #include "maps.h"
+#include "battle_mode.h"
 
 int main(int argc, char* argv[]) {
     // 1. Inicializa o SDL3
@@ -54,8 +55,11 @@ int main(int argc, char* argv[]) {
         .hp = 20,
         .hp_max = 20,
         .strength = 5,
-        .defense = 3
+        .defense = 3,
+        .type = PET_BK_MBARACAJAMON
     };
+
+    VPet enemy;
 
     // Variável de controle da opção selecionada (0 = Novo Jogo, 1 = Continuar)
     int menu_opcao = 0;
@@ -150,13 +154,12 @@ int main(int argc, char* argv[]) {
             // Opção 2: CONTINUAR (DESABILITADO)
             RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, 280.0f, "CONTINUAR", menu_opcao == 1, true);
         }
-        else if (current_state == STATE_MAP || current_state == STATE_PAUSE) {
-            
+        else if (current_state == STATE_MAP || current_state == STATE_PAUSE) {            
 
             // Executa movimento único quando a tecla é pressionada
             if ((gamepad.delta_x != 0 || gamepad.y != 0) && !key_pressed && current_state == STATE_MAP)
             {
-                MovePlayer(&player, &current_state, gamepad.delta_x, gamepad.y, FIRST_MAP);
+                MovePlayer(&player, &current_state, &enemy, gamepad.delta_x, gamepad.y, FIRST_MAP);
                 key_pressed = true; // Trava para não andar continuamente
             }
 
@@ -176,6 +179,8 @@ int main(int argc, char* argv[]) {
             {
                 RenderPauseOverlay(renderer, &my_vpet, SCREEN_WIDTH, SCREEN_HEIGHT);
             }
+        } else if(current_state == STATE_BATTLE) {
+            RenderBattleScreen(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, &my_vpet, &enemy, 0);
         }
 
         // 3. Apresenta o buffer renderizado na janela (ESSENCIAL!)
