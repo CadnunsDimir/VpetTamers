@@ -123,23 +123,24 @@ void RenderIsoWallNorthEast(SDL_Renderer* renderer, float centerX, float centerY
     int indices[6] = { 0, 1, 2, 0, 2, 3 };
     SDL_RenderGeometry(renderer, NULL, vertices, 4, indices, 6);
 }
+
 void RenderBattleScreenScenario(SDL_Renderer* renderer, float screenWidth, float screenHeight, OponentsPositioning* positioning) {
     // 1. Fundo Geral da Tela
     SDL_FRect bg_dark = { 0.0f, 0.0f, screenWidth, screenHeight };
     SDL_SetRenderDrawColor(renderer, 10, 10, 15, 255);
     SDL_RenderFillRect(renderer, &bg_dark);
 
-    // --- Parâmetros da Arena Isométrica ---
+    // --- Parâmetros da Arena Isométrica Ampliada ---
     const int ARENA_SIZE = 5;
-    float tile_w = 100.0f;
-    float tile_h = 50.0f;
+    float tile_w = 140.0f; // Escala ampliada da largura do tile
+    float tile_h = 70.0f;  // Escala ampliada da altura do tile (proporção 2:1)
 
     float offset_x = screenWidth / 2.0f;
-    float offset_y = 140.0f;
+    float offset_y = 100.0f; // Elevado ligeiramente para enquadrar a arena maior
 
-    float wall_height = 90.0f;
+    float wall_height = 110.0f; // Parede mais alta para acompanhar a nova escala
 
-    // --- 2. PAREDES TRASEIRAS (Alinhadas em diagonal perfeita) ---
+    // --- 2. PAREDES TRASEIRAS ---
     Color color_wall_nw = { 65, 70, 80, 255 }; // Parede Esquerda (Luz)
     Color color_wall_ne = { 45, 50, 60, 255 }; // Parede Direita (Sombra)
 
@@ -169,14 +170,14 @@ void RenderBattleScreenScenario(SDL_Renderer* renderer, float screenWidth, float
             Color current_tile_color = ((x + y) % 2 == 0) ? color_floor_a : color_floor_b;
             RenderIsoTile(renderer, iso_x, iso_y, tile_w, tile_h, current_tile_color);
 
-            // Inimigo no tile do fundo (Grid: X=3, Y=1)
-            if (x == 3 && y == 1) {
+            // Inimigo recuado no topo (Grid: X=1, Y=0)
+            if (x == 2 && y == 0) {
                 positioning->enemy.x = iso_x;
                 positioning->enemy.y = iso_y;
             }
 
-            // BkMbaracajamon no tile da frente (Grid: X=1, Y=3)
-            if (x == 1 && y == 3) {
+            // BkMbaracajamon avançado na frente (Grid: X=3, Y=3)
+            if (x == 2 && y == 4) {
                 positioning->player.x = iso_x;
                 positioning->player.y = iso_y;
             }
@@ -209,7 +210,7 @@ void RenderPetHUD(SDL_Renderer* renderer, float x, float y, float width, float h
 }
 
 void RenderBattleMenu(SDL_Renderer* renderer, float screenWidth, float screenHeight, int menu_opcao_batalha) {
-     // --- 5. Caixa de Comandos de Batalha (Rodapé) ---
+    // --- Caixa de Comandos de Batalha (Rodapé) ---
     SDL_FRect menu_box = { 20.0f, screenHeight - 140.0f, screenWidth - 40.0f, 120.0f };
     SDL_SetRenderDrawColor(renderer, 15, 20, 35, 245);
     SDL_RenderFillRect(renderer, &menu_box);
@@ -221,39 +222,40 @@ void RenderBattleMenu(SDL_Renderer* renderer, float screenWidth, float screenHei
     Color col_fugir  = (menu_opcao_batalha == 1) ? COLOR_MENU_BUTTON_SELECTED : COLOR_WHITE;
 
     RenderText(renderer, "ATACAR", col_atacar, 60.0f, screenHeight - 100.0f, 3.5f);
-
-    //AO escolher fugir, pode acontecer 2 coisas: 1. ele defende e foge; 2. recebe dano e laça um dado com 70% de change de encerrar a batalha
     RenderText(renderer, "FUGIR",  col_fugir,  320.0f, screenHeight - 100.0f, 3.5f);
 }
 
 void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenHeight, const VPet* player_pet, const VPet* enemy_pet, int menu_opcao_batalha) {
-    // 1. Fundo da Arena (Escuro/Verde estilo campo de batalha)
-    // --- 2. Plataformas/Bases das Entidades ---
-
-    // Posições onde ficharão os V-Pets no grid da arena
-
-    OponentsPositioning oponentsPositioning = {
-        0,
-        0,
-        0,
-        0
-    };
+    OponentsPositioning oponentsPositioning = { 0, 0, 0, 0 };
     
     RenderBattleScreenScenario(renderer, screenWidth, screenHeight, &oponentsPositioning);
 
-    // --- 3. Representação Visual das Entidades ---
-    // Renderiza o Inimigo (Jaguapirumon / Ruguasumon) no tile do Norte
-    // Em vez de passar enemy_pet->type para ambos:
-    RenderVPetSprite(renderer, enemy_pet->type, oponentsPositioning.enemy.x - 30.0f, oponentsPositioning.enemy.y - 60.0f, 2.5f);
-    RenderVPetSprite(renderer, player_pet->type, oponentsPositioning.player.x - 30.0f, oponentsPositioning.player.y - 60.0f, 2.5f);
+    // --- Representação Visual das Entidades ---
+    // --- Representação Visual das Entidades ---
 
-    // --- 4. Painéis de Status (HUD) ---
-    char buffer[32];
-    // Largura estendida para os HUDs (de 300px para 380px)
+    // 1. Inimigo (Renderizado PRIMEIRO para ficar ao fundo)
+    RenderVPetSprite(
+        renderer, 
+        enemy_pet->type, 
+        oponentsPositioning.enemy.x - (16.0f * 2.5f), // Centraliza horizontalmente o sprite de 32px
+        oponentsPositioning.enemy.y - (24.0f * 2.5f), // Apoia a base do sprite no centro do tile
+        2.5f
+    );
+
+    // 2. BkMbaracajamon (Renderizado DEPOIS para se sobrepor caso cruzem a linha de visão)
+    RenderVPetSprite(
+        renderer, 
+        player_pet->type, 
+        oponentsPositioning.player.x - (15.0f * 2.5f), 
+        oponentsPositioning.player.y - (25.0f * 2.5f), 
+        2.5f
+    );
+
+    // --- Painéis de Status (HUD) ---
     float hud_width = 380.0f;
     float hud_height = 80.0f;
 
-   // --- Status do Inimigo (Topo Direito) ---
+    // Status do Inimigo (Topo Direito)
     float enemy_hud_x = screenWidth - hud_width - 40.0f;
     float enemy_hud_y = 40.0f;
 
@@ -269,9 +271,9 @@ void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenH
         enemy_pet->hp_max
     );
 
-    // --- 2. Status do Player (Inferior Esquerdo - Acima do Menu de Comandos) ---
+    // Status do Player (Inferior Esquerdo - Acima do Menu)
     float player_hud_x = 40.0f;
-    float player_hud_y = screenHeight - 230.0f; // Posicionado com folga acima da caixa de comandos
+    float player_hud_y = screenHeight - 230.0f;
 
     RenderPetHUD(
         renderer, 
