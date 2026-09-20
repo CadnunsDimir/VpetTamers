@@ -1,11 +1,13 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3_image/SDL_image.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include "game.h"
 #include "functions.h"
 #include "maps.h"
 #include "battle_mode.h"
+#include "game_logo.h"
 
 int main(int argc, char* argv[]) {
     // 1. Inicializa o SDL3
@@ -17,7 +19,9 @@ int main(int argc, char* argv[]) {
     // 2. Cria Janela e Renderizador juntos no SDL3
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
-    if (!SDL_CreateWindowAndRenderer("Jogo com Joystick - SDL3", SCREEN_WIDTH, SCREEN_HEIGHT, 0, &window, &renderer)) {
+    SDL_Texture* game_logo = NULL;
+
+    if (!SDL_CreateWindowAndRenderer("VPet Tamers", SCREEN_WIDTH, SCREEN_HEIGHT, 0, &window, &renderer)) {
         printf("Erro ao criar janela/renderizador: %s\n", SDL_GetError());
         SDL_Quit();
         return 1;
@@ -25,6 +29,10 @@ int main(int argc, char* argv[]) {
 
     //habilita Blend para criar transparencias
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    if (!LoadAssets(renderer, &game_logo)) {
+        printf("Erro ao carregar logo");
+    }
 
     // 3. Abre o primeiro Gamepad/Joystick disponível
     SDL_Gamepad* gamepad_connection = NULL;
@@ -156,11 +164,14 @@ int main(int argc, char* argv[]) {
 
         // 2. Desenha o estado atual
         if (current_state == STATE_MENU) {
+            RenderMenuLogo(renderer, game_logo, SCREEN_WIDTH, 40.0f);
             // Opção 1: NOVO JOGO
-            RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, 200, "NOVO JOGO", menu_opcao == 0, false);
+            float top = 320.0f;
+            RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, top, "NOVO JOGO", menu_opcao == 0, false);
 
             // Opção 2: CONTINUAR (DESABILITADO)
-            RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, 280.0f, "CONTINUAR", menu_opcao == 1, true);
+            float spacing = 80.0f;
+            RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, top + spacing, "CONTINUAR", menu_opcao == 1, true);
         }
         else if (current_state == STATE_MAP || current_state == STATE_PAUSE) {            
 
