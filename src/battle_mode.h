@@ -209,7 +209,7 @@ void RenderPetHUD(SDL_Renderer* renderer, float x, float y, float width, float h
     RenderText(renderer, buffer, COLOR_WHITE, x + 15.0f, y + 42.0f, 2.5f);
 }
 
-void RenderBattleMenu(SDL_Renderer* renderer, float screenWidth, float screenHeight, int menu_opcao_batalha) {
+void RenderBattleMenu(SDL_Renderer* renderer, float screenWidth, float screenHeight, BattleMenuOption battle_option_menu) {
     // --- Caixa de Comandos de Batalha (Rodapé) ---
     SDL_FRect menu_box = { 20.0f, screenHeight - 140.0f, screenWidth - 40.0f, 120.0f };
     SDL_SetRenderDrawColor(renderer, 15, 20, 35, 245);
@@ -218,14 +218,14 @@ void RenderBattleMenu(SDL_Renderer* renderer, float screenWidth, float screenHei
     SDL_RenderRect(renderer, &menu_box);
 
     // Opções do Turno
-    Color col_atacar = (menu_opcao_batalha == 0) ? COLOR_MENU_BUTTON_SELECTED : COLOR_WHITE;
-    Color col_fugir  = (menu_opcao_batalha == 1) ? COLOR_MENU_BUTTON_SELECTED : COLOR_WHITE;
+    Color col_atacar = (battle_option_menu == BATLLE_MENU_ATTACK) ? COLOR_MENU_BUTTON_SELECTED : COLOR_WHITE;
+    Color col_fugir  = (battle_option_menu == BATLLE_MENU_RUN) ? COLOR_MENU_BUTTON_SELECTED : COLOR_WHITE;
 
     RenderText(renderer, "ATACAR", col_atacar, 60.0f, screenHeight - 100.0f, 3.5f);
     RenderText(renderer, "FUGIR",  col_fugir,  320.0f, screenHeight - 100.0f, 3.5f);
 }
 
-void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenHeight, const VPet* player_pet, const VPet* enemy_pet, int menu_opcao_batalha) {
+void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenHeight, const VPet* player_pet, const VPet* enemy_pet, BattleMenuOption battle_option_menu) {
     OponentsPositioning oponentsPositioning = { 0, 0, 0, 0 };
     
     RenderBattleScreenScenario(renderer, screenWidth, screenHeight, &oponentsPositioning);
@@ -287,5 +287,5 @@ void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenH
         player_pet->hp_max
     );
 
-    RenderBattleMenu(renderer, screenWidth, screenHeight, menu_opcao_batalha);
+    RenderBattleMenu(renderer, screenWidth, screenHeight, battle_option_menu);
 }

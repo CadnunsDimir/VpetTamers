@@ -63,6 +63,7 @@ int main(int argc, char* argv[]) {
 
     // Variável de controle da opção selecionada (0 = Novo Jogo, 1 = Continuar)
     int menu_opcao = 0;
+    BattleMenuOption battle_menu_option = BATLLE_MENU_ATTACK;
 
     // Trava simples para evitar navegação ultra-rápida (pode usar eventos ou flag de liberação)
     //TODO: ajustar comportamento para permitir botão mantido pressionado. hoje ele só permite 1 movimento por vez
@@ -108,26 +109,23 @@ int main(int argc, char* argv[]) {
         if (!gamepad.triggered_pause)
         {
             pause_key_pressed = false;
-        }
+        }        
 
         // --- Atualização do Menu ---
         if (current_state == STATE_MENU)
         {
-            bool moveu_baixo = gamepad.y == 1;
-            bool moveu_cima = gamepad.y == -1;
-
-            if (moveu_baixo && !key_pressed)
+            if (gamepad.down && !key_pressed)
             {
                 menu_opcao = 1; // Seleciona "Continuar"
                 key_pressed = true;
             }
-            else if (moveu_cima && !key_pressed)
+            else if (gamepad.up && !key_pressed)
             {
                 menu_opcao = 0; // Seleciona "Novo Jogo"
                 key_pressed = true;
             }
 
-            if (!moveu_baixo && !moveu_cima)
+            if (!gamepad.down && !gamepad.up)
             {
                 key_pressed = false;
             }
@@ -157,14 +155,14 @@ int main(int argc, char* argv[]) {
         else if (current_state == STATE_MAP || current_state == STATE_PAUSE) {            
 
             // Executa movimento único quando a tecla é pressionada
-            if ((gamepad.delta_x != 0 || gamepad.y != 0) && !key_pressed && current_state == STATE_MAP)
+            if ((gamepad.delta_x != 0 || gamepad.delta_y != 0) && !key_pressed && current_state == STATE_MAP)
             {
-                MovePlayer(&player, &current_state, &enemy, gamepad.delta_x, gamepad.y, FIRST_MAP);
+                MovePlayer(&player, &current_state, &enemy, gamepad.delta_x, gamepad.delta_y, FIRST_MAP);
                 key_pressed = true; // Trava para não andar continuamente
             }
 
             // Libera a trava quando solta o botão
-            if (gamepad.delta_x == 0 && gamepad.y == 0)
+            if (gamepad.delta_x == 0 && gamepad.delta_y == 0)
             {
                 key_pressed = false;
             }
@@ -180,7 +178,16 @@ int main(int argc, char* argv[]) {
                 RenderPauseOverlay(renderer, &my_vpet, SCREEN_WIDTH, SCREEN_HEIGHT);
             }
         } else if(current_state == STATE_BATTLE) {
-            RenderBattleScreen(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, &my_vpet, &enemy, 0);
+
+            if (gamepad.right && battle_menu_option == BATLLE_MENU_ATTACK)
+            {
+                battle_menu_option = BATLLE_MENU_RUN;
+            } else if (gamepad.left && battle_menu_option == BATLLE_MENU_RUN)
+            {
+                battle_menu_option = BATLLE_MENU_ATTACK;
+            }
+
+            RenderBattleScreen(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, &my_vpet, &enemy, battle_menu_option);
         }
 
         // 3. Apresenta o buffer renderizado na janela (ESSENCIAL!)

@@ -14,6 +14,11 @@ typedef enum {
     STATE_BATTLE
 } GameState;
 
+typedef enum {
+    BATLLE_MENU_ATTACK,
+    BATLLE_MENU_RUN,
+} BattleMenuOption;
+
 typedef struct { 
     int x; 
     int y; 
@@ -50,9 +55,13 @@ typedef struct {
 
 typedef struct {
     int delta_x;
-    int y;
+    int delta_y;
     bool triggered_pause;
     bool triggered_confirm;
+    bool down;
+    bool up;
+    bool right;
+    bool left;
 } PlayerGamePad;
 
 typedef struct {

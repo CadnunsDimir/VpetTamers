@@ -229,10 +229,10 @@ void MovePlayer(PlayerPosition* player, GameState* game_state, VPet* enemy_found
     }
 }
 
-PlayerGamePad GetPlayerGamePad(SDL_Gamepad* gamepad) {
+PlayerGamePad GetPlayerGamePad(SDL_Gamepad* gamepad_connection) {
     const bool *state = SDL_GetKeyboardState(NULL);
 
-    PlayerGamePad gamepad_delta = {0, 0, false, false};
+    PlayerGamePad gamepad_delta = {0, 0, false, false, false, false, false, false};
 
     // Captura entrada (Teclado)
     if (state[SDL_SCANCODE_LEFT] || state[SDL_SCANCODE_A])
@@ -240,40 +240,45 @@ PlayerGamePad GetPlayerGamePad(SDL_Gamepad* gamepad) {
     if (state[SDL_SCANCODE_RIGHT] || state[SDL_SCANCODE_D])
         gamepad_delta.delta_x = 1;
     if (state[SDL_SCANCODE_UP] || state[SDL_SCANCODE_W])
-        gamepad_delta.y = -1;
+        gamepad_delta.delta_y = -1;
     if (state[SDL_SCANCODE_DOWN] || state[SDL_SCANCODE_S])
-        gamepad_delta.y = 1;
+        gamepad_delta.delta_y = 1;
 
     gamepad_delta.triggered_pause = state[SDL_SCANCODE_ESCAPE];
     gamepad_delta.triggered_confirm = state[SDL_SCANCODE_RETURN];
 
     // Captura entrada (Gamepad D-Pad)
-    if (gamepad)
+    if (gamepad_connection)
     {
-        Sint16 axisX = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTX);
-        Sint16 axisY = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTY);
+        Sint16 axisX = SDL_GetGamepadAxis(gamepad_connection, SDL_GAMEPAD_AXIS_LEFTX);
+        Sint16 axisY = SDL_GetGamepadAxis(gamepad_connection, SDL_GAMEPAD_AXIS_LEFTY);
 
         if (axisX < -8000)
             gamepad_delta.delta_x = -1;
         if (axisX > 8000)
             gamepad_delta.delta_x = 1;
         if (axisY < -8000)
-            gamepad_delta.y = -1;
+            gamepad_delta.delta_y = -1;
         if (axisY > 8000)
-            gamepad_delta.y = 1;
+            gamepad_delta.delta_y = 1;
 
-        if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_LEFT))
+        if (SDL_GetGamepadButton(gamepad_connection, SDL_GAMEPAD_BUTTON_DPAD_LEFT))
             gamepad_delta.delta_x = -1;
-        if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_RIGHT))
+        if (SDL_GetGamepadButton(gamepad_connection, SDL_GAMEPAD_BUTTON_DPAD_RIGHT))
             gamepad_delta.delta_x = 1;
-        if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_UP))
-            gamepad_delta.y = -1;
-        if (SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_DPAD_DOWN))
-            gamepad_delta.y = 1;
+        if (SDL_GetGamepadButton(gamepad_connection, SDL_GAMEPAD_BUTTON_DPAD_UP))
+            gamepad_delta.delta_y = -1;
+        if (SDL_GetGamepadButton(gamepad_connection, SDL_GAMEPAD_BUTTON_DPAD_DOWN))
+            gamepad_delta.delta_y = 1;
         
-         gamepad_delta.triggered_pause |= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_START);
-         gamepad_delta.triggered_confirm  |= SDL_GetGamepadButton(gamepad, SDL_GAMEPAD_BUTTON_SOUTH);
+         gamepad_delta.triggered_pause |= SDL_GetGamepadButton(gamepad_connection, SDL_GAMEPAD_BUTTON_START);
+         gamepad_delta.triggered_confirm  |= SDL_GetGamepadButton(gamepad_connection, SDL_GAMEPAD_BUTTON_SOUTH);
     }
+
+    gamepad_delta.down = gamepad_delta.delta_y == 1;
+    gamepad_delta.up = gamepad_delta.delta_y == -1;    
+    gamepad_delta.right = gamepad_delta.delta_x == 1;
+    gamepad_delta.left = gamepad_delta.delta_x == -1;
     
     return gamepad_delta;
 }
