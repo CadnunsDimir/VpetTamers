@@ -7,24 +7,55 @@ void GridToIsometric(int grid_x, int grid_y, float tile_w, float tile_h, float o
 void RenderVPetSprite(SDL_Renderer* renderer, VPetType tipo, float x, float y, float scale) {
     switch (tipo) {
         case PET_BK_MBARACAJAMON: {
-            // Corpo Principal (Felino/Sombrio - Azul escuro/Cinzento)
-            SDL_FRect body = { x, y + (10.0f * scale), 30.0f * scale, 25.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 35, 45, 60, 255);
+            // 1. Cauda Curvada Volumosa (Esquerda)
+            SDL_FRect tail_1 = { x - (10.0f * scale), y + (6.0f * scale), 7.0f * scale, 16.0f * scale };
+            SDL_FRect tail_2 = { x - (14.0f * scale), y - (2.0f * scale), 8.0f * scale, 12.0f * scale };
+            SDL_FRect tail_tip = { x - (12.0f * scale), y - (8.0f * scale), 7.0f * scale, 8.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 90, 95, 100, 255); // Cinza médio
+            SDL_RenderFillRect(renderer, &tail_1);
+            SDL_RenderFillRect(renderer, &tail_2);
+            SDL_RenderFillRect(renderer, &tail_tip);
+
+            // 2. Patas Traseiras
+            SDL_FRect leg_back_l = { x - (2.0f * scale), y + (22.0f * scale), 5.0f * scale, 12.0f * scale };
+            SDL_FRect leg_back_r = { x + (6.0f * scale), y + (24.0f * scale), 5.0f * scale, 10.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 80, 85, 90, 255);
+            SDL_RenderFillRect(renderer, &leg_back_l);
+            SDL_RenderFillRect(renderer, &leg_back_r);
+
+            // 3. Área Clara da Barriga / Traseiro (Detalhe bege)
+            SDL_FRect belly_light = { x + (1.0f * scale), y + (16.0f * scale), 10.0f * scale, 10.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 235, 215, 200, 255); // Tom bege claro
+            SDL_RenderFillRect(renderer, &belly_light);
+
+            // 4. Dorso / Corpo Principal (Inclinado em perspectiva)
+            SDL_FRect body = { x + (2.0f * scale), y + (10.0f * scale), 18.0f * scale, 15.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 100, 105, 110, 255);
             SDL_RenderFillRect(renderer, &body);
 
-            // Orelhas de Gato
-            SDL_FRect ear_l = { x + (2.0f * scale), y, 6.0f * scale, 10.0f * scale };
-            SDL_FRect ear_r = { x + (22.0f * scale), y, 6.0f * scale, 10.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 20, 25, 35, 255);
+            // 5. Patas Dianteiras (Visíveis à direita, no fundo)
+            SDL_FRect leg_front_l = { x + (12.0f * scale), y + (18.0f * scale), 4.0f * scale, 10.0f * scale };
+            SDL_FRect leg_front_r = { x + (17.0f * scale), y + (15.0f * scale), 4.0f * scale, 10.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 80, 85, 90, 255);
+            SDL_RenderFillRect(renderer, &leg_front_l);
+            SDL_RenderFillRect(renderer, &leg_front_r);
+
+            // 6. Cabeça Felina (3/4 Traseiro)
+            SDL_FRect head = { x + (10.0f * scale), y + (2.0f * scale), 16.0f * scale, 13.0f * scale };
+            SDL_FRect cheek_l = { x + (8.0f * scale), y + (6.0f * scale), 4.0f * scale, 6.0f * scale };
+            SDL_FRect cheek_r = { x + (24.0f * scale), y + (6.0f * scale), 4.0f * scale, 6.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 100, 105, 110, 255);
+            SDL_RenderFillRect(renderer, &head);
+            SDL_RenderFillRect(renderer, &cheek_l);
+            SDL_RenderFillRect(renderer, &cheek_r);
+
+            // 7. Orelhas Pontudas
+            SDL_FRect ear_l = { x + (10.0f * scale), y - (5.0f * scale), 5.0f * scale, 8.0f * scale };
+            SDL_FRect ear_r = { x + (20.0f * scale), y - (4.0f * scale), 5.0f * scale, 8.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 80, 85, 90, 255);
             SDL_RenderFillRect(renderer, &ear_l);
             SDL_RenderFillRect(renderer, &ear_r);
 
-            // Olhos Brilhantes (Amarelo/Verde)
-            SDL_FRect eye_l = { x + (6.0f * scale), y + (14.0f * scale), 4.0f * scale, 4.0f * scale };
-            SDL_FRect eye_r = { x + (20.0f * scale), y + (14.0f * scale), 4.0f * scale, 4.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 230, 220, 50, 255);
-            SDL_RenderFillRect(renderer, &eye_l);
-            SDL_RenderFillRect(renderer, &eye_r);
             break;
         }
 
@@ -47,20 +78,59 @@ void RenderVPetSprite(SDL_Renderer* renderer, VPetType tipo, float x, float y, f
         }
 
         case PET_RUGUASUMON: {
-            // Corpo (Ave/Galinha - Marrom/Amarelado)
-            SDL_FRect body = { x + (4.0f * scale), y + (10.0f * scale), 24.0f * scale, 22.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 180, 140, 60, 255);
-            SDL_RenderFillRect(renderer, &body);
+            // 1. Cauda Verde Arqueada (À direita, no fundo)
+            SDL_FRect tail_main = { x + (18.0f * scale), y - (2.0f * scale), 12.0f * scale, 20.0f * scale };
+            SDL_FRect tail_top  = { x + (14.0f * scale), y - (8.0f * scale), 14.0f * scale, 10.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 20, 80, 65, 255); // Verde-escuro / Esmeralda
+            SDL_RenderFillRect(renderer, &tail_main);
+            SDL_RenderFillRect(renderer, &tail_top);
 
-            // Crista (Vermelha no topo)
-            SDL_FRect comb = { x + (12.0f * scale), y + (2.0f * scale), 8.0f * scale, 8.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 220, 30, 30, 255);
-            SDL_RenderFillRect(renderer, &comb);
+            // 2. Patas Amarelas (Alinhadas em baixo)
+            SDL_FRect leg_l = { x + (6.0f * scale), y + (28.0f * scale), 3.0f * scale, 8.0f * scale };
+            SDL_FRect leg_r = { x + (14.0f * scale), y + (28.0f * scale), 3.0f * scale, 8.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 230, 190, 40, 255); // Amarelo
+            SDL_RenderFillRect(renderer, &leg_l);
+            SDL_RenderFillRect(renderer, &leg_r);
 
-            // Bico (Laranja)
-            SDL_FRect beak = { x + (26.0f * scale), y + (16.0f * scale), 8.0f * scale, 6.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 240, 150, 20, 255);
+            // 3. Peito / Barriga (Verde-escuro)
+            SDL_FRect breast = { x + (2.0f * scale), y + (18.0f * scale), 14.0f * scale, 12.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 20, 80, 65, 255);
+            SDL_RenderFillRect(renderer, &breast);
+
+            // 4. Asa / Asas (Acastanhadas/Avermelhadas no dorso)
+            SDL_FRect wing = { x + (8.0f * scale), y + (14.0f * scale), 14.0f * scale, 12.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 180, 65, 25, 255); // Castanho-avermelhado
+            SDL_RenderFillRect(renderer, &wing);
+
+            // 5. Pescoço e Cabeça (Amarelo vivo, voltado para a esquerda/frente)
+            SDL_FRect neck = { x + (2.0f * scale), y + (6.0f * scale), 10.0f * scale, 14.0f * scale };
+            SDL_FRect head = { x - (1.0f * scale), y + (2.0f * scale), 11.0f * scale, 8.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 240, 180, 30, 255); // Amarelo
+            SDL_RenderFillRect(renderer, &neck);
+            SDL_RenderFillRect(renderer, &head);
+
+            // 6. Crista Vermelha no Topo da Cabeça
+            SDL_FRect comb_1 = { x + (1.0f * scale), y - (4.0f * scale), 4.0f * scale, 7.0f * scale };
+            SDL_FRect comb_2 = { x + (5.0f * scale), y - (5.0f * scale), 4.0f * scale, 8.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 220, 35, 35, 255); // Vermelho
+            SDL_RenderFillRect(renderer, &comb_1);
+            SDL_RenderFillRect(renderer, &comb_2);
+
+            // 7. Barbela (Pedaço vermelho sob o bico)
+            SDL_FRect wattle = { x - (2.0f * scale), y + (10.0f * scale), 4.0f * scale, 6.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 220, 35, 35, 255);
+            SDL_RenderFillRect(renderer, &wattle);
+
+            // 8. Bico Amarelo (Apontado para a esquerda/frente, na direção do gato)
+            SDL_FRect beak = { x - (6.0f * scale), y + (4.0f * scale), 6.0f * scale, 4.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 245, 190, 20, 255);
             SDL_RenderFillRect(renderer, &beak);
+
+            // 9. Olho Preto
+            SDL_FRect eye = { x + (2.0f * scale), y + (4.0f * scale), 2.0f * scale, 2.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 10, 10, 10, 255);
+            SDL_RenderFillRect(renderer, &eye);
+
             break;
         }
     }
