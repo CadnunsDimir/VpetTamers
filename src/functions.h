@@ -61,6 +61,10 @@ void RenderText(SDL_Renderer* renderer, const char* texto, const Color color, fl
                 glyph[0] = 0b00010; glyph[1] = 0b00100; glyph[2] = 0b00100; glyph[3] = 0b00100; glyph[4] = 0b00010; break;
             case ')':
                 glyph[0] = 0b01000; glyph[1] = 0b00100; glyph[2] = 0b00100; glyph[3] = 0b00100; glyph[4] = 0b01000; break;
+            case '.':
+                glyph[0] = 0b00000; glyph[1] = 0b00000; glyph[2] = 0b00000; glyph[3] = 0b00000; glyph[4] = 0b00100; break;
+            case '!':
+                glyph[0] = 0b00100; glyph[1] = 0b00100; glyph[2] = 0b00100; glyph[3] = 0b00000; glyph[4] = 0b00100; break;
             case '0':
                 glyph[0] = 0b01110; glyph[1] = 0b10001; glyph[2] = 0b10001; glyph[3] = 0b10001; glyph[4] = 0b01110; break;
             case '1':
@@ -84,7 +88,7 @@ void RenderText(SDL_Renderer* renderer, const char* texto, const Color color, fl
             case ' ':
                 continue; // Espaço em branco
             default: // Caractere desconhecido vira um bloco sólido
-                // printf("[RenderText] Letra não mapeada: " + c);
+                printf("%c\n", c);
                 glyph[0] = 0b11111; glyph[1] = 0b11111; glyph[2] = 0b11111; glyph[3] = 0b11111; glyph[4] = 0b11111; break;
         }
 
@@ -106,7 +110,7 @@ void RenderText(SDL_Renderer* renderer, const char* texto, const Color color, fl
     }
 }
 
-SDL_FRect PlayerToRect(PlayerPosition player, int playerSize) {
+SDL_FRect PlayerToRect(ElementCoordinates player, int playerSize) {
     SDL_FRect rect = {
         player.x  * playerSize,
         player.y * playerSize,
@@ -201,7 +205,7 @@ VPetEncounter CheckIfFindEnemy(int enemy_code){
     return encounter;
 }
 
-void MovePlayer(PlayerPosition* player, GameState* game_state, VPet* enemy_found,int delta_x, int delta_y, const int map[MAP_HEIGHT][MAP_WIDTH]) {
+void MovePlayer(ElementCoordinates* player, GameState* game_state, VPet* enemy_found, ElementCoordinates* enemy_coordinates, int delta_x, int delta_y, const int map[MAP_HEIGHT][MAP_WIDTH]) {
     int next_x = player->x + delta_x;
     int next_y = player->y + delta_y;
 
@@ -216,7 +220,6 @@ void MovePlayer(PlayerPosition* player, GameState* game_state, VPet* enemy_found
     if(location == 0) {
         player->x = next_x;
         player->y = next_y;
-        return;
     }
 
     // 3. Encontrou inimigo -> Batalha
@@ -225,6 +228,8 @@ void MovePlayer(PlayerPosition* player, GameState* game_state, VPet* enemy_found
     if(encounter.is_found){
         *game_state = STATE_BATTLE;
         *enemy_found = encounter.enemy;
+        enemy_coordinates->x = next_x;
+        enemy_coordinates->y = next_y;
         return;
     }
 }
@@ -389,4 +394,8 @@ void RenderPauseOverlay(SDL_Renderer* renderer, VPet *vpet, float screenWidth, f
     SDL_RenderFillRect(renderer, &line);
 
     RenderVPetStats(renderer, vpet, panel_x, panel_y);
+}
+
+void RemoveEnemyFromMap(int map[MAP_HEIGHT][MAP_WIDTH], ElementCoordinates* position) {
+    map[position->y][position->x] = MAP_TILE_GROUND;
 }

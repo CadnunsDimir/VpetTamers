@@ -5,7 +5,12 @@
 #define TILE_SIZE 32
 #define MAP_WIDTH 25   // 800 / 32 = 25 colunas
 #define MAP_HEIGHT 18  // 576 / 32 = 18 linhas
+#define BATTLE_RUNNING_CHANCE 40 // 40% de chance de fuga em batalhas
 
+typedef enum {
+    MAP_TILE_WALL = 1,
+    MAP_TILE_GROUND = 0
+} MapTile;
 
 typedef enum {
     STATE_MENU,
@@ -15,14 +20,19 @@ typedef enum {
 } GameState;
 
 typedef enum {
-    BATLLE_MENU_ATTACK,
-    BATLLE_MENU_RUN,
-} BattleMenuOption;
+    BATTLE_STATE_MENU_ATTACK,
+    BATTLE_STATE_MENU_RUN,
+    BATTLE_STATE_ATTACKING,
+    BATTLE_STATE_RUNNING,
+    BATTLE_STATE_WIN,
+    BATTLE_STATE_LOST,
+    BATTLE_STATE_ENEMY_ATACKING
+} BattleState;
 
 typedef struct { 
     int x; 
     int y; 
-} PlayerPosition;
+} ElementCoordinates;
 
 
 typedef enum {
@@ -72,6 +82,15 @@ typedef struct {
     Coordinates player;
     Coordinates enemy;
 } OponentsPositioning;
+
+typedef struct {
+    BattleState current_state;
+    Uint64 message_start_time; // Armazena o timestamp de início da mensagem
+    Uint64 message_duration;   // Duração da mensagem em milissegundos (ex: 2000ms = 2s)
+    char current_message[64];  // Texto da mensagem temporizada
+    VPet player;
+    VPet enemy;
+} BattleSystem;
 
 static const Color COLOR_GREY_WALL = {60, 60, 75, 255};
 static const Color COLOR_GREY_WALL_BORDER = { 40, 40, 50, 255};

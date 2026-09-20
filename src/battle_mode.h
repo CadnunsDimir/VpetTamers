@@ -255,7 +255,7 @@ void RenderBattleScreenScenario(SDL_Renderer* renderer, float screenWidth, float
     }
 }
 
-void RenderPetHUD(SDL_Renderer* renderer, float x, float y, float width, float height, const char* name, int level, int hp, int max_hp) {
+void RenderPetHUD(SDL_Renderer* renderer, float x, float y, float width, float height, VPet* pet) {
     // 1. Fundo do Painel (Azul escuro semi-transparente)
     SDL_FRect hud_rect = { x, y, width, height };
     SDL_SetRenderDrawColor(renderer, 20, 25, 40, 230);
@@ -267,19 +267,19 @@ void RenderPetHUD(SDL_Renderer* renderer, float x, float y, float width, float h
 
     // 3. Texto do Nome e Nível (se o nível for > 0)
     char buffer[64];
-    if (level > 0) {
-        snprintf(buffer, sizeof(buffer), "%s (LVL %d)", name, level);
+    if (pet->level > 0) {
+        snprintf(buffer, sizeof(buffer), "%s (LVL %d)", pet->name, pet->level);
     } else {
-        snprintf(buffer, sizeof(buffer), "%s", name);
+        snprintf(buffer, sizeof(buffer), "%s", pet->name);
     }
     RenderText(renderer, buffer, COLOR_WHITE, x + 15.0f, y + 12.0f, 2.5f);
 
     // 4. Texto do HP Numérico
-    snprintf(buffer, sizeof(buffer), "HP: %d/%d", hp, max_hp);
+    snprintf(buffer, sizeof(buffer), "HP: %d/%d", pet->hp, pet->hp_max);
     RenderText(renderer, buffer, COLOR_WHITE, x + 15.0f, y + 42.0f, 2.5f);
 }
 
-void RenderBattleMenu(SDL_Renderer* renderer, float screenWidth, float screenHeight, BattleMenuOption battle_option_menu) {
+void RenderBattleMenu(SDL_Renderer* renderer, float screenWidth, float screenHeight, BattleState battle_state) {
     // --- Caixa de Comandos de Batalha (Rodapé) ---
     SDL_FRect menu_box = { 20.0f, screenHeight - 140.0f, screenWidth - 40.0f, 120.0f };
     SDL_SetRenderDrawColor(renderer, 15, 20, 35, 245);
@@ -288,14 +288,33 @@ void RenderBattleMenu(SDL_Renderer* renderer, float screenWidth, float screenHei
     SDL_RenderRect(renderer, &menu_box);
 
     // Opções do Turno
-    Color col_atacar = (battle_option_menu == BATLLE_MENU_ATTACK) ? COLOR_MENU_BUTTON_SELECTED : COLOR_WHITE;
-    Color col_fugir  = (battle_option_menu == BATLLE_MENU_RUN) ? COLOR_MENU_BUTTON_SELECTED : COLOR_WHITE;
+    Color col_atacar = (battle_state == BATTLE_STATE_MENU_ATTACK) ? COLOR_MENU_BUTTON_SELECTED : COLOR_WHITE;
+    Color col_fugir  = (battle_state == BATTLE_STATE_MENU_RUN) ? COLOR_MENU_BUTTON_SELECTED : COLOR_WHITE;
 
     RenderText(renderer, "ATACAR", col_atacar, 60.0f, screenHeight - 100.0f, 3.5f);
     RenderText(renderer, "FUGIR",  col_fugir,  320.0f, screenHeight - 100.0f, 3.5f);
 }
 
-void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenHeight, const VPet* player_pet, const VPet* enemy_pet, BattleMenuOption battle_option_menu) {
+void RenderBattleMessage(SDL_Renderer* renderer, float screenWidth, float screenHeight, const char* message) {
+    // Caixa de mensagem no rodapé (mesmas dimensões do menu)
+    SDL_FRect msg_box = { 20.0f, screenHeight - 140.0f, screenWidth - 40.0f, 120.0f };
+    SDL_SetRenderDrawColor(renderer, 15, 20, 35, 245);
+    SDL_RenderFillRect(renderer, &msg_box);
+    SDL_SetRenderDrawColor(renderer, 200, 200, 220, 255);
+    SDL_RenderRect(renderer, &msg_box);
+
+    // Renderiza o texto centralizado/alinhado no painel
+    RenderText(renderer, message, COLOR_WHITE, 50.0f, screenHeight - 95.0f, 3.0f);
+}
+
+void TriggerBattleMessage(BattleSystem* battle, BattleState new_state, const char* text, Uint64 duration_ms) {
+    battle->current_state = new_state;
+    battle->message_start_time = SDL_GetTicks();
+    battle->message_duration = duration_ms;
+    snprintf(battle->current_message, sizeof(battle->current_message), "%s", text);
+}
+
+void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenHeight, BattleSystem battle) {
     OponentsPositioning oponentsPositioning = { 0, 0, 0, 0 };
     
     RenderBattleScreenScenario(renderer, screenWidth, screenHeight, &oponentsPositioning);
@@ -306,7 +325,7 @@ void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenH
     // 1. Inimigo (Renderizado PRIMEIRO para ficar ao fundo)
     RenderVPetSprite(
         renderer, 
-        enemy_pet->type, 
+        battle.enemy.type,
         oponentsPositioning.enemy.x - (16.0f * 2.5f), // Centraliza horizontalmente o sprite de 32px
         oponentsPositioning.enemy.y - (24.0f * 2.5f), // Apoia a base do sprite no centro do tile
         2.5f
@@ -315,7 +334,7 @@ void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenH
     // 2. BkMbaracajamon (Renderizado DEPOIS para se sobrepor caso cruzem a linha de visão)
     RenderVPetSprite(
         renderer, 
-        player_pet->type, 
+        battle.player.type,
         oponentsPositioning.player.x - (15.0f * 2.5f), 
         oponentsPositioning.player.y - (25.0f * 2.5f), 
         2.5f
@@ -335,10 +354,7 @@ void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenH
         enemy_hud_y, 
         hud_width, 
         hud_height, 
-        enemy_pet->name, 
-        enemy_pet->level, 
-        enemy_pet->hp, 
-        enemy_pet->hp_max
+        &battle.enemy
     );
 
     // Status do Player (Inferior Esquerdo - Acima do Menu)
@@ -351,11 +367,114 @@ void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenH
         player_hud_y, 
         hud_width, 
         hud_height, 
-        player_pet->name, 
-        player_pet->level, 
-        player_pet->hp, 
-        player_pet->hp_max
+        &battle.player
     );
+    bool showing_battle_menu = battle.current_state == BATTLE_STATE_MENU_ATTACK || battle.current_state == BATTLE_STATE_MENU_RUN;
 
-    RenderBattleMenu(renderer, screenWidth, screenHeight, battle_option_menu);
+    if (showing_battle_menu) {
+        RenderBattleMenu(renderer, screenWidth, screenHeight, battle.current_state);
+    } else {
+        RenderBattleMessage(renderer, screenWidth, screenHeight, battle.current_message);
+    }
+}
+
+void UpdateNavigation(BattleSystem* battle, PlayerGamePad* gamepad) {
+    bool showing_battle_menu = battle->current_state == BATTLE_STATE_MENU_ATTACK || battle->current_state == BATTLE_STATE_MENU_RUN;
+    if (showing_battle_menu)
+    {
+        if (gamepad->right && battle->current_state == BATTLE_STATE_MENU_ATTACK)
+        {
+            battle->current_state = BATTLE_STATE_MENU_RUN;
+        }
+        else if (gamepad->left && battle->current_state == BATTLE_STATE_MENU_RUN)
+        {
+            battle->current_state = BATTLE_STATE_MENU_ATTACK;
+        }
+        else if (gamepad->triggered_confirm)
+        {
+            switch (battle->current_state)
+            {
+                case BATTLE_STATE_MENU_ATTACK:
+                    TriggerBattleMessage(battle, BATTLE_STATE_ATTACKING, "Atacando...", 2000);
+                    break;
+                case BATTLE_STATE_MENU_RUN:
+                    TriggerBattleMessage(battle, BATTLE_STATE_RUNNING, "Fugindo...", 2000);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+}
+
+int CalculateDamage(VPet* attacker, VPet* defender) {
+    int damage = attacker->strength - (defender->defense / 2);
+    return (damage < 1) ? 1 : damage;
+}
+
+void UpdateBattleState(BattleSystem* battle, GameState* game_state) {
+
+    Uint64 current_time = SDL_GetTicks();
+
+    // Se estiver em um estado de mensagem temporizada
+    if (battle->current_state != BATTLE_STATE_MENU_ATTACK && battle->current_state != BATTLE_STATE_MENU_RUN) {
+        
+        // Verifica se a duração da mensagem expirou
+        if (current_time - battle->message_start_time >= battle->message_duration) {
+            switch (battle->current_state) {
+                case BATTLE_STATE_ATTACKING:
+                    // 1. Player ataca o Inimigo
+                    battle->enemy.hp -= CalculateDamage(&battle->player, &battle->enemy);
+                    if (battle->enemy.hp < 0)
+                        battle->enemy.hp = 0;
+
+                    // 2. Checa se o Inimigo foi derrotado
+                    if (battle->enemy.hp == 0)
+                    {
+                        TriggerBattleMessage(battle, BATTLE_STATE_WIN, "INIMIGO FOI DERROTADO", 2000);
+                    }
+                    else
+                    {
+                        // Após a animação/mensagem do ataque do jogador, passa a vez para o ataque do inimigo
+                        TriggerBattleMessage(battle, BATTLE_STATE_ENEMY_ATACKING, "INIMIGO ATACA!", 2000);
+                    }
+                    break;
+
+                case BATTLE_STATE_ENEMY_ATACKING:
+                    battle->player.hp -= CalculateDamage(&battle->enemy, &battle->player);
+                    if (battle->player.hp < 0)
+                        battle->player.hp = 0;
+
+                    // 2. Checa se meu VPet fui derrotado
+                    if (battle->player.hp == 0)
+                    {
+                        TriggerBattleMessage(battle, BATTLE_STATE_LOST, "VOCÊ FOI DERROTADO", 2000);
+                    }
+                    else
+                    {
+                        battle->current_state = BATTLE_STATE_MENU_ATTACK;
+                    }                    
+                    break;
+                case BATTLE_STATE_RUNNING:
+                        int running_chance = rand() % 100;
+                        if (running_chance < BATTLE_RUNNING_CHANCE) {
+                            // Volta para o mapa de exploração
+                            *game_state = STATE_MAP;
+                        } else {
+                            TriggerBattleMessage(battle, BATTLE_STATE_ENEMY_ATACKING, "Nao foi possivel fugir! Sendo atacado...", 1000);
+                        }
+                    break;
+                case BATTLE_STATE_WIN:
+                case BATTLE_STATE_LOST:
+                    // Encerra a batalha e volta ao mapa
+                    *game_state = STATE_MAP;
+                    battle->current_state = BATTLE_STATE_MENU_ATTACK;
+                    //TODO: Implementar tela de FIM DE BATALHA E LÓGICA DE EXP E LEVEL up
+                    break;
+                default:
+                    battle->current_state = BATTLE_STATE_MENU_ATTACK;
+                    break;
+            }
+        }
+    }
 }

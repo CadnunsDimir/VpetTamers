@@ -1,4 +1,4 @@
-    // 0 = Chão (cor azul-escuro/cinza), 1 = Parede (cor cinza-claro/vermelho)
+    // 0 = Chão (cor azul-escuro/cinza), 1 = Parede (cor cinza-claro/vermelho), ou codigo dos vpets inimigos
     static const int FIRST_MAP[MAP_HEIGHT][MAP_WIDTH] = {
         {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
         {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},

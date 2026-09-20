@@ -41,15 +41,23 @@ int main(int argc, char* argv[]) {
     }
 
     // Posicao do jogador (SDL3 usa float para retângulos)
-    PlayerPosition player = {
+    ElementCoordinates player_coordinates = {
         FIRST_MAP_SPAWN_POINT[0],
         FIRST_MAP_SPAWN_POINT[1]
+    };
+
+    ElementCoordinates enemy_coordinates = {
+        0,
+        0
     };
 
     bool running = true;
     SDL_Event event;
     GameState current_state = STATE_MENU;
-    VPet my_vpet = {
+
+    // Variável de controle da opção selecionada (0 = Novo Jogo, 1 = Continuar)
+    int menu_opcao = 0;
+    VPet initial_vpet = {
         .name = "BkMbaracajamon",
         .level = 1,
         .hp = 20,
@@ -59,17 +67,19 @@ int main(int argc, char* argv[]) {
         .type = PET_BK_MBARACAJAMON
     };
 
-    VPet enemy;
-
-    // Variável de controle da opção selecionada (0 = Novo Jogo, 1 = Continuar)
-    int menu_opcao = 0;
-    BattleMenuOption battle_menu_option = BATLLE_MENU_ATTACK;
+    BattleSystem battle_system = {
+        .current_state = BATTLE_STATE_MENU_ATTACK,
+        .player =  initial_vpet
+    };
 
     // Trava simples para evitar navegação ultra-rápida (pode usar eventos ou flag de liberação)
     //TODO: ajustar comportamento para permitir botão mantido pressionado. hoje ele só permite 1 movimento por vez
     static bool key_pressed = false;
 
     static bool pause_key_pressed = false;
+
+    int current_map[MAP_HEIGHT][MAP_WIDTH];
+    memcpy(current_map, FIRST_MAP, sizeof(current_map));
 
     // Loop principal
     while (running) {
@@ -157,7 +167,7 @@ int main(int argc, char* argv[]) {
             // Executa movimento único quando a tecla é pressionada
             if ((gamepad.delta_x != 0 || gamepad.delta_y != 0) && !key_pressed && current_state == STATE_MAP)
             {
-                MovePlayer(&player, &current_state, &enemy, gamepad.delta_x, gamepad.delta_y, FIRST_MAP);
+                MovePlayer(&player_coordinates, &current_state, &battle_system.enemy, &enemy_coordinates, gamepad.delta_x, gamepad.delta_y, current_map);
                 key_pressed = true; // Trava para não andar continuamente
             }
 
@@ -167,27 +177,26 @@ int main(int argc, char* argv[]) {
                 key_pressed = false;
             }
 
-            RenderMap(renderer, FIRST_MAP, MAP_HEIGHT, MAP_WIDTH, TILE_SIZE);
+            RenderMap(renderer, current_map, MAP_HEIGHT, MAP_WIDTH, TILE_SIZE);
 
             // Desenha o jogador (quadrado azul no centro por enquanto)
-            SDL_FRect playerRect = PlayerToRect(player, TILE_SIZE);
+            SDL_FRect playerRect = PlayerToRect(player_coordinates, TILE_SIZE);
             SDL_SetRenderDrawColor(renderer, 0, 150, 255, 255);            
             SDL_RenderFillRect(renderer, &playerRect);
             if (current_state == STATE_PAUSE)
             {
-                RenderPauseOverlay(renderer, &my_vpet, SCREEN_WIDTH, SCREEN_HEIGHT);
+                RenderPauseOverlay(renderer, &battle_system.player, SCREEN_WIDTH, SCREEN_HEIGHT);
             }
         } else if(current_state == STATE_BATTLE) {
+            UpdateNavigation(&battle_system, &gamepad);
+            UpdateBattleState(&battle_system, &current_state);
 
-            if (gamepad.right && battle_menu_option == BATLLE_MENU_ATTACK)
+            if (battle_system.current_state == BATTLE_STATE_WIN)
             {
-                battle_menu_option = BATLLE_MENU_RUN;
-            } else if (gamepad.left && battle_menu_option == BATLLE_MENU_RUN)
-            {
-                battle_menu_option = BATLLE_MENU_ATTACK;
+                RemoveEnemyFromMap(current_map, &enemy_coordinates);
             }
 
-            RenderBattleScreen(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, &my_vpet, &enemy, battle_menu_option);
+            RenderBattleScreen(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, battle_system);
         }
 
         // 3. Apresenta o buffer renderizado na janela (ESSENCIAL!)
