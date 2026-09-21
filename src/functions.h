@@ -110,15 +110,21 @@ void RenderText(SDL_Renderer* renderer, const char* texto, const Color color, fl
     }
 }
 
-SDL_FRect PlayerToRect(ElementCoordinates player, int playerSize) {
+SDL_FRect PlayerToRect(Coordinates player, int playerSize, Camera cam) {
     SDL_FRect rect = {
-        player.x  * playerSize,
-        player.y * playerSize,
-        playerSize,
-        playerSize
+        (player.x * playerSize) - cam.x, // Posição X no Mundo - Câmera X
+        (player.y * playerSize) - cam.y, // Posição Y no Mundo - Câmera Y
+        (float)playerSize,
+        (float)playerSize
     };
 
     return rect;
+}
+
+void RenderPlayer(SDL_Renderer* renderer, Coordinates player_coordinates, Camera cam) {
+    SDL_FRect playerRect = PlayerToRect(player_coordinates, TILE_SIZE, cam);
+    SDL_SetRenderDrawColor(renderer, 0, 150, 255, 255);            
+    SDL_RenderFillRect(renderer, &playerRect);
 }
 
 void DrawRect(SDL_Renderer* renderer, SDL_FRect tile, Color color) {
@@ -205,33 +211,53 @@ VPetEncounter CheckIfFindEnemy(int enemy_code){
     return encounter;
 }
 
-void MovePlayer(ElementCoordinates* player, GameState* game_state, VPet* enemy_found, ElementCoordinates* enemy_coordinates, int delta_x, int delta_y, const int map[MAP_HEIGHT][MAP_WIDTH]) {
+bool IsTileWalkable(int tile_id) {
+    // Se for -1 (sem tile) ou um tile de obstáculo (ex: árvores, paredes, água)
+    if (tile_id < 0) return false;
+
+    // Exemplo: IDs de 0 a 10 são chão/grama/caminho, acima disso são obstáculos
+    // Podes ajustar os IDs conforme o teu layout no Tiled
+    if (tile_id == 2 || tile_id == 5 || tile_id == 7) { 
+        return false; // Bloqueia árvores/construções
+    }
+
+    return true; // É chão livre
+}
+
+void MovePlayer(Coordinates* player, GameState* game_state, VPet* enemy_found, Coordinates* enemy_coordinates, int delta_x, int delta_y, const int map[TILED_MAP_HEIGHT][TILED_MAP_WIDTH], MapMob mobs[], int mob_count) {
     int next_x = player->x + delta_x;
     int next_y = player->y + delta_y;
 
-    // 1. Checa limites do mapa (para não tentar ler fora do array na RAM)
-    if (next_x < 0 || next_x >= MAP_WIDTH || next_y < 0 || next_y >= MAP_HEIGHT) {
-        return; // Fora do mapa -> Bloqueia
+    // 1. Checa limites do mapa (Evita leitura fora da memória)
+    if (next_x < 0 || next_x >= TILED_MAP_WIDTH || next_y < 0 || next_y >= TILED_MAP_HEIGHT) {
+        return; // Fora dos limites -> Bloqueia
     }
 
-    int location = map[next_y][next_x];
-
-    // 2. Chão -> Atualiza a posição
-    if(location == 0) {
-        player->x = next_x;
-        player->y = next_y;
+    // 2. Checa colisão com o cenário (Tileset)
+    int tile_id = map[next_y][next_x];
+    if (!IsTileWalkable(tile_id)) {
+        return; // Colisão com árvore/parede/água -> Bloqueia
     }
 
-    // 3. Encontrou inimigo -> Batalha
-    VPetEncounter encounter = CheckIfFindEnemy(location);
+    // 3. Checa se a próxima célula contém um mob inimigo no mapa
+    for (int i = 0; i < mob_count; i++) {
+        if (mobs[i].is_active && (int)mobs[i].x == next_x && (int)mobs[i].y == next_y) {
+            // Atualiza posição final do player antes da batalha
+            player->x = next_x;
+            player->y = next_y;
 
-    if(encounter.is_found){
-        *game_state = STATE_BATTLE;
-        *enemy_found = encounter.enemy;
-        enemy_coordinates->x = next_x;
-        enemy_coordinates->y = next_y;
-        return;
+            // Inicia o encontro de batalha
+            *game_state = STATE_BATTLE;
+            *enemy_found = mobs[i].vpet_data; // Dados do VPet associado ao mob
+            enemy_coordinates->x = next_x;
+            enemy_coordinates->y = next_y;
+            return;
+        }
     }
+
+    // 4. Se não houver colisão nem inimigo -> Move o player
+    player->x = next_x;
+    player->y = next_y;
 }
 
 PlayerGamePad GetPlayerGamePad(SDL_Gamepad* gamepad_connection) {
@@ -396,6 +422,99 @@ void RenderPauseOverlay(SDL_Renderer* renderer, VPet *vpet, float screenWidth, f
     RenderVPetStats(renderer, vpet, panel_x, panel_y);
 }
 
-void RemoveEnemyFromMap(int map[MAP_HEIGHT][MAP_WIDTH], ElementCoordinates* position) {
-    map[position->y][position->x] = MAP_TILE_GROUND;
+void RemoveEnemyFromMap(int map[TILED_MAP_HEIGHT][TILED_MAP_WIDTH], Coordinates* position, MapMob* mobs, int mob_count) {
+    for (int i = 0; i < mob_count; i++) {
+        // Altera diretamente no array original
+        if (mobs[i].x == position->x && mobs[i].y == position->y) {
+            mobs[i].is_active = false;
+            return;
+        }
+    }
+}
+
+void UpdateCamera(Camera* cam, Coordinates player_coordinates, float player_w, float player_h, int map_width_tiles, int map_height_tiles) {
+    float draw_scale = 2.0f;
+    float tile_size = 16.0f;
+    float scaled_tile = tile_size * draw_scale;
+
+    // Tamanho total em pixels do mapa especifico que esta carregado
+    float map_pixel_width = map_width_tiles * scaled_tile;
+    float map_pixel_height = map_height_tiles * scaled_tile;
+
+    // 1. Tenta centralizar a camera no jogador
+    cam->x = (player_coordinates.x + player_w / 2.0f) - (cam->width / 2.0f);
+    cam->y = (player_coordinates.y + player_h / 2.0f) - (cam->height / 2.0f);
+
+    // 2. Trava se o mapa for Maior que a tela
+    if (map_pixel_width > cam->width) {
+        if (cam->x < 0) cam->x = 0;
+        if (cam->x > map_pixel_width - cam->width) cam->x = map_pixel_width - cam->width;
+    } else {
+        // Se o mapa for Menor ou Igual a tela (ex: dentro de um quarto), centraliza o mapa
+        cam->x = -(cam->width - map_pixel_width) / 2.0f;
+    }
+
+    if (map_pixel_height > cam->height) {
+        if (cam->y < 0) cam->y = 0;
+        if (cam->y > map_pixel_height - cam->height) cam->y = map_pixel_height - cam->height;
+    } else {
+        cam->y = -(cam->height - map_pixel_height) / 2.0f;
+    }
+}
+
+MapMob* SpawnMobs(int *tamanho_retorno, int count, int map_width_tiles, int map_height_tiles) {
+    int capacidade = 2;
+    int mob_array_size = 0;
+    
+    // CORREÇÃO 1: Usar sizeof(MapMob) na alocação inicial
+    MapMob *mob_array = malloc(capacidade * sizeof(MapMob));
+    if (!mob_array) return NULL; // Boa prática: verificar se o malloc falhou
+    
+    for (size_t i = 0; i < count; i++) {
+        if (mob_array_size >= capacidade) {
+            capacidade *= 2;
+            // CORREÇÃO 2: Usar sizeof(MapMob) no realloc
+            MapMob *temp = realloc(mob_array, capacidade * sizeof(MapMob));
+            if (!temp) {
+                // Tratar falha de memória se necessário
+                break;
+            }
+            mob_array = temp;
+        }
+
+        int enemy_list_size = sizeof(ENEMY_LIST) / sizeof(ENEMY_LIST[0]);
+        int indice_sorteado = rand() % enemy_list_size;
+        VPet pet = ENEMY_LIST[indice_sorteado];
+
+        int pos_x = rand() % map_width_tiles;
+        int pos_y = rand() % map_height_tiles;
+
+        MapMob mob = {
+            .is_active = true,
+            .vpet_data = pet,
+            .x = pos_x,
+            .y = pos_y
+        };
+
+        mob_array[mob_array_size] = mob; // Agora há espaço suficiente na memória!
+        mob_array_size++;
+    }
+
+    // Não te esqueças de preencher o ponteiro de tamanho no final
+    if (tamanho_retorno) {
+        *tamanho_retorno = mob_array_size;
+    }
+
+    return mob_array;
+}
+
+void RenderEnemies(SDL_Renderer* renderer, MapMob mobs[], int mob_count) {
+    for (size_t i = 0; i < mob_count; i++)
+    {
+        MapMob mob = mobs[i];
+        if(mob.is_active) {
+            RenderVPet(renderer, mob.vpet_data.type, mob.x, mob.y, TILE_SIZE);
+        }
+    }
+    
 }

@@ -6,6 +6,9 @@
 #define MAP_WIDTH 25   // 800 / 32 = 25 colunas
 #define MAP_HEIGHT 18  // 576 / 32 = 18 linhas
 #define BATTLE_RUNNING_CHANCE 40 // 40% de chance de fuga em batalhas
+#define TILED_MAP_WIDTH 20
+#define TILED_MAP_HEIGHT 15
+#define TOTAL_MAPS 1
 
 typedef enum {
     MAP_TILE_WALL = 1,
@@ -30,11 +33,6 @@ typedef enum {
     BATTLE_STATE_ENEMY_ATACKING
 } BattleState;
 
-typedef struct { 
-    int x; 
-    int y; 
-} ElementCoordinates;
-
 
 typedef enum {
     PET_BK_MBARACAJAMON = 4,
@@ -57,6 +55,13 @@ typedef struct {
     bool is_found;
     VPet enemy;
 } VPetEncounter;
+
+typedef struct {
+    bool is_active;
+    int x;
+    int y;
+    VPet vpet_data
+} MapMob;
 
 typedef struct {
     int r; 
@@ -93,6 +98,11 @@ typedef struct {
     VPet player;
     VPet enemy;
 } BattleSystem;
+
+typedef struct {
+    float x, y;
+    float width, height;
+} Camera;
 
 static const Color COLOR_GREY_WALL = {60, 60, 75, 255};
 static const Color COLOR_GREY_WALL_BORDER = { 40, 40, 50, 255};

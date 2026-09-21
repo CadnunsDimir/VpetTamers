@@ -20,6 +20,7 @@ int main(int argc, char* argv[]) {
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
     SDL_Texture* game_logo = NULL;
+    SDL_Texture* tileset_texture = NULL;
 
     if (!SDL_CreateWindowAndRenderer("VPet Tamers", SCREEN_WIDTH, SCREEN_HEIGHT, 0, &window, &renderer)) {
         printf("Erro ao criar janela/renderizador: %s\n", SDL_GetError());
@@ -32,6 +33,15 @@ int main(int argc, char* argv[]) {
 
     if (!LoadAssets(renderer, &game_logo)) {
         printf("Erro ao carregar logo");
+    }
+
+    if(!LoadTileset(renderer, &tileset_texture, "assets/tile2map32.png")){
+        printf("Erro ler tileset: %s\n", SDL_GetError());
+        return 1;
+    }
+    if(!LoadMapFromCSV("assets/Map1.csv", 1)) {
+        printf("Erro ao carregar mapa 1");
+        return 1;
     }
 
     // 3. Abre o primeiro Gamepad/Joystick disponível
@@ -49,12 +59,12 @@ int main(int argc, char* argv[]) {
     }
 
     // Posicao do jogador (SDL3 usa float para retângulos)
-    ElementCoordinates player_coordinates = {
+    Coordinates player_coordinates = {
         FIRST_MAP_SPAWN_POINT[0],
         FIRST_MAP_SPAWN_POINT[1]
     };
 
-    ElementCoordinates enemy_coordinates = {
+    Coordinates enemy_coordinates = {
         0,
         0
     };
@@ -86,8 +96,15 @@ int main(int argc, char* argv[]) {
 
     static bool pause_key_pressed = false;
 
-    int current_map[MAP_HEIGHT][MAP_WIDTH];
-    memcpy(current_map, FIRST_MAP, sizeof(current_map));
+    int current_map[TILED_MAP_HEIGHT][TILED_MAP_WIDTH];
+    
+    int current_map_id = 1;
+    memcpy(current_map, WORLD_MAP[current_map_id], sizeof(current_map));
+
+    Camera main_camera = {0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT};
+
+    int spawned_mobs_size = 0.0f;
+    MapMob* spawned_mobs = SpawnMobs(&spawned_mobs_size, 10, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
 
     // Loop principal
     while (running) {
@@ -174,26 +191,28 @@ int main(int argc, char* argv[]) {
             RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, top + spacing, "CONTINUAR", menu_opcao == 1, true);
         }
         else if (current_state == STATE_MAP || current_state == STATE_PAUSE) {            
-
+            
             // Executa movimento único quando a tecla é pressionada
-            if ((gamepad.delta_x != 0 || gamepad.delta_y != 0) && !key_pressed && current_state == STATE_MAP)
-            {
-                MovePlayer(&player_coordinates, &current_state, &battle_system.enemy, &enemy_coordinates, gamepad.delta_x, gamepad.delta_y, current_map);
-                key_pressed = true; // Trava para não andar continuamente
+            if (current_state == STATE_MAP) {
+                if ((gamepad.delta_x != 0 || gamepad.delta_y != 0) && !key_pressed) {
+                    MovePlayer(&player_coordinates, &current_state, &battle_system.enemy, &enemy_coordinates, gamepad.delta_x, gamepad.delta_y, current_map, spawned_mobs, spawned_mobs_size);
+                    key_pressed = true; // Trava para não andar continuamente
+                }
+
+                // Libera a trava quando solta o botão
+                if (gamepad.delta_x == 0 && gamepad.delta_y == 0) {
+                    key_pressed = false;
+                }
+
+                // Atualiza a câmera apenas quando estiver no mapa ativo
+                UpdateCamera(&main_camera, player_coordinates, 32, 32, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
             }
 
-            // Libera a trava quando solta o botão
-            if (gamepad.delta_x == 0 && gamepad.delta_y == 0)
-            {
-                key_pressed = false;
-            }
+            // RenderTilemap(renderer, tileset_texture, current_map_id, main_camera);
+            RenderTilemap(renderer, tileset_texture, current_map_id);
+            RenderPlayer(renderer, player_coordinates, main_camera);
+            RenderEnemies(renderer, spawned_mobs, spawned_mobs_size);
 
-            RenderMap(renderer, current_map, MAP_HEIGHT, MAP_WIDTH, TILE_SIZE);
-
-            // Desenha o jogador (quadrado azul no centro por enquanto)
-            SDL_FRect playerRect = PlayerToRect(player_coordinates, TILE_SIZE);
-            SDL_SetRenderDrawColor(renderer, 0, 150, 255, 255);            
-            SDL_RenderFillRect(renderer, &playerRect);
             if (current_state == STATE_PAUSE)
             {
                 RenderPauseOverlay(renderer, &battle_system.player, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -204,7 +223,7 @@ int main(int argc, char* argv[]) {
 
             if (battle_system.current_state == BATTLE_STATE_WIN)
             {
-                RemoveEnemyFromMap(current_map, &enemy_coordinates);
+                RemoveEnemyFromMap(current_map, &enemy_coordinates, spawned_mobs, spawned_mobs_size);
             }
 
             RenderBattleScreen(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, battle_system);
