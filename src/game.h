@@ -25,6 +25,7 @@ typedef enum {
     BATTLE_STATE_ATTACKING,
     BATTLE_STATE_RUNNING,
     BATTLE_STATE_WIN,
+    BATTLE_STATE_WIN_CLOSE_BATTLE,
     BATTLE_STATE_LOST,
     BATTLE_STATE_ENEMY_ATACKING
 } BattleState;
@@ -48,6 +49,7 @@ typedef struct {
     int hp_max; 
     int strength; 
     int defense;
+    int total_exp;
     VPetType type;
 } VPet;
 
@@ -111,7 +113,8 @@ static const VPet ENEMY_JAGUAPIRUMON = {
     .strength = 3,
     .hp = 20,
     .hp_max = 20,
-    .type = PET_JAGUAPIRUMON
+    .type = PET_JAGUAPIRUMON,
+    .level = 2
 };
 
 static const VPet ENEMY_RYGUASUMON = {
@@ -120,7 +123,8 @@ static const VPet ENEMY_RYGUASUMON = {
     .strength = 1,
     .hp = 10,
     .hp_max = 10,
-    .type = PET_RUGUASUMON
+    .type = PET_RUGUASUMON,
+    .level = 1
 };
 
 static const VPet ENEMY_LIST[2] = {

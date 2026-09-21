@@ -1,3 +1,5 @@
+#include <math.h> // Necessário para usar pow()
+
 // Converte coordenadas do Grid (X,Y) para Pixels Isométricos (ScreenX, ScreenY)
 void GridToIsometric(int grid_x, int grid_y, float tile_w, float tile_h, float offset_x, float offset_y, float* out_x, float* out_y) {
     *out_x = (grid_x - grid_y) * (tile_w / 2.0f) + offset_x;
@@ -412,6 +414,29 @@ int CalculateDamage(VPet* attacker, VPet* defender) {
     return (damage < 1) ? 1 : damage;
 }
 
+int CalculateExp(VPet* enemy){
+    return enemy->level * 2;
+}
+
+bool CheckLevelUp(VPet* vpet){
+    int next_level = vpet->level +1;
+    printf("prox nivel: %d\n", next_level);
+    int exp_next_level = pow(next_level, 2);
+    printf("experiencia necessária: %d\n", exp_next_level);
+    printf("experiencia atual: %d\n", vpet->total_exp);
+    if (vpet->total_exp >= exp_next_level)
+    {
+        vpet->level = next_level;
+        vpet->strength += vpet->level*2;
+        vpet->defense += vpet->level*2;
+        vpet->hp_max += vpet->level*5;
+        vpet->hp = vpet->hp_max;
+        CheckLevelUp(vpet);
+        return true;
+    }
+    return false;
+}
+
 void UpdateBattleState(BattleSystem* battle, GameState* game_state) {
 
     Uint64 current_time = SDL_GetTicks();
@@ -431,7 +456,7 @@ void UpdateBattleState(BattleSystem* battle, GameState* game_state) {
                     // 2. Checa se o Inimigo foi derrotado
                     if (battle->enemy.hp == 0)
                     {
-                        TriggerBattleMessage(battle, BATTLE_STATE_WIN, "INIMIGO FOI DERROTADO", 2000);
+                        TriggerBattleMessage(battle, BATTLE_STATE_WIN, "INIMIGO FOI DERROTADO!", 2000);
                     }
                     else
                     {
@@ -465,11 +490,22 @@ void UpdateBattleState(BattleSystem* battle, GameState* game_state) {
                         }
                     break;
                 case BATTLE_STATE_WIN:
-                case BATTLE_STATE_LOST:
-                    // Encerra a batalha e volta ao mapa
+                    char player_win_message[64];
+                    int exp = CalculateExp(&battle->enemy);
+                    char level_up_msg[25];
+                    battle->player.total_exp += exp;
+                    if(CheckLevelUp(&battle->player)) {
+                        snprintf(level_up_msg, sizeof(level_up_msg), "Subiu para LVL %d!!!", battle->player.level);
+                    } else {
+                        snprintf(level_up_msg, sizeof(level_up_msg), " ");
+                    }                    
+                    snprintf(player_win_message, sizeof(player_win_message), "Ganhou %d EXP! %s", exp, level_up_msg);                    
+                    TriggerBattleMessage(battle, BATTLE_STATE_WIN_CLOSE_BATTLE, player_win_message, 3000);
+                    break;
+                case BATTLE_STATE_WIN_CLOSE_BATTLE:
+                case BATTLE_STATE_LOST: 
                     *game_state = STATE_MAP;
                     battle->current_state = BATTLE_STATE_MENU_ATTACK;
-                    //TODO: Implementar tela de FIM DE BATALHA E LÓGICA DE EXP E LEVEL up
                     break;
                 default:
                     battle->current_state = BATTLE_STATE_MENU_ATTACK;
