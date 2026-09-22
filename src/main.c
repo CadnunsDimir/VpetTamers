@@ -3,6 +3,7 @@
 #include <SDL3_image/SDL_image.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include "game.h"
 #include "functions.h"
 #include "maps.h"
@@ -16,36 +17,40 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // 2. Cria Janela e Renderizador juntos no SDL3
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
     SDL_Texture* game_logo = NULL;
     SDL_Texture* tileset_texture = NULL;
+    MapMob* spawned_mobs = NULL;
+    SDL_Gamepad* gamepad_connection = NULL;
+    int world_map[TOTAL_MAPS][TILED_MAP_HEIGHT][TILED_MAP_WIDTH];
 
+    // 2. Cria Janela e Renderizador
     if (!SDL_CreateWindowAndRenderer("VPet Tamers", SCREEN_WIDTH, SCREEN_HEIGHT, 0, &window, &renderer)) {
         printf("Erro ao criar janela/renderizador: %s\n", SDL_GetError());
         SDL_Quit();
         return 1;
     }
 
-    //habilita Blend para criar transparencias
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
     if (!LoadAssets(renderer, &game_logo)) {
-        printf("Erro ao carregar logo");
+        printf("Erro ao carregar logo\n");
     }
 
-    if(!LoadTileset(renderer, &tileset_texture, "assets/tile2map32.png")){
+    if (!LoadTileset(renderer, &tileset_texture, "assets/tile2map32.png")) {
         printf("Erro ler tileset: %s\n", SDL_GetError());
-        return 1;
-    }
-    if(!LoadMapFromCSV("assets/Map1.csv", 1)) {
-        printf("Erro ao carregar mapa 1");
-        return 1;
+        goto cleanup; // Usa rótulo de limpeza para não vazar recursos
     }
 
-    // 3. Abre o primeiro Gamepad/Joystick disponível
-    SDL_Gamepad* gamepad_connection = NULL;
+
+
+    if (!LoadMapFromCSV("assets/Map1.csv", world_map, 1)) {
+        printf("Erro ao carregar mapa 1\n");
+        goto cleanup;
+    }
+
+    // 3. Conecta Gamepad inicial
     int count = 0;
     SDL_JoystickID* joysticks = SDL_GetJoysticks(&count);
     if (count > 0 && joysticks) {
@@ -58,22 +63,13 @@ int main(int argc, char* argv[]) {
         SDL_free(joysticks);
     }
 
-    // Posicao do jogador (SDL3 usa float para retângulos)
-    Coordinates player_coordinates = {
-        FIRST_MAP_SPAWN_POINT[0],
-        FIRST_MAP_SPAWN_POINT[1]
-    };
-
-    Coordinates enemy_coordinates = {
-        0,
-        0
-    };
+    Coordinates player_coordinates = { 5, 5 };
+    Coordinates enemy_coordinates = { 0, 0 };
 
     bool running = true;
     SDL_Event event;
     GameState current_state = STATE_MENU;
 
-    // Variável de controle da opção selecionada (0 = Novo Jogo, 1 = Continuar)
     int menu_opcao = 0;
     VPet initial_vpet = {
         .name = "BkMbaracajamon",
@@ -87,24 +83,20 @@ int main(int argc, char* argv[]) {
 
     BattleSystem battle_system = {
         .current_state = BATTLE_STATE_MENU_ATTACK,
-        .player =  initial_vpet
+        .player = initial_vpet
     };
 
-    // Trava simples para evitar navegação ultra-rápida (pode usar eventos ou flag de liberação)
-    //TODO: ajustar comportamento para permitir botão mantido pressionado. hoje ele só permite 1 movimento por vez
     static bool key_pressed = false;
-
     static bool pause_key_pressed = false;
 
     int current_map[TILED_MAP_HEIGHT][TILED_MAP_WIDTH];
-    
     int current_map_id = 1;
-    memcpy(current_map, WORLD_MAP[current_map_id], sizeof(current_map));
+    memcpy(current_map, world_map[current_map_id], sizeof(current_map));
 
     Camera main_camera = {0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT};
 
-    int spawned_mobs_size = 0.0f;
-    MapMob* spawned_mobs = SpawnMobs(&spawned_mobs_size, 10, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
+    int spawned_mobs_size = 0; // Corrigido de 0.0f para 0
+    spawned_mobs = SpawnMobs(&spawned_mobs_size, 10, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
 
     // Loop principal
     while (running) {
@@ -127,121 +119,105 @@ int main(int argc, char* argv[]) {
 
         PlayerGamePad gamepad = GetPlayerGamePad(gamepad_connection);
 
-        if (gamepad.triggered_pause && !pause_key_pressed)
-        {
-            if (current_state == STATE_MAP)
-            {
+        if (gamepad.triggered_pause && !pause_key_pressed) {
+            if (current_state == STATE_MAP) {
                 current_state = STATE_PAUSE;
             }
-            else if (current_state == STATE_PAUSE)
-            {
+            else if (current_state == STATE_PAUSE) {
                 current_state = STATE_MAP;
             }
             pause_key_pressed = true;
         }
 
-        // Libera a trava quando solta o botão
-        if (!gamepad.triggered_pause)
-        {
+        if (!gamepad.triggered_pause) {
             pause_key_pressed = false;
         }        
 
         // --- Atualização do Menu ---
-        if (current_state == STATE_MENU)
-        {
-            if (gamepad.down && !key_pressed)
-            {
-                menu_opcao = 1; // Seleciona "Continuar"
+        if (current_state == STATE_MENU) {
+            if (gamepad.down && !key_pressed) {
+                menu_opcao = 1;
                 key_pressed = true;
             }
-            else if (gamepad.up && !key_pressed)
-            {
-                menu_opcao = 0; // Seleciona "Novo Jogo"
+            else if (gamepad.up && !key_pressed) {
+                menu_opcao = 0;
                 key_pressed = true;
             }
 
-            if (!gamepad.down && !gamepad.up)
-            {
+            if (!gamepad.down && !gamepad.up) {
                 key_pressed = false;
             }
 
-            if (gamepad.triggered_confirm)
-            {
-                if (menu_opcao == 0)
-                {
+            if (gamepad.triggered_confirm) {
+                if (menu_opcao == 0) {
                     current_state = STATE_MAP;
                 }
             }
         }
 
         // --- Renderização ---
-        // 1. Limpa a tela com a cor de fundo (Escuro)
         SDL_SetRenderDrawColor(renderer, 20, 20, 30, 255);
         SDL_RenderClear(renderer);
 
-        // 2. Desenha o estado atual
         if (current_state == STATE_MENU) {
             RenderMenuLogo(renderer, game_logo, SCREEN_WIDTH, 40.0f);
-            // Opção 1: NOVO JOGO
             float top = 320.0f;
             RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, top, "NOVO JOGO", menu_opcao == 0, false);
-
-            // Opção 2: CONTINUAR (DESABILITADO)
             float spacing = 80.0f;
             RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, top + spacing, "CONTINUAR", menu_opcao == 1, true);
         }
         else if (current_state == STATE_MAP || current_state == STATE_PAUSE) {            
-            
-            // Executa movimento único quando a tecla é pressionada
             if (current_state == STATE_MAP) {
                 if ((gamepad.delta_x != 0 || gamepad.delta_y != 0) && !key_pressed) {
                     MovePlayer(&player_coordinates, &current_state, &battle_system.enemy, &enemy_coordinates, gamepad.delta_x, gamepad.delta_y, current_map, spawned_mobs, spawned_mobs_size);
-                    key_pressed = true; // Trava para não andar continuamente
+                    key_pressed = true;
                 }
 
-                // Libera a trava quando solta o botão
                 if (gamepad.delta_x == 0 && gamepad.delta_y == 0) {
                     key_pressed = false;
                 }
+                
+                float player_height = SCALED_TILED_SIZE;
+                float player_width = SCALED_TILED_SIZE;
 
-                // Atualiza a câmera apenas quando estiver no mapa ativo
-                UpdateCamera(&main_camera, player_coordinates, 32, 32, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
+                UpdateCamera(&main_camera, player_coordinates, player_width, player_height, TILED_MAP_WIDTH, TILED_MAP_HEIGHT, SCALED_TILED_SIZE);
             }
 
-            // RenderTilemap(renderer, tileset_texture, current_map_id, main_camera);
-            RenderTilemap(renderer, tileset_texture, current_map_id);
-            RenderPlayer(renderer, player_coordinates, main_camera);
-            RenderEnemies(renderer, spawned_mobs, spawned_mobs_size);
+            RenderTilemap(renderer, tileset_texture, current_map_id, main_camera, world_map);
+            RenderPlayer(renderer, player_coordinates, main_camera, SCALED_TILED_SIZE);
+            RenderEnemies(renderer, main_camera, spawned_mobs, spawned_mobs_size, SCALED_TILED_SIZE);
 
-            if (current_state == STATE_PAUSE)
-            {
+            if (current_state == STATE_PAUSE) {
                 RenderPauseOverlay(renderer, &battle_system.player, SCREEN_WIDTH, SCREEN_HEIGHT);
             }
-        } else if(current_state == STATE_BATTLE) {
+        } 
+        else if(current_state == STATE_BATTLE) {
             UpdateNavigation(&battle_system, &gamepad);
             UpdateBattleState(&battle_system, &current_state);
 
-            if (battle_system.current_state == BATTLE_STATE_WIN)
-            {
+            if (battle_system.current_state == BATTLE_STATE_WIN) {
                 RemoveEnemyFromMap(current_map, &enemy_coordinates, spawned_mobs, spawned_mobs_size);
             }
 
             RenderBattleScreen(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, battle_system);
         }
 
-        // 3. Apresenta o buffer renderizado na janela (ESSENCIAL!)
         SDL_RenderPresent(renderer);
-
-        // 4. Pausa de ~16ms para cravar em 60 FPS e liberar a CPU
         SDL_Delay(16);
     }
 
-    if (gamepad_connection) {
-        SDL_CloseGamepad(gamepad_connection);
-    }
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+printf("Finalizando programa...\n");
+cleanup:
+    printf("liberando recursos\n");
+
+    if (spawned_mobs) free(spawned_mobs);
+    if (game_logo) SDL_DestroyTexture(game_logo);
+    if (tileset_texture) SDL_DestroyTexture(tileset_texture);
+    if (gamepad_connection) SDL_CloseGamepad(gamepad_connection);
+    if (renderer) SDL_DestroyRenderer(renderer);
+    if (window) SDL_DestroyWindow(window);    
     SDL_Quit();
 
-    return 0;
+    printf("FIM.\n");    
+    exit(0); // Força a liberação da thread do OS caso o SDL3 mantenha subsistemas abertos
 }

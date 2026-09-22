@@ -2,13 +2,13 @@
 #define SCREEN_HEIGHT 600
 #define PLAYER_SIZE   40.0f
 #define SPEED         5.0f
-#define TILE_SIZE 32
 #define MAP_WIDTH 25   // 800 / 32 = 25 colunas
 #define MAP_HEIGHT 18  // 576 / 32 = 18 linhas
 #define BATTLE_RUNNING_CHANCE 40 // 40% de chance de fuga em batalhas
 #define TILED_MAP_WIDTH 20
 #define TILED_MAP_HEIGHT 15
 #define TOTAL_MAPS 1
+#define SCALED_TILED_SIZE 64.0f
 
 typedef enum {
     MAP_TILE_WALL = 1,
