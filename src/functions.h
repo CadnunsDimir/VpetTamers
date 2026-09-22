@@ -213,13 +213,22 @@ VPetEncounter CheckIfFindEnemy(int enemy_code){
     return encounter;
 }
 
+bool ArrayIncludes(int arr[], int tamanho, int elemento_buscado) {
+    for (int i = 0; i < tamanho; i++) {
+        if (arr[i] == elemento_buscado) {
+            return true; // Encontrou
+        }
+    }
+    return false; // Não encontrou
+}
+
 bool IsTileWalkable(int tile_id) {
     // Se for -1 (sem tile) ou um tile de obstáculo (ex: árvores, paredes, água)
     if (tile_id < 0) return false;
 
     // Exemplo: IDs de 0 a 10 são chão/grama/caminho, acima disso são obstáculos
     // Podes ajustar os IDs conforme o teu layout no Tiled
-    if (tile_id == 2 || tile_id == 5 || tile_id == 7) { 
+    if (ArrayIncludes(WALKABLE_TILES, WALKABLE_TILES_COUNT, tile_id)) { 
         return false; // Bloqueia árvores/construções
     }
 

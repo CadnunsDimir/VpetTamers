@@ -9,6 +9,7 @@
 #define TILED_MAP_HEIGHT 15
 #define TOTAL_MAPS 1
 #define SCALED_TILED_SIZE 64.0f
+#define WALKABLE_TILES_COUNT (sizeof(WALKABLE_TILES) / sizeof(WALKABLE_TILES[0]))
 
 typedef enum {
     MAP_TILE_WALL = 1,
@@ -116,6 +117,9 @@ static const Color COLOR_MENU_BUTTON_DISABLED = {50, 50, 50, 255};
 static const Color COLOR_MENU_BUTTON_DISABLED_SELECTED = {120, 120, 120, 255};
 static const Color COLOR_ENEMY_2 = {193, 114, 38, 255};
 static const Color COLOR_ENEMY_3 = {139, 69, 19, 255};
+static const int WALKABLE_TILES[] = {
+    300, 301, 302,  304, 306, 308, 309, 310
+};
 
 static const VPet ENEMY_JAGUAPIRUMON = {
     .name = "Jaguapirumon", //cachoro feio
