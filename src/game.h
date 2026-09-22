@@ -10,6 +10,7 @@
 #define TOTAL_MAPS 1
 #define SCALED_TILED_SIZE 64.0f
 #define WALKABLE_TILES_COUNT (sizeof(WALKABLE_TILES) / sizeof(WALKABLE_TILES[0]))
+#define STEP_COOLDOWN_MS 150
 
 typedef enum {
     MAP_TILE_WALL = 1,

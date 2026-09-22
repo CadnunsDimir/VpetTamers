@@ -101,6 +101,7 @@ int main(int argc, char* argv[]) {
 
     int spawned_mobs_size = 0; // Corrigido de 0.0f para 0
     spawned_mobs = SpawnMobs(&spawned_mobs_size, 10, current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
+    static Uint64 last_step_time = 0;
 
     // Loop principal
     while (running) {
@@ -171,18 +172,19 @@ int main(int argc, char* argv[]) {
             RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, top + spacing, "CONTINUAR", menu_opcao == 1, true);
         }
         else if (current_state == STATE_MAP || current_state == STATE_PAUSE) {   
+            Uint64 current_time = SDL_GetTicks();
             bool is_moving = false;         
             if (current_state == STATE_MAP) {
                 is_moving = (gamepad.delta_x != 0 || gamepad.delta_y != 0);
-                if (is_moving && !key_pressed) {
-                    MovePlayer(&player_coordinates, &current_state, &battle_system.enemy, &enemy_coordinates, gamepad.delta_x, gamepad.delta_y, current_map, spawned_mobs, spawned_mobs_size);
-                    key_pressed = true;
+                if (is_moving) {
+                    if (current_time - last_step_time >= STEP_COOLDOWN_MS) {
+                        MovePlayer(&player_coordinates, &current_state, &battle_system.enemy, &enemy_coordinates, gamepad.delta_x, gamepad.delta_y, current_map, spawned_mobs, spawned_mobs_size);
+                        last_step_time = current_time;
+                    }                    
+                } else {
+                    last_step_time = 0;
                 }
-
-                if (!is_moving) {
-                    key_pressed = false;
-                }
-                
+                        
                 float player_height = SCALED_TILED_SIZE;
                 float player_width = SCALED_TILED_SIZE;
 
