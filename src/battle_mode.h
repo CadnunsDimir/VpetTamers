@@ -62,20 +62,99 @@ void RenderVPetSprite(SDL_Renderer* renderer, VPetType tipo, float x, float y, f
         }
 
         case PET_JAGUAPIRUMON: {
-            // Corpo (Cão/Canídeo - Marrom avermelhado)
-            SDL_FRect body = { x, y + (8.0f * scale), 32.0f * scale, 24.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 120, 60, 30, 255);
+            // 1. AURA DE CHAMAS EXTERNA (Efeito de brilho ao redor do corpo)
+            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+            
+            // Chama Laranja Externa (Transparente)
+            SDL_FRect flame_outer = { x - (8.0f * scale), y - (6.0f * scale), 48.0f * scale, 42.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 255, 100, 0, 120);
+            SDL_RenderFillRect(renderer, &flame_outer);
+
+            // Chama Amarela Intermediária (Efeito de calor pulsante)
+            float time_offset = sinf((float)SDL_GetTicks() / 80.0f) * (2.0f * scale); // Animação de chama tremulando
+            SDL_FRect flame_inner = { x - (4.0f * scale), y - (2.0f * scale) + time_offset, 40.0f * scale, 34.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 255, 200, 0, 160);
+            SDL_RenderFillRect(renderer, &flame_inner);
+
+            // 2. PATAS (Posicionadas para criar perspectiva isométrica)
+            SDL_SetRenderDrawColor(renderer, 40, 20, 10, 255); // Pelo carbonizado escuro
+            
+            // Pata Traseira Esquerda
+            SDL_FRect leg_back_l = { x + (22.0f * scale), y + (22.0f * scale), 6.0f * scale, 12.0f * scale };
+            SDL_RenderFillRect(renderer, &leg_back_l);
+            
+            // Pata Traseira Direita
+            SDL_FRect leg_back_r = { x + (16.0f * scale), y + (24.0f * scale), 6.0f * scale, 12.0f * scale };
+            SDL_RenderFillRect(renderer, &leg_back_r);
+
+            // Pata Dianteira Esquerda
+            SDL_FRect leg_front_l = { x + (4.0f * scale), y + (22.0f * scale), 7.0f * scale, 14.0f * scale };
+            SDL_RenderFillRect(renderer, &leg_front_l);
+
+            // Pata Dianteira Direita (Avançada para frente e com garras)
+            SDL_FRect leg_front_r = { x - (2.0f * scale), y + (24.0f * scale), 8.0f * scale, 14.0f * scale };
+            SDL_SetRenderDrawColor(renderer, 50, 25, 12, 255);
+            SDL_RenderFillRect(renderer, &leg_front_r);
+
+            // Garras Pretas na pata dianteira
+            SDL_SetRenderDrawColor(renderer, 10, 10, 10, 255);
+            SDL_FRect claws = { x - (3.0f * scale), y + (36.0f * scale), 9.0f * scale, 3.0f * scale };
+            SDL_RenderFillRect(renderer, &claws);
+
+            // 3. CORPO / TRONCO (Inclinado para a postura canina)
+            SDL_SetRenderDrawColor(renderer, 45, 22, 12, 255); // Castanho escuro / queimado
+            SDL_FRect body = { x + (2.0f * scale), y + (8.0f * scale), 26.0f * scale, 18.0f * scale };
             SDL_RenderFillRect(renderer, &body);
 
-            // Focinho
-            SDL_FRect snout = { x - (4.0f * scale), y + (16.0f * scale), 10.0f * scale, 10.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 80, 40, 20, 255);
+            // Lombo/Costas (Sombra superior)
+            SDL_SetRenderDrawColor(renderer, 25, 12, 6, 255);
+            SDL_FRect spine = { x + (6.0f * scale), y + (6.0f * scale), 20.0f * scale, 6.0f * scale };
+            SDL_RenderFillRect(renderer, &spine);
+
+            // 4. CORRENTE METÁLICA NAS COSTAS
+            SDL_SetRenderDrawColor(renderer, 180, 180, 190, 255); // Prateado/Cinza metálico
+            SDL_FRect chain_link1 = { x + (12.0f * scale), y + (4.0f * scale), 6.0f * scale, 5.0f * scale };
+            SDL_FRect chain_link2 = { x + (16.0f * scale), y + (1.0f * scale), 5.0f * scale, 5.0f * scale };
+            SDL_RenderFillRect(renderer, &chain_link1);
+            SDL_RenderFillRect(renderer, &chain_link2);
+
+            // 5. CABEÇA E FOCINHO (Inclinados para a esquerda/frente na batalha)
+            SDL_SetRenderDrawColor(renderer, 35, 18, 8, 255);
+            SDL_FRect head = { x - (4.0f * scale), y + (6.0f * scale), 16.0f * scale, 14.0f * scale };
+            SDL_RenderFillRect(renderer, &head);
+
+            // Focinho Alongado
+            SDL_FRect snout = { x - (10.0f * scale), y + (12.0f * scale), 12.0f * scale, 10.0f * scale };
             SDL_RenderFillRect(renderer, &snout);
 
-            // Olhos Vermelhos
-            SDL_FRect eye = { x + (6.0f * scale), y + (12.0f * scale), 4.0f * scale, 4.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 220, 40, 40, 255);
+            // Orelhas / Chifres Pontiagudos
+            SDL_SetRenderDrawColor(renderer, 20, 10, 5, 255);
+            SDL_FRect ear1 = { x + (4.0f * scale), y - (2.0f * scale), 4.0f * scale, 10.0f * scale };
+            SDL_FRect ear2 = { x + (9.0f * scale), y + (1.0f * scale), 4.0f * scale, 8.0f * scale };
+            SDL_RenderFillRect(renderer, &ear1);
+            SDL_RenderFillRect(renderer, &ear2);
+
+            // 6. DETALHES RANCOROSOS (Dentes, Olhos e Fogo na Boca)
+            // Dentes Expôstos (Branco Amarelado)
+            SDL_SetRenderDrawColor(renderer, 240, 230, 180, 255);
+            SDL_FRect teeth = { x - (10.0f * scale), y + (20.0f * scale), 10.0f * scale, 3.0f * scale };
+            SDL_RenderFillRect(renderer, &teeth);
+
+            // Olhos Incandescentes (Amarelo/Branco Flamejante)
+            SDL_SetRenderDrawColor(renderer, 255, 255, 100, 255);
+            SDL_FRect eye = { x - (1.0f * scale), y + (10.0f * scale), 4.0f * scale, 3.0f * scale };
             SDL_RenderFillRect(renderer, &eye);
+
+            // Núcleo do Olho
+            SDL_SetRenderDrawColor(renderer, 255, 50, 0, 255);
+            SDL_FRect eye_core = { x - (1.0f * scale), y + (11.0f * scale), 2.0f * scale, 2.0f * scale };
+            SDL_RenderFillRect(renderer, &eye_core);
+
+            // Fogo saindo da Mandíbula (Detalhe final)
+            SDL_SetRenderDrawColor(renderer, 255, 150, 0, 200);
+            SDL_FRect jaw_fire = { x - (12.0f * scale), y + (18.0f * scale), 6.0f * scale, 6.0f * scale };
+            SDL_RenderFillRect(renderer, &jaw_fire);
+
             break;
         }
 
@@ -321,26 +400,32 @@ void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenH
     
     RenderBattleScreenScenario(renderer, screenWidth, screenHeight, &oponentsPositioning);
 
-    // --- Representação Visual das Entidades ---
-    // --- Representação Visual das Entidades ---
+    // --- Representação Visual das Entidades ---    
 
-    // 1. Inimigo (Renderizado PRIMEIRO para ficar ao fundo)
-    RenderVPetSprite(
-        renderer, 
-        battle.enemy.type,
-        oponentsPositioning.enemy.x - (16.0f * 2.5f), // Centraliza horizontalmente o sprite de 32px
-        oponentsPositioning.enemy.y - (24.0f * 2.5f), // Apoia a base do sprite no centro do tile
-        2.5f
-    );
+    if (battle.current_state != BATTLE_STATE_WIN && battle.current_state != BATTLE_STATE_WIN_CLOSE_BATTLE)
+    {
+        // 1. Inimigo (Renderizado PRIMEIRO para ficar ao fundo)
+       RenderVPetSprite(
+            renderer, 
+            battle.enemy.type,
+            oponentsPositioning.enemy.x - (16.0f * 2.5f), // Centraliza horizontalmente o sprite de 32px
+            oponentsPositioning.enemy.y - (24.0f * 2.5f), // Apoia a base do sprite no centro do tile
+            2.5f
+        );
+    }
+    
+    if (battle.current_state != BATTLE_STATE_LOST) {
+       // 2. BkMbaracajamon (Renderizado DEPOIS para se sobrepor caso cruzem a linha de visão)
+        RenderVPetSprite(
+            renderer, 
+            battle.player.type,
+            oponentsPositioning.player.x - (15.0f * 2.5f), 
+            oponentsPositioning.player.y - (25.0f * 2.5f), 
+            2.5f
+        );
+    }
 
-    // 2. BkMbaracajamon (Renderizado DEPOIS para se sobrepor caso cruzem a linha de visão)
-    RenderVPetSprite(
-        renderer, 
-        battle.player.type,
-        oponentsPositioning.player.x - (15.0f * 2.5f), 
-        oponentsPositioning.player.y - (25.0f * 2.5f), 
-        2.5f
-    );
+    
 
     // --- Painéis de Status (HUD) ---
     float hud_width = 380.0f;

@@ -123,10 +123,88 @@ SDL_FRect PlayerToRect(Coordinates player, float playerSize, Camera cam) {
     return rect;
 }
 
-void RenderPlayer(SDL_Renderer* renderer, Coordinates player_coordinates, Camera cam, float size) {
+void RenderPlayer(SDL_Renderer* renderer, Coordinates player_coordinates, Camera cam, float size, bool is_moving) {
+    // Posição base em pixels do player na tela
     SDL_FRect playerRect = PlayerToRect(player_coordinates, size, cam);
-    SDL_SetRenderDrawColor(renderer, 0, 150, 255, 255);            
-    SDL_RenderFillRect(renderer, &playerRect);
+
+    // 1. Configurações de proporção do boneco
+    float head_size = size * 0.35f;
+    float body_w    = size * 0.35f;
+    float body_h    = size * 0.40f;
+    float limb_w    = size * 0.12f;
+    float limb_h    = size * 0.30f;
+
+    // Center X do player
+    float center_x = playerRect.x + (size / 2.0f);
+
+    // 2. Cálculo do deslocamento das pernas/braços ao andar
+    float limb_offset = 0.0f;
+    if (is_moving) {
+        // Alterna entre -8px e +8px criando movimento uniforme de caminhada
+        float time = (float)SDL_GetTicks() / 100.0f; 
+        limb_offset = sinf(time) * (size * 0.15f);
+    }
+
+    // --- A. PERNAS (Atrás do tronco) ---
+    SDL_SetRenderDrawColor(renderer, 30, 30, 120, 255); // Azul escuro (calça)
+    
+    // Perna Esquerda (Mexe para um lado)
+    SDL_FRect left_leg = {
+        center_x - (body_w / 2.0f),
+        playerRect.y + head_size + body_h - (limb_h * 0.2f) + limb_offset,
+        limb_w,
+        limb_h
+    };
+    SDL_RenderFillRect(renderer, &left_leg);
+
+    // Perna Direita (Mexe para o lado oposto)
+    SDL_FRect right_leg = {
+        center_x + (body_w / 2.0f) - limb_w,
+        playerRect.y + head_size + body_h - (limb_h * 0.2f) - limb_offset,
+        limb_w,
+        limb_h
+    };
+    SDL_RenderFillRect(renderer, &right_leg);
+
+    // --- B. TRONCO / CORPO ---
+    SDL_SetRenderDrawColor(renderer, 220, 50, 50, 255); // Vermelho (Camisa)
+    SDL_FRect body = {
+        center_x - (body_w / 2.0f),
+        playerRect.y + head_size,
+        body_w,
+        body_h
+    };
+    SDL_RenderFillRect(renderer, &body);
+
+    // --- C. BRAÇOS ---
+    SDL_SetRenderDrawColor(renderer, 240, 190, 150, 255); // Tom de pele
+    
+    // Braço Esquerdo (Mexe invertido com a perna esquerda)
+    SDL_FRect left_arm = {
+        center_x - (body_w / 2.0f) - limb_w,
+        playerRect.y + head_size - limb_offset,
+        limb_w,
+        limb_h
+    };
+    SDL_RenderFillRect(renderer, &left_arm);
+
+    // Braço Direito
+    SDL_FRect right_arm = {
+        center_x + (body_w / 2.0f),
+        playerRect.y + head_size + limb_offset,
+        limb_w,
+        limb_h
+    };
+    SDL_RenderFillRect(renderer, &right_arm);
+
+    // --- D. CABEÇA ---
+    SDL_FRect head = {
+        center_x - (head_size / 2.0f),
+        playerRect.y,
+        head_size,
+        head_size
+    };
+    SDL_RenderFillRect(renderer, &head);
 }
 
 void DrawRect(SDL_Renderer* renderer, SDL_FRect tile, Color color) {
@@ -134,29 +212,166 @@ void DrawRect(SDL_Renderer* renderer, SDL_FRect tile, Color color) {
     SDL_RenderFillRect(renderer, &tile);
 }
 
-void RenderVPet(SDL_Renderer* renderer, int vpet_code, int x, int y, int title_size) {
-    Color enemy_color;
-    //TODO: criar um array que o indice eh o codigo do vpet
-    switch (vpet_code)
-    {
-    case 2:
-        enemy_color = COLOR_ENEMY_2;
-        break;
-    case 3:
-    default:
-        // codigo 3 é default
-        enemy_color = COLOR_ENEMY_3;
-        break;
-    }
+void RenderJaguapirumonOnMap(SDL_Renderer* renderer, float pos_x, float pos_y, float leg_step_A, float leg_step_B, float scale){
+   // 1. Sombra no chão
+    SDL_FRect shadow = { pos_x + (4.0f * scale), pos_y + (26.0f * scale), 24.0f * scale, 5.0f * scale };
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 90);
+    SDL_RenderFillRect(renderer, &shadow);
 
-   SDL_FRect tile = {
-        (float)x,
-        (float)y,
-        (float)title_size,
-        (float)title_size
+    // 2. Aura de Fogo/Brilho na base
+    SDL_FRect flame_aura = { pos_x + (2.0f * scale), pos_y + (22.0f * scale), 28.0f * scale, 6.0f * scale };
+    SDL_SetRenderDrawColor(renderer, 255, 120, 0, 130);
+    SDL_RenderFillRect(renderer, &flame_aura);
+
+    // 3. AS 4 PERNAS ANIMADAS (Cor escura/queimada)
+    SDL_SetRenderDrawColor(renderer, 40, 20, 10, 255);
+
+    // Perna Traseira Esquerda (Grupo B)
+    SDL_FRect leg_back_left = { 
+        pos_x + ((20.0f + leg_step_B) * scale), 
+        pos_y + (18.0f * scale), 
+        4.0f * scale, 
+        9.0f * scale 
+    };
+    // Perna Traseira Direita (Grupo A)
+    SDL_FRect leg_back_right = { 
+        pos_x + ((16.0f + leg_step_A) * scale), 
+        pos_y + (18.0f * scale), 
+        4.0f * scale, 
+        9.0f * scale 
+    };
+    // Perna Dianteira Esquerda (Grupo A)
+    SDL_FRect leg_front_left = { 
+        pos_x + ((10.0f + leg_step_A) * scale), 
+        pos_y + (18.0f * scale), 
+        4.0f * scale, 
+        9.0f * scale 
+    };
+    // Perna Dianteira Direita (Grupo B)
+    SDL_FRect leg_front_right = { 
+        pos_x + ((6.0f + leg_step_B) * scale), 
+        pos_y + (18.0f * scale), 
+        4.0f * scale, 
+        9.0f * scale 
     };
 
-    DrawRect(renderer, tile, enemy_color);
+    SDL_RenderFillRect(renderer, &leg_back_left);
+    SDL_RenderFillRect(renderer, &leg_back_right);
+    SDL_RenderFillRect(renderer, &leg_front_left);
+    SDL_RenderFillRect(renderer, &leg_front_right);
+
+    // Garras/Patinhas em fogo
+    SDL_SetRenderDrawColor(renderer, 255, 100, 0, 255);
+    SDL_FRect paw1 = { leg_back_left.x, pos_y + (25.0f * scale), 4.0f * scale, 2.0f * scale };
+    SDL_FRect paw2 = { leg_back_right.x, pos_y + (25.0f * scale), 4.0f * scale, 2.0f * scale };
+    SDL_FRect paw3 = { leg_front_left.x, pos_y + (25.0f * scale), 4.0f * scale, 2.0f * scale };
+    SDL_FRect paw4 = { leg_front_right.x, pos_y + (25.0f * scale), 4.0f * scale, 2.0f * scale };
+    SDL_RenderFillRect(renderer, &paw1);
+    SDL_RenderFillRect(renderer, &paw2);
+    SDL_RenderFillRect(renderer, &paw3);
+    SDL_RenderFillRect(renderer, &paw4);
+
+    // 4. Corpo (Tronco firme em cima das pernas)
+    SDL_SetRenderDrawColor(renderer, 80, 40, 20, 255);
+    SDL_FRect body = { pos_x + (4.0f * scale), pos_y + (10.0f * scale), 22.0f * scale, 10.0f * scale };
+    SDL_RenderFillRect(renderer, &body);
+
+    // 5. Cabeça e Focinho
+    SDL_FRect head = { pos_x + (2.0f * scale), pos_y + (6.0f * scale), 12.0f * scale, 10.0f * scale };
+    SDL_RenderFillRect(renderer, &head);
+
+    // 6. Orelhas
+    SDL_SetRenderDrawColor(renderer, 30, 15, 5, 255);
+    SDL_FRect ears = { pos_x + (9.0f * scale), pos_y + (2.0f * scale), 4.0f * scale, 5.0f * scale };
+    SDL_RenderFillRect(renderer, &ears);
+
+    // 7. Olhos Incandescentes
+    SDL_SetRenderDrawColor(renderer, 255, 255, 100, 255);
+    SDL_FRect eye = { pos_x + (4.0f * scale), pos_y + (8.0f * scale), 3.0f * scale, 3.0f * scale };
+    SDL_RenderFillRect(renderer, &eye);
+}
+
+void RenderRuguasumonOnMap(SDL_Renderer* renderer, float pos_x, float pos_y, float leg_step_A, float leg_step_B, float scale) {
+SDL_FRect shadow = { pos_x + (6.0f * scale), pos_y + (27.0f * scale), 20.0f * scale, 4.0f * scale };
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 80);
+    SDL_RenderFillRect(renderer, &shadow);
+
+    // 2 Pernas alternadas
+    SDL_SetRenderDrawColor(renderer, 220, 140, 20, 255);
+    SDL_FRect leg_l = { pos_x + ((10.0f + leg_step_A) * scale), pos_y + (20.0f * scale), 3.0f * scale, 8.0f * scale };
+    SDL_FRect leg_r = { pos_x + ((18.0f + leg_step_B) * scale), pos_y + (20.0f * scale), 3.0f * scale, 8.0f * scale };
+    SDL_RenderFillRect(renderer, &leg_l);
+    SDL_RenderFillRect(renderer, &leg_r);
+
+    // Cauda
+    SDL_SetRenderDrawColor(renderer, 20, 90, 80, 255);
+    SDL_FRect tail = { pos_x + (22.0f * scale), pos_y + (8.0f * scale), 7.0f * scale, 12.0f * scale };
+    SDL_RenderFillRect(renderer, &tail);
+
+    // Corpo
+    SDL_SetRenderDrawColor(renderer, 180, 40, 30, 255);
+    SDL_FRect body = { pos_x + (8.0f * scale), pos_y + (11.0f * scale), 15.0f * scale, 12.0f * scale };
+    SDL_RenderFillRect(renderer, &body);
+
+    // Asas
+    SDL_SetRenderDrawColor(renderer, 220, 100, 20, 255);
+    SDL_FRect wing = { pos_x + (14.0f * scale), pos_y + (12.0f * scale), 8.0f * scale, 8.0f * scale };
+    SDL_RenderFillRect(renderer, &wing);
+
+    // Cabeça
+    SDL_SetRenderDrawColor(renderer, 240, 220, 180, 255);
+    SDL_FRect head = { pos_x + (6.0f * scale), pos_y + (5.0f * scale), 10.0f * scale, 10.0f * scale };
+    SDL_RenderFillRect(renderer, &head);
+
+    // Crista e Barbela
+    SDL_SetRenderDrawColor(renderer, 230, 20, 20, 255);
+    SDL_FRect comb = { pos_x + (8.0f * scale), pos_y + (1.0f * scale), 6.0f * scale, 5.0f * scale };
+    SDL_FRect wattle = { pos_x + (4.0f * scale), pos_y + (13.0f * scale), 4.0f * scale, 4.0f * scale };
+    SDL_RenderFillRect(renderer, &comb);
+    SDL_RenderFillRect(renderer, &wattle);
+
+    // Bico e Olho
+    SDL_SetRenderDrawColor(renderer, 255, 200, 0, 255);
+    SDL_FRect beak = { pos_x + (2.0f * scale), pos_y + (9.0f * scale), 5.0f * scale, 4.0f * scale };
+    SDL_RenderFillRect(renderer, &beak);
+
+    SDL_SetRenderDrawColor(renderer, 10, 10, 10, 255);
+    SDL_FRect eye = { pos_x + (8.0f * scale), pos_y + (7.0f * scale), 2.0f * scale, 2.0f * scale };
+    SDL_RenderFillRect(renderer, &eye);
+}
+
+void RenderVPet(SDL_Renderer* renderer, int vpet_code, int x, int y, int title_size) {
+    // 1. Animação suave para as pernas (ritmo de caminhada)
+    float time = (float)SDL_GetTicks() / 100.0f;
+    
+    // Movimento para frente/trás das patas
+    float leg_step_A = sinf(time) * 2.0f;  // Pata dianteira esquerda e traseira direita
+    float leg_step_B = -sinf(time) * 2.0f; // Pata dianteira direita e traseira esquerda
+
+    float scale = (float)title_size / 32.0f; 
+    
+    // Posição base FIXA no tile (o corpo não pula)
+    float pos_x = (float)x;
+    float pos_y = (float)y;
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    switch (vpet_code) {
+        case PET_JAGUAPIRUMON: {
+            // --- JAGUAPIRUMON (Canídeo de Fogo) ---
+            RenderJaguapirumonOnMap(renderer, pos_x, pos_y, leg_step_A, leg_step_B, scale);
+            break;
+        }
+
+        case PET_RUGUASUMON:
+        default: {
+            // --- RUGUASUMON (Galo Místico / Galo Guerreiro) ---
+            RenderRuguasumonOnMap(renderer, pos_x, pos_y, leg_step_A, leg_step_B, scale);
+            break;
+        }
+    }
 }
 
 void RenderMap(SDL_Renderer* renderer, const int map[MAP_HEIGHT][MAP_WIDTH], int height, int width, int title_size) {

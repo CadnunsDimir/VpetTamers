@@ -170,14 +170,16 @@ int main(int argc, char* argv[]) {
             float spacing = 80.0f;
             RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, top + spacing, "CONTINUAR", menu_opcao == 1, true);
         }
-        else if (current_state == STATE_MAP || current_state == STATE_PAUSE) {            
+        else if (current_state == STATE_MAP || current_state == STATE_PAUSE) {   
+            bool is_moving = false;         
             if (current_state == STATE_MAP) {
-                if ((gamepad.delta_x != 0 || gamepad.delta_y != 0) && !key_pressed) {
+                is_moving = (gamepad.delta_x != 0 || gamepad.delta_y != 0);
+                if (is_moving && !key_pressed) {
                     MovePlayer(&player_coordinates, &current_state, &battle_system.enemy, &enemy_coordinates, gamepad.delta_x, gamepad.delta_y, current_map, spawned_mobs, spawned_mobs_size);
                     key_pressed = true;
                 }
 
-                if (gamepad.delta_x == 0 && gamepad.delta_y == 0) {
+                if (!is_moving) {
                     key_pressed = false;
                 }
                 
@@ -188,7 +190,7 @@ int main(int argc, char* argv[]) {
             }
 
             RenderTilemap(renderer, tileset_texture, current_map_id, main_camera, world_map);
-            RenderPlayer(renderer, player_coordinates, main_camera, SCALED_TILED_SIZE);
+            RenderPlayer(renderer, player_coordinates, main_camera, SCALED_TILED_SIZE, is_moving);
             RenderEnemies(renderer, main_camera, spawned_mobs, spawned_mobs_size, SCALED_TILED_SIZE);
 
             if (current_state == STATE_PAUSE) {
