@@ -256,9 +256,6 @@ void MovePlayer(Coordinates* player, GameState* game_state, VPet* enemy_found, C
         int mob_grid_y = (int)round(mobs[i].y);
 
         if (mobs[i].is_active && mob_grid_x == next_x && mob_grid_y == next_y) {
-            player->x = next_x;
-            player->y = next_y;
-
             *game_state = STATE_BATTLE;
             *enemy_found = mobs[i].vpet_data;
             enemy_coordinates->x = next_x;
@@ -476,7 +473,7 @@ void UpdateCamera(Camera* cam, Coordinates player_grid_coords, float player_w, f
     }
 }
 
-MapMob* SpawnMobs(int *tamanho_retorno, int count, int map_width_tiles, int map_height_tiles) {
+MapMob* SpawnMobs(int *tamanho_retorno, int count,int map[TILED_MAP_HEIGHT][TILED_MAP_WIDTH], int map_width_tiles, int map_height_tiles) {
     int capacidade = 2;
     int mob_array_size = 0;
     
@@ -500,8 +497,15 @@ MapMob* SpawnMobs(int *tamanho_retorno, int count, int map_width_tiles, int map_
         int indice_sorteado = rand() % enemy_list_size;
         VPet pet = ENEMY_LIST[indice_sorteado];
 
-        int pos_x = rand() % map_width_tiles;
-        int pos_y = rand() % map_height_tiles;
+        int pos_x, pos_y;
+        int tile_id;
+
+        // Sorteia posições até encontrar um tile onde seja possível caminhar
+        do {
+            pos_x = rand() % map_width_tiles;
+            pos_y = rand() % map_height_tiles;
+            tile_id = map[pos_y][pos_x];
+        } while (!IsTileWalkable(tile_id));
 
         MapMob mob = {
             .is_active = true,

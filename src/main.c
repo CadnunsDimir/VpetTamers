@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <time.h>
 #include "game.h"
 #include "functions.h"
 #include "maps.h"
@@ -11,6 +12,9 @@
 #include "game_logo.h"
 
 int main(int argc, char* argv[]) {
+    // Inicializa a semente do gerador de números aleatórios com o tempo atual
+    srand((unsigned int)time(NULL));
+
     // 1. Inicializa o SDL3
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
         printf("Erro ao inicializar SDL: %s\n", SDL_GetError());
@@ -96,7 +100,7 @@ int main(int argc, char* argv[]) {
     Camera main_camera = {0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT};
 
     int spawned_mobs_size = 0; // Corrigido de 0.0f para 0
-    spawned_mobs = SpawnMobs(&spawned_mobs_size, 10, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
+    spawned_mobs = SpawnMobs(&spawned_mobs_size, 10, current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
 
     // Loop principal
     while (running) {
