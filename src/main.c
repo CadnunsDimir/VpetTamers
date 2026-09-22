@@ -10,6 +10,7 @@
 #include "maps.h"
 #include "battle_mode.h"
 #include "game_logo.h"
+#include "objects/objects.h"
 
 int main(int argc, char* argv[]) {
     // Inicializa a semente do gerador de números aleatórios com o tempo atual
@@ -103,6 +104,9 @@ int main(int argc, char* argv[]) {
     spawned_mobs = SpawnMobs(&spawned_mobs_size, 10, current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
     static Uint64 last_step_time = 0;
 
+    Coordinates* object_tiles = NULL;
+    int total_objects = 0;
+
     // Loop principal
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -178,7 +182,15 @@ int main(int argc, char* argv[]) {
                 is_moving = (gamepad.delta_x != 0 || gamepad.delta_y != 0);
                 if (is_moving) {
                     if (current_time - last_step_time >= STEP_COOLDOWN_MS) {
-                        MovePlayer(&player_coordinates, &current_state, &battle_system.enemy, &enemy_coordinates, gamepad.delta_x, gamepad.delta_y, current_map, spawned_mobs, spawned_mobs_size);
+                        MovePlayer(
+                            &player_coordinates, 
+                            &current_state, 
+                            &battle_system.enemy, 
+                            &enemy_coordinates, 
+                            gamepad.delta_x, gamepad.delta_y, 
+                            current_map, spawned_mobs, spawned_mobs_size,
+                            object_tiles, total_objects
+                        );
                         last_step_time = current_time;
                     }                    
                 } else {
@@ -190,8 +202,24 @@ int main(int argc, char* argv[]) {
 
                 UpdateCamera(&main_camera, player_coordinates, player_width, player_height, TILED_MAP_WIDTH, TILED_MAP_HEIGHT, SCALED_TILED_SIZE);
             }
-
+            
             RenderTilemap(renderer, tileset_texture, current_map_id, main_camera, world_map);
+
+            if(current_map_id == 2) {                
+                Coordinates hotel = {6, 5};
+                total_objects = 0;
+                int object_tiles_capacity = 16;
+                object_tiles = malloc(object_tiles_capacity * sizeof(Coordinates));
+                RenderObject(
+                    renderer, 
+                    tileset_texture,main_camera, 
+                    hotel, 
+                    OBJECT_HOTEL, 
+                    OBJECT_HOTEL_TILE_COUNT, 
+                    &object_tiles, 
+                    &total_objects);
+            }            
+
             RenderPlayer(renderer, player_coordinates, main_camera, SCALED_TILED_SIZE, is_moving);
             RenderEnemies(renderer, main_camera, spawned_mobs, spawned_mobs_size, SCALED_TILED_SIZE);
 

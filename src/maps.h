@@ -87,3 +87,78 @@ void RenderTilemap(SDL_Renderer* renderer, SDL_Texture* tileset_texture, int map
         }
     }
 }
+
+void RenderObject(
+    SDL_Renderer* renderer, 
+    SDL_Texture* tileset_texture, 
+    Camera cam, 
+    Coordinates coordinates, 
+    int object_definition[16][3], 
+    int object_tiles_count, 
+    Coordinates** objects_pointer, // Alterado para Coordinates** para atualizar o ponteiro externo
+    int* objects_pointer_size
+) {
+    if (!tileset_texture || !objects_pointer || !objects_pointer_size) return;
+
+    int tile_size = 32;       
+    int tileset_columns = 4; 
+    float draw_scale = 2.0f; 
+    float scaled_tile = tile_size * draw_scale;
+
+    // 1. Garante uma capacidade inicial mínima maior que 0 caso o tamanho atual seja 0
+    int capacidade = (*objects_pointer_size == 0) ? 16 : (*objects_pointer_size);
+
+    int pos = *objects_pointer_size;
+
+    for (int i = 0; i < object_tiles_count; i++)
+    {
+        // 2. CORREÇÃO: Desreferencia (*objects_pointer_size) em vez de usar o ponteiro cru
+        if (pos >= capacidade) {
+            capacidade *= 2;
+            
+            // 3. Usa realloc no ponteiro real trazido de fora
+            Coordinates* temp = realloc(*objects_pointer, capacidade * sizeof(Coordinates));
+            if (!temp) {
+                printf("Falha ao realocar memoria no indice %d\n", pos);
+                break;
+            }
+            *objects_pointer = temp; // Atualiza o ponteiro principal com o novo endereço
+        }
+
+        int tile_id = object_definition[i][0];
+        float relative_x = object_definition[i][1];
+        float relative_y = object_definition[i][2];
+        float real_x = coordinates.x + relative_x;
+        float real_y = coordinates.y + relative_y;
+
+        Coordinates obj_coordinates = {
+            .x = real_x,
+            .y = real_y
+        };
+
+        // Adiciona a coordenada ao array alocado
+        (*objects_pointer)[pos] = obj_coordinates;
+        pos += 1;        
+
+        // --- RENDERIZAÇÃO ---
+        int tile_col = tile_id % tileset_columns;
+        int tile_row = tile_id / tileset_columns;
+
+        float src_x = (float)(tile_col * tile_size);
+        float src_y = (float)(tile_row * tile_size);
+
+        SDL_FRect src_rect = { src_x, src_y, (float)tile_size, (float)tile_size };
+
+        SDL_FRect dst_rect = {
+            (float)(real_x * scaled_tile) - cam.x,
+            (float)(real_y * scaled_tile) - cam.y,
+            scaled_tile,
+            scaled_tile
+        };
+
+        SDL_RenderTexture(renderer, tileset_texture, &src_rect, &dst_rect);
+    }
+
+    // Atualiza a quantidade real de objetos ocupados
+    *objects_pointer_size = pos;
+}

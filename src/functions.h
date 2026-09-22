@@ -450,7 +450,32 @@ bool IsTileWalkable(int tile_id) {
     return true; // É chão livre
 }
 
-void MovePlayer(Coordinates* player, GameState* game_state, VPet* enemy_found, Coordinates* enemy_coordinates, int delta_x, int delta_y, const int map[TILED_MAP_HEIGHT][TILED_MAP_WIDTH], MapMob mobs[], int mob_count) {
+bool IsTileAnObject(float x, float y, Coordinates objects[], int objects_count) {
+    if (!objects || objects_count <= 0) {
+        return false;
+    }
+
+    for (int i = 0; i < objects_count; i++) {
+        printf("Checando objeto index %d de %d em %p...\n", i, objects_count, (void*)&objects[i]);
+        if (objects[i].x == x && objects[i].y == y)
+        {
+            return true;
+        }        
+    }    
+
+    return false;
+}
+
+void MovePlayer(
+    Coordinates* player, 
+    GameState* game_state, 
+    VPet* enemy_found, 
+    Coordinates* enemy_coordinates, 
+    int delta_x, int delta_y, 
+    const int map[TILED_MAP_HEIGHT][TILED_MAP_WIDTH], 
+    MapMob mobs[], int mob_count,
+    Coordinates objects[], int objects_count
+) {
     int next_x = player->x + delta_x;
     int next_y = player->y + delta_y;
 
@@ -461,8 +486,8 @@ void MovePlayer(Coordinates* player, GameState* game_state, VPet* enemy_found, C
 
     // 2. Checa colisão com o cenário
     int tile_id = map[next_y][next_x];
-    if (!IsTileWalkable(tile_id)) {
-        return; 
+    if (!IsTileWalkable(tile_id) || IsTileAnObject(next_x, next_y, objects, objects_count)) {
+        return;
     }
 
     // 3. Checa se a próxima célula contém um mob inimigo ativo
