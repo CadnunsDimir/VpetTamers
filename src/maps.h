@@ -175,30 +175,50 @@ void RenderObjectOnMap(
 ){
     if (!object_tiles || !total_objects) return;
 
-    if (current_map_id == 2)
-    {
-        Coordinates hotel = {5, 2};
-        
-        // 1. Zera o valor apontado por total_objects
-        *total_objects = 0; 
-        
-        int object_tiles_capacity = 16;
-        
-        // 2. Se o ponteiro principal estiver NULO, aloca a memória inicial
-        if (*object_tiles == NULL) {
-            *object_tiles = malloc(object_tiles_capacity * sizeof(Coordinates));
-        }
+    // 1. Zera a contagem de objetos
+    *total_objects = 0;
 
-        // 3. Repassa os ponteiros de ponteiro corretamente
-        RenderObject(
-            renderer,
-            tileset_texture, 
-            cam,
-            hotel,
-            OBJECT_HOTEL,
-            OBJECT_HOTEL_TILE_COUNT,
-            object_tiles,    // Já é Coordinates**, passa direto
-            total_objects    // Já é int*, passa direto
-        );
+    // 2. Calcula quantos tiles no total o mapa atual precisa alocar
+    int total_needed_tiles = 0;
+    for (int i = 0; i < ALL_OBJECTS_ON_MAPS_COUNT; i++) {
+        if (ALL_OBJECTS_ON_MAPS[i].map_id == current_map_id) {
+            total_needed_tiles += ALL_OBJECTS_ON_MAPS[i].title_count; // (Atentar ao typo 'title_count' vs 'tile_count')
+        }
     }
+
+    // 3. Se o mapa atual não tem objetos, libera a memória anterior e encerra
+    if (total_needed_tiles == 0) {
+        if (*object_tiles != NULL) {
+            free(*object_tiles);
+            *object_tiles = NULL;
+        }
+        return;
+    }
+
+    // 4. Redimensiona o array para caber TODOS os objetos do mapa ativo de uma só vez
+    Coordinates* temp = realloc(*object_tiles, total_needed_tiles * sizeof(Coordinates));
+    if (!temp) {
+        printf("Erro ao realocar memoria para os objetos do mapa %d\n", current_map_id);
+        return;
+    }
+    *object_tiles = temp;
+
+    // 5. Renderiza cada objeto. O RenderObject vai preencher o array sequencialmente
+    //    conforme o *total_objects for sendo incrementado (de 0 até total_needed_tiles).
+    for (int i = 0; i < ALL_OBJECTS_ON_MAPS_COUNT; i++)
+    {
+        if (ALL_OBJECTS_ON_MAPS[i].map_id == current_map_id)
+        {        
+            RenderObject(
+                renderer,
+                tileset_texture, 
+                cam,
+                ALL_OBJECTS_ON_MAPS[i].pos,
+                ALL_OBJECTS_ON_MAPS[i].tiles,
+                ALL_OBJECTS_ON_MAPS[i].title_count,
+                object_tiles,    // Já é Coordinates**, passa direto
+                total_objects    // O RenderObject vai inserindo a partir de *total_objects
+            );
+        }        
+    }    
 }

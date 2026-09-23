@@ -114,6 +114,13 @@ typedef struct {
     // Adicione outras variáveis de progresso/inventário aqui
 } SaveData;
 
+typedef struct {
+    int map_id;
+    Coordinates pos;
+    int tiles[16][3];
+    int title_count;
+} MapObject;
+
 static const Color COLOR_GREY_WALL = {60, 60, 75, 255};
 static const Color COLOR_GREY_WALL_BORDER = { 40, 40, 50, 255};
 static const Color COLOR_GREEN_GROUND = {25, 45, 30, 255};

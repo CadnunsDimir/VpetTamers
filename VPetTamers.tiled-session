@@ -1,5 +1,5 @@
 {
-    "activeFile": "assets/Map2_Village.tmx",
+    "activeFile": "assets/Map1.tmx",
     "expandedProjectPaths": [
         "assets",
         "."
@@ -20,8 +20,8 @@
             "scale": 1.7654166666666666,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 256.0302100542837,
-                "y": 182.39320273778617
+                "x": 327.4014632995044,
+                "y": 295.6809063016285
             }
         },
         "assets/tile2map16.tsx": {
@@ -71,8 +71,8 @@
     "project": "VPetTamers.tiled-project",
     "recentFiles": [
         "assets/tile2map32.tsx",
-        "assets/Map1.tmx",
         "assets/Map2_Village.tmx",
+        "assets/Map1.tmx",
         "assets/tile2map16.tsx",
         "assets/tile_set2.tsx",
         "assets/tile_set.tsx",

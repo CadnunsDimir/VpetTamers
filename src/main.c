@@ -262,6 +262,7 @@ int main(int argc, char* argv[]) {
 
             if (changed_map)
             {
+                total_objects = 0;
                 memcpy(current_map, world_map[current_map_id], sizeof(current_map));
                 if (spawned_mobs) { free(spawned_mobs); spawned_mobs = NULL; }
                 spawned_mobs = SpawnMobs(&spawned_mobs_size, SPAWN_ENEMIES_LIMIT_PER_MAP[current_map_id], current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
