@@ -11,6 +11,7 @@
 #include "maps.h"
 #include "battle_mode.h"
 #include "game_logo.h"
+#include "state\load_save_game.h"
 
 int main(int argc, char* argv[]) {
     // Inicializa a semente do gerador de números aleatórios com o tempo atual
@@ -116,6 +117,8 @@ int main(int argc, char* argv[]) {
     Coordinates* object_tiles = NULL;
     int total_objects = 0;
 
+    char save_data_file[10] = "save.dat";
+
     // Loop principal
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -169,6 +172,16 @@ int main(int argc, char* argv[]) {
             if (gamepad.triggered_confirm) {
                 if (menu_opcao == 0) {
                     current_state = STATE_MAP;
+                } else if (menu_opcao == 1) {
+                    LoadGame(
+                        save_data_file, 
+                        &player_coordinates, 
+                        &current_map_id,
+                        &battle_system.player
+                    );
+                    memcpy(current_map, world_map[current_map_id], sizeof(current_map));
+                    spawned_mobs = SpawnMobs(&spawned_mobs_size, SPAWN_ENEMIES_LIMIT_PER_MAP[current_map_id], current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
+                    current_state = STATE_MAP;
                 }
             }
         }
@@ -182,7 +195,7 @@ int main(int argc, char* argv[]) {
             float top = 320.0f;
             RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, top, "NOVO JOGO", menu_opcao == 0, false);
             float spacing = 80.0f;
-            RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, top + spacing, "CONTINUAR", menu_opcao == 1, true);
+            RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, top + spacing, "CONTINUAR", menu_opcao == 1, false);
         }
         else if (current_state == STATE_MAP || current_state == STATE_PAUSE) {   
             Uint64 current_time = SDL_GetTicks();
@@ -214,23 +227,6 @@ int main(int argc, char* argv[]) {
             
             RenderTilemap(renderer, tileset_texture, current_map_id, main_camera, world_map);
             RenderObjectOnMap(renderer, tileset_texture, main_camera, &object_tiles, current_map_id, &total_objects);
-            // if (current_map_id == 2)
-            // {
-            //     // printf("RenderObjectOnMap | Map %d\n", current_map_id);
-            //     Coordinates hotel = {5, 2};
-            //     total_objects = 0;
-            //     int object_tiles_capacity = 16;
-            //     object_tiles = malloc(object_tiles_capacity * sizeof(Coordinates));
-            //     RenderObject(
-            //         renderer,
-            //         tileset_texture, 
-            //         main_camera,
-            //         hotel,
-            //         OBJECT_HOTEL,
-            //         OBJECT_HOTEL_TILE_COUNT,
-            //         &object_tiles,
-            //         &total_objects);
-            // }
             RenderPlayer(renderer, player_coordinates, main_camera, SCALED_TILED_SIZE, is_moving);
             RenderEnemies(renderer, main_camera, spawned_mobs, spawned_mobs_size, SCALED_TILED_SIZE);
 
@@ -240,27 +236,39 @@ int main(int argc, char* argv[]) {
 
             //TODO: linhas 240-256 Criar função UpdateMapsTransition(player_coordinates, current_map_id, spawned_mobs);
             // printf("player(x=%d, y=%d)\n", player_coordinates.x, player_coordinates.y);
+            bool changed_map = false;
             if(current_map_id == 1) {
                 
                 if (player_coordinates.x == 19 && (player_coordinates.y == 10 || player_coordinates.y == 11))
                 {
                     current_map_id = 2;
-                    memcpy(current_map, world_map[current_map_id], sizeof(current_map));
+                    
                     player_coordinates.x = 1;
-                    player_coordinates.y = player_coordinates.y - 4;
-                    spawned_mobs = SpawnMobs(&spawned_mobs_size, SPAWN_ENEMIES_LIMIT_PER_MAP[current_map_id], current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
+                    player_coordinates.y = player_coordinates.y - 4;                    
+                    changed_map = true;
                 }                
             } else if(current_map_id == 2) {
                 printf("MAP 2 | player(x=%d, y=%d)\n", player_coordinates.x, player_coordinates.y);
                 if (player_coordinates.x == 0 && (player_coordinates.y == 6 || player_coordinates.y == 7))
                 {
                     current_map_id = 1;
-                    memcpy(current_map, world_map[current_map_id], sizeof(current_map));
                     player_coordinates.x = 18;
                     player_coordinates.y = player_coordinates.y + 4;
-                    spawned_mobs = SpawnMobs(&spawned_mobs_size, SPAWN_ENEMIES_LIMIT_PER_MAP[current_map_id], current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
+                    changed_map = true;                    
                 }
             }
+
+            if (changed_map)
+            {
+                memcpy(current_map, world_map[current_map_id], sizeof(current_map));
+                spawned_mobs = SpawnMobs(&spawned_mobs_size, SPAWN_ENEMIES_LIMIT_PER_MAP[current_map_id], current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
+                SaveGame(
+                    save_data_file,
+                    player_coordinates,
+                    current_map_id,
+                    battle_system.player);
+            }
+            
         } 
         else if(current_state == STATE_BATTLE) {
             UpdateNavigation(&battle_system, &gamepad);
@@ -269,6 +277,15 @@ int main(int argc, char* argv[]) {
             if (battle_system.current_state == BATTLE_STATE_WIN) {
                 RemoveEnemyFromMap(current_map, &enemy_coordinates, spawned_mobs, spawned_mobs_size);
             }
+
+            if (battle_system.current_state == BATTLE_STATE_WIN_CLOSE_BATTLE || battle_system.current_state == BATTLE_STATE_LOST)
+            {
+                SaveGame(
+                    save_data_file,
+                    player_coordinates,
+                    current_map_id,
+                    battle_system.player);
+            }            
 
             RenderBattleScreen(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, battle_system);
         }
