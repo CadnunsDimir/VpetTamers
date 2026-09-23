@@ -522,7 +522,12 @@ bool CheckLevelUp(VPet* vpet){
     return false;
 }
 
-void UpdateBattleState(BattleSystem* battle, GameState* game_state) {
+void UpdateBattleState(
+    BattleSystem* battle, 
+    GameState* game_state, 
+    const char* save_data_file, 
+    Coordinates player_pos, 
+    int current_map_id) {
 
     Uint64 current_time = SDL_GetTicks();
 
@@ -591,6 +596,11 @@ void UpdateBattleState(BattleSystem* battle, GameState* game_state) {
                 case BATTLE_STATE_LOST: 
                     *game_state = STATE_MAP;
                     battle->current_state = BATTLE_STATE_MENU_ATTACK;
+                    SaveGame(
+                        save_data_file,
+                        player_pos,
+                        current_map_id,
+                        battle->player);
                     break;
                 default:
                     battle->current_state = BATTLE_STATE_MENU_ATTACK;

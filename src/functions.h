@@ -456,7 +456,7 @@ bool IsTileAnObject(float x, float y, Coordinates objects[], int objects_count) 
     }
 
     for (int i = 0; i < objects_count; i++) {
-        printf("Checando objeto index %d de %d em %p...\n", i, objects_count, (void*)&objects[i]);
+        // printf("Checando objeto index %d de %d em %p...\n", i, objects_count, (void*)&objects[i]);
         if (objects[i].x == x && objects[i].y == y)
         {
             return true;

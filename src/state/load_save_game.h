@@ -2,6 +2,7 @@
 #include <stdbool.h>
 
 bool SaveGame(const char* filename, Coordinates player_pos, int current_map_id, VPet vpet) {
+    printf("[SaveGame] Salvando estado em %s", filename);
     FILE* file = fopen(filename, "wb"); // "wb" = write binary
     if (!file) {
         printf("Erro ao abrir arquivo para salvar!\n");
@@ -19,7 +20,7 @@ bool SaveGame(const char* filename, Coordinates player_pos, int current_map_id, 
     fclose(file);
 
     if (written == 1) {
-        printf("Sessao salva com sucesso em '%s'!\n", filename);
+        printf("[SaveGame] Sessao salva com sucesso em '%s'!\n", filename);
         return true;
     }
 
@@ -29,7 +30,7 @@ bool SaveGame(const char* filename, Coordinates player_pos, int current_map_id, 
 bool LoadGame(const char* filename, Coordinates* player_pos, int* current_map_id, VPet* vpet) {
     FILE* file = fopen(filename, "rb"); // "rb" = read binary
     if (!file) {
-        printf("Nenhum save encontrado em '%s'.\n", filename);
+        printf("[LoadGame] Nenhum save encontrado em '%s'.\n", filename);
         return false;
     }
 
@@ -43,7 +44,7 @@ bool LoadGame(const char* filename, Coordinates* player_pos, int* current_map_id
         *current_map_id = data.current_map_id;
         *vpet = data.vpt;
 
-        printf("Sessao carregada com sucesso!\n");
+        printf("[LoadGame] Sessao carregada com sucesso!\n");
         return true;
     }
 
