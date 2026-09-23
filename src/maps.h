@@ -23,7 +23,7 @@ bool LoadTileset(SDL_Renderer* renderer, SDL_Texture** tileset_texture, const ch
 bool LoadMapFromCSV(const char* filepath, int world_map[TOTAL_MAPS][TILED_MAP_HEIGHT][TILED_MAP_WIDTH], int map_code) {
     FILE* file = fopen(filepath, "r");
     if (!file) {
-        SDL_Log("Erro ao abrir o arquivo de mapa: %s", filepath);
+        printf("Erro ao abrir o arquivo de mapa: %s", filepath);
         return false;
     }
 
@@ -136,6 +136,8 @@ void RenderObject(
             .y = real_y
         };
 
+        // printf("RenderObject | real coordinates | x = %d, y = %d\n", obj_coordinates.x, obj_coordinates.y);
+
         // Adiciona a coordenada ao array alocado
         (*objects_pointer)[pos] = obj_coordinates;
         pos += 1;        
@@ -161,4 +163,42 @@ void RenderObject(
 
     // Atualiza a quantidade real de objetos ocupados
     *objects_pointer_size = pos;
+}
+
+void RenderObjectOnMap(
+    SDL_Renderer* renderer, 
+    SDL_Texture* tileset_texture,
+    Camera cam,
+    Coordinates** object_tiles, // Ponteiro para o ponteiro da main
+    int current_map_id,
+    int* total_objects          // Ponteiro para a contagem da main
+){
+    if (!object_tiles || !total_objects) return;
+
+    if (current_map_id == 2)
+    {
+        Coordinates hotel = {5, 2};
+        
+        // 1. Zera o valor apontado por total_objects
+        *total_objects = 0; 
+        
+        int object_tiles_capacity = 16;
+        
+        // 2. Se o ponteiro principal estiver NULO, aloca a memória inicial
+        if (*object_tiles == NULL) {
+            *object_tiles = malloc(object_tiles_capacity * sizeof(Coordinates));
+        }
+
+        // 3. Repassa os ponteiros de ponteiro corretamente
+        RenderObject(
+            renderer,
+            tileset_texture, 
+            cam,
+            hotel,
+            OBJECT_HOTEL,
+            OBJECT_HOTEL_TILE_COUNT,
+            object_tiles,    // Já é Coordinates**, passa direto
+            total_objects    // Já é int*, passa direto
+        );
+    }
 }

@@ -7,10 +7,10 @@
 #include <time.h>
 #include "game.h"
 #include "functions.h"
+#include "objects/objects.h"
 #include "maps.h"
 #include "battle_mode.h"
 #include "game_logo.h"
-#include "objects/objects.h"
 
 int main(int argc, char* argv[]) {
     // Inicializa a semente do gerador de números aleatórios com o tempo atual
@@ -48,12 +48,21 @@ int main(int argc, char* argv[]) {
         goto cleanup; // Usa rótulo de limpeza para não vazar recursos
     }
 
+    const char* map_files[] = {
+       "assets/Map1.csv",
+       "assets/Map2_Village.csv"
+    };
 
-
-    if (!LoadMapFromCSV("assets/Map1.csv", world_map, 1)) {
-        printf("Erro ao carregar mapa 1\n");
-        goto cleanup;
-    }
+    for (int i = 0; i < 2; i++) {
+        int map_id = i+1;
+        printf("Carregando Map %d (%s)...\n", map_id, map_files[i]);
+        if (!LoadMapFromCSV(map_files[i], world_map, map_id)) {
+            printf("Erro ao carregar mapa %d (%s)\n", map_id, map_files[i]);
+            goto cleanup;
+        } else{
+            printf("Mapa %d (%s) carregado com sucesso!\n", map_id, map_files[i]);
+        }
+    }    
 
     // 3. Conecta Gamepad inicial
     int count = 0;
@@ -100,8 +109,8 @@ int main(int argc, char* argv[]) {
 
     Camera main_camera = {0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT};
 
-    int spawned_mobs_size = 0; // Corrigido de 0.0f para 0
-    spawned_mobs = SpawnMobs(&spawned_mobs_size, 10, current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
+    int spawned_mobs_size = 0; // Guarda a quantidade total de mobs no map (ativos e não ativos)
+    spawned_mobs = SpawnMobs(&spawned_mobs_size, SPAWN_ENEMIES_LIMIT_PER_MAP[current_map_id], current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
     static Uint64 last_step_time = 0;
 
     Coordinates* object_tiles = NULL;
@@ -204,27 +213,51 @@ int main(int argc, char* argv[]) {
             }
             
             RenderTilemap(renderer, tileset_texture, current_map_id, main_camera, world_map);
-
-            if(current_map_id == 2) {                
-                Coordinates hotel = {6, 5};
-                total_objects = 0;
-                int object_tiles_capacity = 16;
-                object_tiles = malloc(object_tiles_capacity * sizeof(Coordinates));
-                RenderObject(
-                    renderer, 
-                    tileset_texture,main_camera, 
-                    hotel, 
-                    OBJECT_HOTEL, 
-                    OBJECT_HOTEL_TILE_COUNT, 
-                    &object_tiles, 
-                    &total_objects);
-            }            
-
+            RenderObjectOnMap(renderer, tileset_texture, main_camera, &object_tiles, current_map_id, &total_objects);
+            // if (current_map_id == 2)
+            // {
+            //     // printf("RenderObjectOnMap | Map %d\n", current_map_id);
+            //     Coordinates hotel = {5, 2};
+            //     total_objects = 0;
+            //     int object_tiles_capacity = 16;
+            //     object_tiles = malloc(object_tiles_capacity * sizeof(Coordinates));
+            //     RenderObject(
+            //         renderer,
+            //         tileset_texture, 
+            //         main_camera,
+            //         hotel,
+            //         OBJECT_HOTEL,
+            //         OBJECT_HOTEL_TILE_COUNT,
+            //         &object_tiles,
+            //         &total_objects);
+            // }
             RenderPlayer(renderer, player_coordinates, main_camera, SCALED_TILED_SIZE, is_moving);
             RenderEnemies(renderer, main_camera, spawned_mobs, spawned_mobs_size, SCALED_TILED_SIZE);
 
             if (current_state == STATE_PAUSE) {
                 RenderPauseOverlay(renderer, &battle_system.player, SCREEN_WIDTH, SCREEN_HEIGHT);
+            }
+
+            //TODO: linhas 240-256 Criar função UpdateMapsTransition(player_coordinates, current_map_id, spawned_mobs);
+            // printf("player(x=%d, y=%d)\n", player_coordinates.x, player_coordinates.y);
+            if(current_map_id == 1) {
+                
+                if (player_coordinates.x == 19 && (player_coordinates.y == 10 || player_coordinates.y == 11))
+                {
+                    current_map_id = 2;
+                    player_coordinates.x = 1;
+                    player_coordinates.y = player_coordinates.y - 4;
+                    spawned_mobs = SpawnMobs(&spawned_mobs_size, SPAWN_ENEMIES_LIMIT_PER_MAP[current_map_id], current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
+                }                
+            } else if(current_map_id == 2) {
+                printf("MAP 2 | player(x=%d, y=%d)\n", player_coordinates.x, player_coordinates.y);
+                if (player_coordinates.x == 19 && (player_coordinates.y == 6 || player_coordinates.y == 7))
+                {
+                    current_map_id = 1;
+                    player_coordinates.x = 18;
+                    player_coordinates.y = player_coordinates.y + 4;
+                    spawned_mobs = SpawnMobs(&spawned_mobs_size, SPAWN_ENEMIES_LIMIT_PER_MAP[current_map_id], current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
+                }
             }
         } 
         else if(current_state == STATE_BATTLE) {

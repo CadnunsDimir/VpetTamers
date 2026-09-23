@@ -7,7 +7,7 @@
 #define BATTLE_RUNNING_CHANCE 40 // 40% de chance de fuga em batalhas
 #define TILED_MAP_WIDTH 20
 #define TILED_MAP_HEIGHT 15
-#define TOTAL_MAPS 1
+#define TOTAL_MAPS 3
 #define SCALED_TILED_SIZE 64.0f
 #define WALKABLE_TILES_COUNT (sizeof(WALKABLE_TILES) / sizeof(WALKABLE_TILES[0]))
 #define STEP_COOLDOWN_MS 150
@@ -83,6 +83,7 @@ typedef struct {
     bool left;
 } PlayerGamePad;
 
+//{X, Y}
 typedef struct {
     int x;
     int y;
@@ -120,6 +121,13 @@ static const Color COLOR_ENEMY_2 = {193, 114, 38, 255};
 static const Color COLOR_ENEMY_3 = {139, 69, 19, 255};
 static const int WALKABLE_TILES[] = {
     300, 301, 302,  304, 306, 308, 309, 310
+};
+
+// Define quantos inimigos serão gerados por mapa. podemos gerar zonas seguras como cidades e vilas
+static const int SPAWN_ENEMIES_LIMIT_PER_MAP[] = {
+    0, 
+    10, //mapa 1
+    0   // mapa 2
 };
 
 static const VPet ENEMY_JAGUAPIRUMON = {
