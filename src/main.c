@@ -245,15 +245,17 @@ int main(int argc, char* argv[]) {
                 if (player_coordinates.x == 19 && (player_coordinates.y == 10 || player_coordinates.y == 11))
                 {
                     current_map_id = 2;
+                    memcpy(current_map, world_map[current_map_id], sizeof(current_map));
                     player_coordinates.x = 1;
                     player_coordinates.y = player_coordinates.y - 4;
                     spawned_mobs = SpawnMobs(&spawned_mobs_size, SPAWN_ENEMIES_LIMIT_PER_MAP[current_map_id], current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
                 }                
             } else if(current_map_id == 2) {
                 printf("MAP 2 | player(x=%d, y=%d)\n", player_coordinates.x, player_coordinates.y);
-                if (player_coordinates.x == 19 && (player_coordinates.y == 6 || player_coordinates.y == 7))
+                if (player_coordinates.x == 0 && (player_coordinates.y == 6 || player_coordinates.y == 7))
                 {
                     current_map_id = 1;
+                    memcpy(current_map, world_map[current_map_id], sizeof(current_map));
                     player_coordinates.x = 18;
                     player_coordinates.y = player_coordinates.y + 4;
                     spawned_mobs = SpawnMobs(&spawned_mobs_size, SPAWN_ENEMIES_LIMIT_PER_MAP[current_map_id], current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
