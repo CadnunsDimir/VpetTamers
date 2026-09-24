@@ -212,6 +212,30 @@ void DrawRect(SDL_Renderer* renderer, SDL_FRect tile, Color color) {
     SDL_RenderFillRect(renderer, &tile);
 }
 
+static Color ShadeVpetColor(Color color, float factor, int alpha) {
+    Color shaded = {
+        (int)(color.r * factor),
+        (int)(color.g * factor),
+        (int)(color.b * factor),
+        alpha
+    };
+
+    return shaded;
+}
+
+static void RenderVpetPartVolume(SDL_Renderer* renderer, SDL_FRect rect, Color color, float scale) {
+    float depth = fmaxf(1.0f, scale * 1.5f);
+    SDL_FRect side = { rect.x + depth, rect.y + depth, rect.w, rect.h };
+    SDL_FRect top = { rect.x, rect.y, rect.w, fmaxf(1.0f, scale * 1.5f) };
+    SDL_FRect left = { rect.x, rect.y, fmaxf(1.0f, scale * 1.5f), rect.h };
+
+    // Extrusao escura e duas faces de luz para sugerir volume na vista iso.
+    DrawRect(renderer, side, ShadeVpetColor(color, 0.45f, color.a));
+    DrawRect(renderer, rect, color);
+    DrawRect(renderer, top, ShadeVpetColor(color, 1.20f, color.a));
+    DrawRect(renderer, left, ShadeVpetColor(color, 1.08f, color.a));
+}
+
 void RenderMapVpetData(SDL_Renderer* renderer, const VpetPart* parts, size_t count, float pos_x, float pos_y, float leg_step_A, float leg_step_B, float scale) {
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
@@ -226,8 +250,6 @@ void RenderMapVpetData(SDL_Renderer* renderer, const VpetPart* parts, size_t cou
             x_offset = leg_step_B;
         }
 
-        SDL_SetRenderDrawColor(renderer, part->color.r, part->color.g, part->color.b, part->color.a);
-
         SDL_FRect dst_rect = {
             pos_x + ((part->rect.x + x_offset) * scale),
             pos_y + (part->rect.y * scale),
@@ -235,7 +257,7 @@ void RenderMapVpetData(SDL_Renderer* renderer, const VpetPart* parts, size_t cou
             part->rect.h * scale
         };
 
-        SDL_RenderFillRect(renderer, &dst_rect);
+        RenderVpetPartVolume(renderer, dst_rect, part->color, scale);
     }
 }
 

@@ -45,9 +45,6 @@ void RenderVPetSprite(SDL_Renderer* renderer, VPetType tipo, float x, float y, f
             y_offset = sinf((float)SDL_GetTicks() / 80.0f) * (2.0f * scale);
         }
 
-        // Aplica a cor da parte
-        SDL_SetRenderDrawColor(renderer, part.color.r, part.color.g, part.color.b, part.color.a);
-
         // Calcula as posições na tela escaladas (incluindo deslocamento de animação)
         SDL_FRect dst_rect = {
             x + (part.rect.x * scale),
@@ -56,8 +53,8 @@ void RenderVPetSprite(SDL_Renderer* renderer, VPetType tipo, float x, float y, f
             part.rect.h * scale
         };
 
-        // Desenha a parte
-        SDL_RenderFillRect(renderer, &dst_rect);
+        // Usa o mesmo volume estilizado dos VPets do mapa.
+        RenderVpetPartVolume(renderer, dst_rect, part.color, scale);
     }
 }
 
