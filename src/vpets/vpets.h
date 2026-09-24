@@ -1,7 +1,17 @@
+typedef enum {
+    ANIM_STATIC,  // Parte fixa (corpo, cabeça, olhos, etc.)
+    ANIM_STEP_A,  // Move com leg_step_A
+    ANIM_STEP_B   // Move com leg_step_B
+} MapAnimGroup;
+
 typedef struct {
     Color color;
     SDL_FRect rect;
+    MapAnimGroup anim_group;
 } VpetPart;
+
+// geral
+const Color MAP_SHADOW                  = {0, 0, 0, 90};
 
 // ==========================================
 // 1. PET_BK_MBARACAJAMON
@@ -62,6 +72,8 @@ const Color JAGUAPIRUMON_OLHO            = {255, 255, 100, 255};
 const Color JAGUAPIRUMON_NUCLEO_OLHO     = {255, 50, 0, 255};
 const Color JAGUAPIRUMON_FOGO_MANDIBULA  = {255, 150, 0, 200};
 
+const Color JAGUAPIRUMON_AURA_BASE      = {255, 120, 0, 130};
+
 VpetPart PET_JAGUAPIRUMON_BATTLE_MODE[] = {
     // 1. Auras de Chama
     { .color = JAGUAPIRUMON_CHAMA_EXTERNA, .rect = {  -8.0f,  -6.0f, 48.0f, 42.0f } }, // flame_outer
@@ -101,9 +113,9 @@ VpetPart PET_JAGUAPIRUMON_BATTLE_MODE[] = {
 // ==========================================
 const Color RUGUASUMON_CAUDA   = {20, 80, 65, 255};
 const Color RUGUASUMON_PATAS   = {230, 190, 40, 255};
-const Color RUGUASUMON_PEITO   = {20, 80, 65, 255};
+const Color RUGUASUMON_CORPO   = {20, 80, 65, 255};
 const Color RUGUASUMON_ASA     = {180, 65, 25, 255};
-const Color RUGUASUMON_PESCOCO = {240, 180, 30, 255};
+const Color RUGUASUMON_CABECA = {240, 180, 30, 255};
 const Color RUGUASUMON_CRISTA  = {220, 35, 35, 255};
 const Color RUGUASUMON_BARBELA = {220, 35, 35, 255};
 const Color RUGUASUMON_BICO    = {245, 190, 20, 255};
@@ -118,15 +130,15 @@ VpetPart PET_RUGUASUMON_BATTLE_MODE[] = {
     { .color = RUGUASUMON_PATAS,   .rect = {   6.0f,  28.0f,  3.0f,  8.0f } }, // leg_l
     { .color = RUGUASUMON_PATAS,   .rect = {  14.0f,  28.0f,  3.0f,  8.0f } }, // leg_r
 
-    // 3. Peito
-    { .color = RUGUASUMON_PEITO,   .rect = {   2.0f,  18.0f, 14.0f, 12.0f } }, // breast
+    // 3. Corpo
+    { .color = RUGUASUMON_CORPO,   .rect = {   2.0f,  18.0f, 14.0f, 12.0f } }, // breast
 
     // 4. Asa
     { .color = RUGUASUMON_ASA,     .rect = {   8.0f,  14.0f, 14.0f, 12.0f } }, // wing
 
     // 5. Pescoço e Cabeça
-    { .color = RUGUASUMON_PESCOCO, .rect = {   2.0f,   6.0f, 10.0f, 14.0f } }, // neck
-    { .color = RUGUASUMON_PESCOCO, .rect = {  -1.0f,   2.0f, 11.0f,  8.0f } }, // head
+    { .color = RUGUASUMON_CABECA, .rect = {   2.0f,   6.0f, 10.0f, 14.0f } }, // neck
+    { .color = RUGUASUMON_CABECA, .rect = {  -1.0f,   2.0f, 11.0f,  8.0f } }, // head
 
     // 6. Crista
     { .color = RUGUASUMON_CRISTA,  .rect = {   1.0f,  -4.0f,  4.0f,  7.0f } }, // comb_1
@@ -142,3 +154,60 @@ VpetPart PET_RUGUASUMON_BATTLE_MODE[] = {
     { .color = RUGUASUMON_OLHO,    .rect = {   2.0f,   4.0f,  2.0f,  2.0f } }  // eye
 };
 #define PET_RUGUASUMON_BATTLE_MODE_COUNT (sizeof(PET_RUGUASUMON_BATTLE_MODE) / sizeof(PET_RUGUASUMON_BATTLE_MODE[0]))
+
+// ============================================================================
+// 1. DADOS DE CORES E GEOMETRIA DO MAPA (JAGUAPIRUMON)
+// ============================================================================
+
+static const VpetPart JAGUAPIRUMON_MAP_PARTS[] = {
+    // 1. Sombra e Aura na Base
+    { .color = MAP_SHADOW,             .rect = {  4.0f, 26.0f, 24.0f,  5.0f }, .anim_group = ANIM_STATIC }, // shadow
+    { .color = JAGUAPIRUMON_AURA_BASE, .rect = {  2.0f, 22.0f, 28.0f,  6.0f }, .anim_group = ANIM_STATIC }, // flame_aura
+
+    // 2. Pernas Animadas
+    { .color = JAGUAPIRUMON_PATAS,     .rect = { 20.0f, 18.0f,  4.0f,  9.0f }, .anim_group = ANIM_STEP_B }, // leg_back_left
+    { .color = JAGUAPIRUMON_PATAS,     .rect = { 16.0f, 18.0f,  4.0f,  9.0f }, .anim_group = ANIM_STEP_A }, // leg_back_right
+    { .color = JAGUAPIRUMON_PATAS,     .rect = { 10.0f, 18.0f,  4.0f,  9.0f }, .anim_group = ANIM_STEP_A }, // leg_front_left
+    { .color = JAGUAPIRUMON_PATAS,     .rect = {  6.0f, 18.0f,  4.0f,  9.0f }, .anim_group = ANIM_STEP_B }, // leg_front_right
+
+    // 3. Garras/Patinhas em fogo
+    { .color = JAGUAPIRUMON_GARRAS,    .rect = { 20.0f, 25.0f,  4.0f,  2.0f }, .anim_group = ANIM_STEP_B }, // paw1 (acompanha leg_back_left)
+    { .color = JAGUAPIRUMON_GARRAS,    .rect = { 16.0f, 25.0f,  4.0f,  2.0f }, .anim_group = ANIM_STEP_A }, // paw2 (acompanha leg_back_right)
+    { .color = JAGUAPIRUMON_GARRAS,    .rect = { 10.0f, 25.0f,  4.0f,  2.0f }, .anim_group = ANIM_STEP_A }, // paw3 (acompanha leg_front_left)
+    { .color = JAGUAPIRUMON_GARRAS,    .rect = {  6.0f, 25.0f,  4.0f,  2.0f }, .anim_group = ANIM_STEP_B }, // paw4 (acompanha leg_front_right)
+
+    // 4. Corpo, Cabeça e Detalhes
+    { .color = JAGUAPIRUMON_CORPO,     .rect = {  4.0f, 10.0f, 22.0f, 10.0f }, .anim_group = ANIM_STATIC }, // body
+    { .color = JAGUAPIRUMON_CABECA,    .rect = {  2.0f,  6.0f, 12.0f, 10.0f }, .anim_group = ANIM_STATIC }, // head
+    { .color = JAGUAPIRUMON_ORELHA,    .rect = {  9.0f,  2.0f,  4.0f,  5.0f }, .anim_group = ANIM_STATIC }, // ears
+    { .color = JAGUAPIRUMON_OLHO,      .rect = {  4.0f,  8.0f,  3.0f,  3.0f }, .anim_group = ANIM_STATIC }  // eye
+};
+
+#define JAGUAPIRUMON_MAP_PARTS_COUNT (sizeof(JAGUAPIRUMON_MAP_PARTS) / sizeof(JAGUAPIRUMON_MAP_PARTS[0]))
+
+// ============================================================================
+// 2. DADOS DE CORES E GEOMETRIA DO MAPA (RUGUASUMON)
+// ============================================================================
+
+static const VpetPart RUGUASUMON_MAP_PARTS[] = {
+    // 1. Sombra na Base
+    { .color = MAP_SHADOW,  .rect = {  6.0f, 27.0f, 20.0f,  4.0f }, .anim_group = ANIM_STATIC }, // shadow
+
+    // 2. Pernas
+    { .color = RUGUASUMON_PATAS,       .rect = { 10.0f, 20.0f,  3.0f,  8.0f }, .anim_group = ANIM_STEP_A }, // leg_l
+    { .color = RUGUASUMON_PATAS,       .rect = { 18.0f, 20.0f,  3.0f,  8.0f }, .anim_group = ANIM_STEP_B }, // leg_r
+
+    // 3. Corpo e Asas
+    { .color = RUGUASUMON_CAUDA,       .rect = { 22.0f,  8.0f,  7.0f, 12.0f }, .anim_group = ANIM_STATIC }, // tail
+    { .color = RUGUASUMON_CORPO,       .rect = {  8.0f, 11.0f, 15.0f, 12.0f }, .anim_group = ANIM_STATIC }, // body
+    { .color = RUGUASUMON_ASA,         .rect = { 14.0f, 12.0f,  8.0f,  8.0f }, .anim_group = ANIM_STATIC }, // wing
+
+    // 4. Cabeça e Detalhes
+    { .color = RUGUASUMON_CABECA,      .rect = {  6.0f,  5.0f, 10.0f, 10.0f }, .anim_group = ANIM_STATIC }, // head
+    { .color = RUGUASUMON_CRISTA,      .rect = {  8.0f,  1.0f,  6.0f,  5.0f }, .anim_group = ANIM_STATIC }, // comb
+    { .color = RUGUASUMON_BARBELA,     .rect = {  4.0f, 13.0f,  4.0f,  4.0f }, .anim_group = ANIM_STATIC }, // wattle
+    { .color = RUGUASUMON_BICO,        .rect = {  2.0f,  9.0f,  5.0f,  4.0f }, .anim_group = ANIM_STATIC }, // beak
+    { .color = RUGUASUMON_OLHO,        .rect = {  8.0f,  7.0f,  2.0f,  2.0f }, .anim_group = ANIM_STATIC }  // eye
+};
+
+#define RUGUASUMON_MAP_PARTS_COUNT (sizeof(RUGUASUMON_MAP_PARTS) / sizeof(RUGUASUMON_MAP_PARTS[0]))
