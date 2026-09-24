@@ -7,213 +7,57 @@ void GridToIsometric(int grid_x, int grid_y, float tile_w, float tile_h, float o
 }
 
 void RenderVPetSprite(SDL_Renderer* renderer, VPetType tipo, float x, float y, float scale) {
+    VpetPart* parts = NULL;
+    size_t count = 0;
+
+    // 1. Seleciona o array e o tamanho corretos conforme o VPet
     switch (tipo) {
-        case PET_BK_MBARACAJAMON: {
-            // 1. Cauda Curvada Volumosa (Esquerda)
-            SDL_FRect tail_1 = { x - (10.0f * scale), y + (6.0f * scale), 7.0f * scale, 16.0f * scale };
-            SDL_FRect tail_2 = { x - (14.0f * scale), y - (2.0f * scale), 8.0f * scale, 12.0f * scale };
-            SDL_FRect tail_tip = { x - (12.0f * scale), y - (8.0f * scale), 7.0f * scale, 8.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 90, 95, 100, 255); // Cinza médio
-            SDL_RenderFillRect(renderer, &tail_1);
-            SDL_RenderFillRect(renderer, &tail_2);
-            SDL_RenderFillRect(renderer, &tail_tip);
-
-            // 2. Patas Traseiras
-            SDL_FRect leg_back_l = { x - (2.0f * scale), y + (22.0f * scale), 5.0f * scale, 12.0f * scale };
-            SDL_FRect leg_back_r = { x + (6.0f * scale), y + (24.0f * scale), 5.0f * scale, 10.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 80, 85, 90, 255);
-            SDL_RenderFillRect(renderer, &leg_back_l);
-            SDL_RenderFillRect(renderer, &leg_back_r);
-
-            // 3. Área Clara da Barriga / Traseiro (Detalhe bege)
-            SDL_FRect belly_light = { x + (1.0f * scale), y + (16.0f * scale), 10.0f * scale, 10.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 235, 215, 200, 255); // Tom bege claro
-            SDL_RenderFillRect(renderer, &belly_light);
-
-            // 4. Dorso / Corpo Principal (Inclinado em perspectiva)
-            SDL_FRect body = { x + (2.0f * scale), y + (10.0f * scale), 18.0f * scale, 15.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 100, 105, 110, 255);
-            SDL_RenderFillRect(renderer, &body);
-
-            // 5. Patas Dianteiras (Visíveis à direita, no fundo)
-            SDL_FRect leg_front_l = { x + (12.0f * scale), y + (18.0f * scale), 4.0f * scale, 10.0f * scale };
-            SDL_FRect leg_front_r = { x + (17.0f * scale), y + (15.0f * scale), 4.0f * scale, 10.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 80, 85, 90, 255);
-            SDL_RenderFillRect(renderer, &leg_front_l);
-            SDL_RenderFillRect(renderer, &leg_front_r);
-
-            // 6. Cabeça Felina (3/4 Traseiro)
-            SDL_FRect head = { x + (10.0f * scale), y + (2.0f * scale), 16.0f * scale, 13.0f * scale };
-            SDL_FRect cheek_l = { x + (8.0f * scale), y + (6.0f * scale), 4.0f * scale, 6.0f * scale };
-            SDL_FRect cheek_r = { x + (24.0f * scale), y + (6.0f * scale), 4.0f * scale, 6.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 100, 105, 110, 255);
-            SDL_RenderFillRect(renderer, &head);
-            SDL_RenderFillRect(renderer, &cheek_l);
-            SDL_RenderFillRect(renderer, &cheek_r);
-
-            // 7. Orelhas Pontudas
-            SDL_FRect ear_l = { x + (10.0f * scale), y - (5.0f * scale), 5.0f * scale, 8.0f * scale };
-            SDL_FRect ear_r = { x + (20.0f * scale), y - (4.0f * scale), 5.0f * scale, 8.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 80, 85, 90, 255);
-            SDL_RenderFillRect(renderer, &ear_l);
-            SDL_RenderFillRect(renderer, &ear_r);
-
+        case PET_BK_MBARACAJAMON:
+            parts = PET_BK_MBARACAJAMON_BATTLE_MODE;
+            count = PET_BK_MBARACAJAMON_BATTLE_MODE_COUNT;
             break;
+
+        case PET_JAGUAPIRUMON:
+            parts = PET_JAGUAPIRUMON_BATTLE_MODE;
+            count = PET_JAGUAPIRUMON_BATTLE_MODE_COUNT;
+            break;
+
+        case PET_RUGUASUMON:
+            parts = PET_RUGUASUMON_BATTLE_MODE;
+            count = PET_RUGUASUMON_BATTLE_MODE_COUNT;
+            break;
+
+        default:
+            return; // VPet desconhecido
+    }
+
+    // 2. Garante o modo de transparência ativo para auras/chamas
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    // 3. Renderiza cada parte do VPet selecionado
+    for (size_t i = 0; i < count; i++) {
+        VpetPart part = parts[i];
+        float y_offset = 0.0f;
+
+        // Animação da chama amarela interna do Jaguapirumon (índice 1 no array)
+        if (tipo == PET_JAGUAPIRUMON && i == 1) {
+            // printf("criando chama\n");
+            y_offset = sinf((float)SDL_GetTicks() / 80.0f) * (2.0f * scale);
         }
 
-        case PET_JAGUAPIRUMON: {
-            // 1. AURA DE CHAMAS EXTERNA (Efeito de brilho ao redor do corpo)
-            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-            
-            // Chama Laranja Externa (Transparente)
-            SDL_FRect flame_outer = { x - (8.0f * scale), y - (6.0f * scale), 48.0f * scale, 42.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 255, 100, 0, 120);
-            SDL_RenderFillRect(renderer, &flame_outer);
+        // Aplica a cor da parte
+        SDL_SetRenderDrawColor(renderer, part.color.r, part.color.g, part.color.b, part.color.a);
 
-            // Chama Amarela Intermediária (Efeito de calor pulsante)
-            float time_offset = sinf((float)SDL_GetTicks() / 80.0f) * (2.0f * scale); // Animação de chama tremulando
-            SDL_FRect flame_inner = { x - (4.0f * scale), y - (2.0f * scale) + time_offset, 40.0f * scale, 34.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 255, 200, 0, 160);
-            SDL_RenderFillRect(renderer, &flame_inner);
+        // Calcula as posições na tela escaladas (incluindo deslocamento de animação)
+        SDL_FRect dst_rect = {
+            x + (part.rect.x * scale),
+            y + (part.rect.y * scale) + y_offset,
+            part.rect.w * scale,
+            part.rect.h * scale
+        };
 
-            // 2. PATAS (Posicionadas para criar perspectiva isométrica)
-            SDL_SetRenderDrawColor(renderer, 40, 20, 10, 255); // Pelo carbonizado escuro
-            
-            // Pata Traseira Esquerda
-            SDL_FRect leg_back_l = { x + (22.0f * scale), y + (22.0f * scale), 6.0f * scale, 12.0f * scale };
-            SDL_RenderFillRect(renderer, &leg_back_l);
-            
-            // Pata Traseira Direita
-            SDL_FRect leg_back_r = { x + (16.0f * scale), y + (24.0f * scale), 6.0f * scale, 12.0f * scale };
-            SDL_RenderFillRect(renderer, &leg_back_r);
-
-            // Pata Dianteira Esquerda
-            SDL_FRect leg_front_l = { x + (4.0f * scale), y + (22.0f * scale), 7.0f * scale, 14.0f * scale };
-            SDL_RenderFillRect(renderer, &leg_front_l);
-
-            // Pata Dianteira Direita (Avançada para frente e com garras)
-            SDL_FRect leg_front_r = { x - (2.0f * scale), y + (24.0f * scale), 8.0f * scale, 14.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 50, 25, 12, 255);
-            SDL_RenderFillRect(renderer, &leg_front_r);
-
-            // Garras Pretas na pata dianteira
-            SDL_SetRenderDrawColor(renderer, 10, 10, 10, 255);
-            SDL_FRect claws = { x - (3.0f * scale), y + (36.0f * scale), 9.0f * scale, 3.0f * scale };
-            SDL_RenderFillRect(renderer, &claws);
-
-            // 3. CORPO / TRONCO (Inclinado para a postura canina)
-            SDL_SetRenderDrawColor(renderer, 45, 22, 12, 255); // Castanho escuro / queimado
-            SDL_FRect body = { x + (2.0f * scale), y + (8.0f * scale), 26.0f * scale, 18.0f * scale };
-            SDL_RenderFillRect(renderer, &body);
-
-            // Lombo/Costas (Sombra superior)
-            SDL_SetRenderDrawColor(renderer, 25, 12, 6, 255);
-            SDL_FRect spine = { x + (6.0f * scale), y + (6.0f * scale), 20.0f * scale, 6.0f * scale };
-            SDL_RenderFillRect(renderer, &spine);
-
-            // 4. CORRENTE METÁLICA NAS COSTAS
-            SDL_SetRenderDrawColor(renderer, 180, 180, 190, 255); // Prateado/Cinza metálico
-            SDL_FRect chain_link1 = { x + (12.0f * scale), y + (4.0f * scale), 6.0f * scale, 5.0f * scale };
-            SDL_FRect chain_link2 = { x + (16.0f * scale), y + (1.0f * scale), 5.0f * scale, 5.0f * scale };
-            SDL_RenderFillRect(renderer, &chain_link1);
-            SDL_RenderFillRect(renderer, &chain_link2);
-
-            // 5. CABEÇA E FOCINHO (Inclinados para a esquerda/frente na batalha)
-            SDL_SetRenderDrawColor(renderer, 35, 18, 8, 255);
-            SDL_FRect head = { x - (4.0f * scale), y + (6.0f * scale), 16.0f * scale, 14.0f * scale };
-            SDL_RenderFillRect(renderer, &head);
-
-            // Focinho Alongado
-            SDL_FRect snout = { x - (10.0f * scale), y + (12.0f * scale), 12.0f * scale, 10.0f * scale };
-            SDL_RenderFillRect(renderer, &snout);
-
-            // Orelhas / Chifres Pontiagudos
-            SDL_SetRenderDrawColor(renderer, 20, 10, 5, 255);
-            SDL_FRect ear1 = { x + (4.0f * scale), y - (2.0f * scale), 4.0f * scale, 10.0f * scale };
-            SDL_FRect ear2 = { x + (9.0f * scale), y + (1.0f * scale), 4.0f * scale, 8.0f * scale };
-            SDL_RenderFillRect(renderer, &ear1);
-            SDL_RenderFillRect(renderer, &ear2);
-
-            // 6. DETALHES RANCOROSOS (Dentes, Olhos e Fogo na Boca)
-            // Dentes Expôstos (Branco Amarelado)
-            SDL_SetRenderDrawColor(renderer, 240, 230, 180, 255);
-            SDL_FRect teeth = { x - (10.0f * scale), y + (20.0f * scale), 10.0f * scale, 3.0f * scale };
-            SDL_RenderFillRect(renderer, &teeth);
-
-            // Olhos Incandescentes (Amarelo/Branco Flamejante)
-            SDL_SetRenderDrawColor(renderer, 255, 255, 100, 255);
-            SDL_FRect eye = { x - (1.0f * scale), y + (10.0f * scale), 4.0f * scale, 3.0f * scale };
-            SDL_RenderFillRect(renderer, &eye);
-
-            // Núcleo do Olho
-            SDL_SetRenderDrawColor(renderer, 255, 50, 0, 255);
-            SDL_FRect eye_core = { x - (1.0f * scale), y + (11.0f * scale), 2.0f * scale, 2.0f * scale };
-            SDL_RenderFillRect(renderer, &eye_core);
-
-            // Fogo saindo da Mandíbula (Detalhe final)
-            SDL_SetRenderDrawColor(renderer, 255, 150, 0, 200);
-            SDL_FRect jaw_fire = { x - (12.0f * scale), y + (18.0f * scale), 6.0f * scale, 6.0f * scale };
-            SDL_RenderFillRect(renderer, &jaw_fire);
-
-            break;
-        }
-
-        case PET_RUGUASUMON: {
-            // 1. Cauda Verde Arqueada (À direita, no fundo)
-            SDL_FRect tail_main = { x + (18.0f * scale), y - (2.0f * scale), 12.0f * scale, 20.0f * scale };
-            SDL_FRect tail_top  = { x + (14.0f * scale), y - (8.0f * scale), 14.0f * scale, 10.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 20, 80, 65, 255); // Verde-escuro / Esmeralda
-            SDL_RenderFillRect(renderer, &tail_main);
-            SDL_RenderFillRect(renderer, &tail_top);
-
-            // 2. Patas Amarelas (Alinhadas em baixo)
-            SDL_FRect leg_l = { x + (6.0f * scale), y + (28.0f * scale), 3.0f * scale, 8.0f * scale };
-            SDL_FRect leg_r = { x + (14.0f * scale), y + (28.0f * scale), 3.0f * scale, 8.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 230, 190, 40, 255); // Amarelo
-            SDL_RenderFillRect(renderer, &leg_l);
-            SDL_RenderFillRect(renderer, &leg_r);
-
-            // 3. Peito / Barriga (Verde-escuro)
-            SDL_FRect breast = { x + (2.0f * scale), y + (18.0f * scale), 14.0f * scale, 12.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 20, 80, 65, 255);
-            SDL_RenderFillRect(renderer, &breast);
-
-            // 4. Asa / Asas (Acastanhadas/Avermelhadas no dorso)
-            SDL_FRect wing = { x + (8.0f * scale), y + (14.0f * scale), 14.0f * scale, 12.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 180, 65, 25, 255); // Castanho-avermelhado
-            SDL_RenderFillRect(renderer, &wing);
-
-            // 5. Pescoço e Cabeça (Amarelo vivo, voltado para a esquerda/frente)
-            SDL_FRect neck = { x + (2.0f * scale), y + (6.0f * scale), 10.0f * scale, 14.0f * scale };
-            SDL_FRect head = { x - (1.0f * scale), y + (2.0f * scale), 11.0f * scale, 8.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 240, 180, 30, 255); // Amarelo
-            SDL_RenderFillRect(renderer, &neck);
-            SDL_RenderFillRect(renderer, &head);
-
-            // 6. Crista Vermelha no Topo da Cabeça
-            SDL_FRect comb_1 = { x + (1.0f * scale), y - (4.0f * scale), 4.0f * scale, 7.0f * scale };
-            SDL_FRect comb_2 = { x + (5.0f * scale), y - (5.0f * scale), 4.0f * scale, 8.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 220, 35, 35, 255); // Vermelho
-            SDL_RenderFillRect(renderer, &comb_1);
-            SDL_RenderFillRect(renderer, &comb_2);
-
-            // 7. Barbela (Pedaço vermelho sob o bico)
-            SDL_FRect wattle = { x - (2.0f * scale), y + (10.0f * scale), 4.0f * scale, 6.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 220, 35, 35, 255);
-            SDL_RenderFillRect(renderer, &wattle);
-
-            // 8. Bico Amarelo (Apontado para a esquerda/frente, na direção do gato)
-            SDL_FRect beak = { x - (6.0f * scale), y + (4.0f * scale), 6.0f * scale, 4.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 245, 190, 20, 255);
-            SDL_RenderFillRect(renderer, &beak);
-
-            // 9. Olho Preto
-            SDL_FRect eye = { x + (2.0f * scale), y + (4.0f * scale), 2.0f * scale, 2.0f * scale };
-            SDL_SetRenderDrawColor(renderer, 10, 10, 10, 255);
-            SDL_RenderFillRect(renderer, &eye);
-
-            break;
-        }
+        // Desenha a parte
+        SDL_RenderFillRect(renderer, &dst_rect);
     }
 }
 

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "game.h"
+#include "vpets/vpets.h"
 #include "state/load_save_game.h"
 #include "functions.h"
 #include "objects/objects.h"
