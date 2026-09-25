@@ -211,3 +211,41 @@ static const VpetPart RUGUASUMON_MAP_PARTS[] = {
 };
 
 #define RUGUASUMON_MAP_PARTS_COUNT (sizeof(RUGUASUMON_MAP_PARTS) / sizeof(RUGUASUMON_MAP_PARTS[0]))
+
+static const VPet ENEMY_JAGUAPIRUMON = {
+    .name = "Jaguapirumon", //cachoro feio
+    .defense = 2,
+    .strength = 3,
+    .hp = 20,
+    .hp_max = 20,
+    .type = PET_JAGUAPIRUMON,
+    .level = 2
+};
+
+static const VPet ENEMY_RYGUASUMON = {
+    .name = "Ruguasumon", //galinha domestica
+    .defense = 1,
+    .strength = 1,
+    .hp = 10,
+    .hp_max = 10,
+    .type = PET_RUGUASUMON,
+    .level = 1
+};
+
+
+//TODO: criar vpets (*mon) inspirados nos nomes abaixo:
+/*
+Jaguarete: Onça-pintada (literalmente "cão verdadeiro" ou "fera verdadeira").
+Aguará: Lobo / Lobo-guará.
+Ka'i: Macaco.
+Tapiti: Coelho ou lebre.
+Angujá: Rato.Pira: Peixe.
+Jagua: Cachorro.Maracadá (ou mbarakaja): Gato.Kavaju: Cavalo.Vaca: Vaca.Curé: Porco / Suíno.Ryguasu: Galinha.Ovechá: Ovelha.Cavará: Cabra / Bode.
+*/
+
+
+static const VPet ENEMY_LIST[] = {
+    ENEMY_JAGUAPIRUMON,
+    ENEMY_RYGUASUMON
+};
+#define ENEMY_LIST_COUNT sizeof(ENEMY_LIST) / sizeof(ENEMY_LIST[0])

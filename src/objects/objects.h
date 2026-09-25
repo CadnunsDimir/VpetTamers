@@ -8,7 +8,7 @@ static const MapObject ALL_OBJECTS_ON_MAPS[] = {
    map2_hotel_2,
    map3_tree1,
    map3_tree2,
-   map3_tree2
+   map3_tree3
 };
 
 #define ALL_OBJECTS_ON_MAPS_COUNT (sizeof(ALL_OBJECTS_ON_MAPS) / sizeof(ALL_OBJECTS_ON_MAPS[0]))

@@ -654,8 +654,8 @@ MapMob* SpawnMobs(int *tamanho_retorno, int count,int map[TILED_MAP_HEIGHT][TILE
             mob_array = temp;
         }
 
-        int enemy_list_size = sizeof(ENEMY_LIST) / sizeof(ENEMY_LIST[0]);
-        int indice_sorteado = rand() % enemy_list_size;
+        
+        int indice_sorteado = rand() % ENEMY_LIST_COUNT;
         VPet pet = ENEMY_LIST[indice_sorteado];
 
         int pos_x, pos_y;

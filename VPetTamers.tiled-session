@@ -1,9 +1,9 @@
 {
-    "activeFile": "assets/Map2_Village.tmx",
+    "activeFile": "assets/Map3_Floresta_Mar.tmx",
     "expandedProjectPaths": [
-        "assets",
+        "assets/maps",
         ".",
-        "assets/maps"
+        "assets"
     ],
     "fileStates": {
         "assets/Map1.tmx": {
@@ -29,8 +29,8 @@
             "scale": 0.89359375,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 319.49641545724785,
-                "y": 240.04196537856274
+                "x": 919.8810980940725,
+                "y": 321.1750305997553
             }
         },
         "assets/maps/Map3_Floresta_Mar.tmx": {
@@ -92,9 +92,9 @@
     "project": "VPetTamers.tiled-project",
     "recentFiles": [
         "assets/tile2map32.tsx",
-        "assets/Map3_Floresta_Mar.tmx",
         "fase1.tmx",
         "assets/Map2_Village.tmx",
+        "assets/Map3_Floresta_Mar.tmx",
         "assets/maps/Map3_Floresta_Mar.tmx",
         "assets/Map1.tmx",
         "assets/tile2map16.tsx",
