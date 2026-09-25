@@ -1,28 +1,48 @@
 {
-    "activeFile": "assets/Map1.tmx",
+    "activeFile": "assets/Map2_Village.tmx",
     "expandedProjectPaths": [
         "assets",
-        "."
+        ".",
+        "assets/maps"
     ],
     "fileStates": {
         "assets/Map1.tmx": {
             "scale": 0.9321875,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 327.18739523969157,
-                "y": 453.77137110291653
+                "x": 260.6771706335903,
+                "y": 237.076768354006
             }
         },
         "assets/Map2_Village.tmx": {
             "expandedObjectLayers": [
                 2
             ],
-            "scale": 1.7654166666666666,
+            "scale": 0.75,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 327.4014632995044,
-                "y": 295.6809063016285
+                "x": 239.33333333333331,
+                "y": 264.66666666666663
             }
+        },
+        "assets/Map3_Floresta_Mar.tmx": {
+            "scale": 0.89359375,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 319.49641545724785,
+                "y": 240.04196537856274
+            }
+        },
+        "assets/maps/Map3_Floresta_Mar.tmx": {
+            "scale": 0.7342708333333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 320.0453965101433,
+                "y": 240.37452120868207
+            }
+        },
+        "assets/maps/tile2map32.tsx": {
+            "scaleInDock": 1
         },
         "assets/tile2map16.tsx": {
             "scaleInDock": 1.5,
@@ -52,8 +72,8 @@
             "scale": 0.9321875,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 319.6781763325511,
-                "y": 240.2950050284948
+                "x": 320.21454911163255,
+                "y": 239.75863224941335
             }
         }
     },
@@ -65,20 +85,23 @@
     "map.width": 20,
     "openFiles": [
         "assets/tile2map32.tsx",
-        "assets/Map1.tmx",
-        "assets/Map2_Village.tmx"
+        "assets/Map3_Floresta_Mar.tmx",
+        "assets/Map2_Village.tmx",
+        "fase1.tmx"
     ],
     "project": "VPetTamers.tiled-project",
     "recentFiles": [
         "assets/tile2map32.tsx",
+        "assets/Map3_Floresta_Mar.tmx",
+        "fase1.tmx",
         "assets/Map2_Village.tmx",
+        "assets/maps/Map3_Floresta_Mar.tmx",
         "assets/Map1.tmx",
         "assets/tile2map16.tsx",
         "assets/tile_set2.tsx",
         "assets/tile_set.tsx",
         "assets/tile_set4.tsx",
-        "assets/tile_set3.tsx",
-        "fase1.tmx"
+        "assets/tile_set3.tsx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.margin": 0,

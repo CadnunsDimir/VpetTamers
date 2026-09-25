@@ -4,6 +4,19 @@
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 
+static const MapPortal MAPS_PORTALS[] = {
+    {.origin_map_id = 1, .origin_pos = {.x = 19, .y = 10}, .dest_map_id = 2, .dest_pos = {.x = 1, .y = 6}},
+    {.origin_map_id = 1, .origin_pos = {.x = 19, .y = 11}, .dest_map_id = 2, .dest_pos = {.x = 1, .y = 7}},
+    {.origin_map_id = 2, .origin_pos = {.x = 0, .y = 6}, .dest_map_id = 1, .dest_pos = {.x = 18, .y = 10}},
+    {.origin_map_id = 2, .origin_pos = {.x = 0, .y = 7}, .dest_map_id = 1, .dest_pos = {.x = 18, .y = 11}},
+    {.origin_map_id = 2, .origin_pos = {.x = 11, .y = 14}, .dest_map_id = 3, .dest_pos = {.x = 2, .y = 1}},
+    {.origin_map_id = 2, .origin_pos = {.x = 12, .y = 14}, .dest_map_id = 3, .dest_pos = {.x = 3, .y = 1}},
+    {.origin_map_id = 3, .origin_pos = {.x = 1, .y = 0}, .dest_map_id = 2, .dest_pos = {.x = 11, .y = 13}},
+    {.origin_map_id = 3, .origin_pos = {.x = 2, .y = 0}, .dest_map_id = 2, .dest_pos = {.x = 12, .y = 13}},
+};
+
+#define MAPS_PORTALS_COUNT (sizeof(MAPS_PORTALS) / sizeof(MAPS_PORTALS[0]))
+
 bool LoadTileset(SDL_Renderer* renderer, SDL_Texture** tileset_texture, const char* filepath) {
     // Carrega o PNG do tileset diretamente como textura na GPU
     *tileset_texture = IMG_LoadTexture(renderer, filepath);
@@ -20,16 +33,16 @@ bool LoadTileset(SDL_Renderer* renderer, SDL_Texture** tileset_texture, const ch
     return true;
 }
 
-bool LoadMapFromCSV(const char* filepath, int world_map[TOTAL_MAPS][TILED_MAP_HEIGHT][TILED_MAP_WIDTH], int map_code) {
+bool LoadMapFromCSV(const char* filepath, int world_map[TOTAL_MAPS_COUNT][TILED_MAP_HEIGHT][TILED_MAP_WIDTH], int map_code) {
     FILE* file = fopen(filepath, "r");
     if (!file) {
-        printf("Erro ao abrir o arquivo de mapa: %s", filepath);
+        printf("Erro ao abrir o arquivo de mapa: %s\n", filepath);
         return false;
     }
 
     for (int row = 0; row < TILED_MAP_HEIGHT; row++) {
         for (int col = 0; col < TILED_MAP_WIDTH; col++) {
-            if (fscanf(file, "%d,", &world_map[map_code][row][col]) != 1) {
+            if (fscanf(file, "%d,", &world_map[map_code-1][row][col]) != 1) {
                 // Se o arquivo acabou antes do esperado ou falhou
                 if (feof(file)) {
                     fclose(file);
@@ -43,7 +56,7 @@ bool LoadMapFromCSV(const char* filepath, int world_map[TOTAL_MAPS][TILED_MAP_HE
     return true;
 }
 
-void RenderTilemap(SDL_Renderer* renderer, SDL_Texture* tileset_texture, int map_code, Camera cam, int world_map[TOTAL_MAPS][TILED_MAP_HEIGHT][TILED_MAP_WIDTH]) {
+void RenderTilemap(SDL_Renderer* renderer, SDL_Texture* tileset_texture, int map_code, Camera cam, int world_map[TOTAL_MAPS_COUNT][TILED_MAP_HEIGHT][TILED_MAP_WIDTH]) {
     if (!tileset_texture) return;
 
     int tile_size = 32;       // Mantido o seu tamanho
@@ -64,7 +77,7 @@ void RenderTilemap(SDL_Renderer* renderer, SDL_Texture* tileset_texture, int map
 
     for (int row = start_row; row < end_row; row++) {
         for (int col = start_col; col < end_col; col++) {
-            int tile_id = world_map[map_code][row][col];
+            int tile_id = world_map[map_code-1][row][col];
             if (tile_id < 0) continue;
 
             int tile_col = tile_id % tileset_columns;
@@ -221,4 +234,23 @@ void RenderObjectOnMap(
             );
         }        
     }    
+}
+
+void CheckMapPortals(int *current_map_id, Coordinates *player_coordinates, bool *changed_map){
+    if (!current_map_id || !player_coordinates || !changed_map) return;
+
+    for (int i = 0; i < MAPS_PORTALS_COUNT; i++)
+    {
+        if (
+            *current_map_id == MAPS_PORTALS[i].origin_map_id &&  // Adicionado '*' aqui
+            player_coordinates->x == MAPS_PORTALS[i].origin_pos.x && 
+            player_coordinates->y == MAPS_PORTALS[i].origin_pos.y)
+        {
+            *current_map_id = MAPS_PORTALS[i].dest_map_id;
+            player_coordinates->x = MAPS_PORTALS[i].dest_pos.x;
+            player_coordinates->y = MAPS_PORTALS[i].dest_pos.y;
+            *changed_map = true;
+            break; // Boa prática: sai do loop assim que encontrar o portal correspondente
+        }
+    }
 }

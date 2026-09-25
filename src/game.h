@@ -7,11 +7,17 @@
 #define BATTLE_RUNNING_CHANCE 40 // 40% de chance de fuga em batalhas
 #define TILED_MAP_WIDTH 20
 #define TILED_MAP_HEIGHT 15
-#define TOTAL_MAPS 3
 #define SCALED_TILED_SIZE 64.0f
 #define WALKABLE_TILES_COUNT (sizeof(WALKABLE_TILES) / sizeof(WALKABLE_TILES[0]))
 #define STEP_COOLDOWN_MS 150
 
+static const char *MAP_FILES[] = {
+    "assets/Map1.csv",
+    "assets/Map2_Village.csv",
+    "assets/Map3_Floresta_Mar.csv"
+};
+
+#define TOTAL_MAPS_COUNT (sizeof(MAP_FILES) / sizeof(MAP_FILES[0]))
 typedef enum {
     MAP_TILE_WALL = 1,
     MAP_TILE_GROUND = 0
@@ -62,7 +68,7 @@ typedef struct {
     bool is_active;
     int x;
     int y;
-    VPet vpet_data
+    VPet vpet_data;
 } MapMob;
 
 typedef struct {
@@ -121,6 +127,13 @@ typedef struct {
     int title_count;
 } MapObject;
 
+typedef struct {
+    int origin_map_id;
+    Coordinates origin_pos;
+    int dest_map_id;
+    Coordinates dest_pos;
+} MapPortal;
+
 static const Color COLOR_GREY_WALL = {60, 60, 75, 255};
 static const Color COLOR_GREY_WALL_BORDER = { 40, 40, 50, 255};
 static const Color COLOR_GREEN_GROUND = {25, 45, 30, 255};
@@ -134,14 +147,15 @@ static const Color COLOR_MENU_BUTTON_DISABLED_SELECTED = {120, 120, 120, 255};
 static const Color COLOR_ENEMY_2 = {193, 114, 38, 255};
 static const Color COLOR_ENEMY_3 = {139, 69, 19, 255};
 static const int WALKABLE_TILES[] = {
-    300, 301, 302,  304, 306, 308, 309, 310
+    300, 301, 302,  304, 306, 308, 309, 310, 
+    348 //agua
 };
 
 // Define quantos inimigos serão gerados por mapa. podemos gerar zonas seguras como cidades e vilas
 static const int SPAWN_ENEMIES_LIMIT_PER_MAP[] = {
-    0, 
     10, //mapa 1
-    0   // mapa 2
+    0,   // mapa 2
+    16
 };
 
 static const VPet ENEMY_JAGUAPIRUMON = {
