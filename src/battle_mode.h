@@ -1,5 +1,9 @@
 #include <math.h> // Necessário para usar pow()
 
+#define BATTLE_ATTACK_TILES 3.0f
+#define BATTLE_ISO_DEPTH_STEP 70.0f
+#define BATTLE_ATTACK_MILIS_DURATION 1000
+
 // Converte coordenadas do Grid (X,Y) para Pixels Isométricos (ScreenX, ScreenY)
 void GridToIsometric(int grid_x, int grid_y, float tile_w, float tile_h, float offset_x, float offset_y, float* out_x, float* out_y) {
     *out_x = (grid_x - grid_y) * (tile_w / 2.0f) + offset_x;
@@ -236,10 +240,68 @@ void TriggerBattleMessage(BattleSystem* battle, BattleState new_state, const cha
     snprintf(battle->current_message, sizeof(battle->current_message), "%s", text);
 }
 
+static float GetBattleAttackProgress(BattleSystem battle) {
+    if (battle.current_state != BATTLE_STATE_ATTACKING &&
+        battle.current_state != BATTLE_STATE_ENEMY_ATACKING) {
+        return 0.0f;
+    }
+
+    Uint64 elapsed = SDL_GetTicks() - battle.message_start_time;
+    if (battle.message_duration == 0 || elapsed >= battle.message_duration) {
+        return 0.0f;
+    }
+
+    float progress = (float)elapsed / (float)battle.message_duration;
+    return progress < 0.5f ? progress * 2.0f : (1.0f - progress) * 2.0f;
+}
+
+static void GetBattleAttackOffsets(
+    BattleSystem battle,
+    OponentsPositioning positioning,
+    float* player_offset_x,
+    float* player_offset_y,
+    float* enemy_offset_x,
+    float* enemy_offset_y
+) {
+    float delta_x = positioning.enemy.x - positioning.player.x;
+    float delta_y = positioning.enemy.y - positioning.player.y;
+    float distance = sqrtf((delta_x * delta_x) + (delta_y * delta_y));
+    float progress = GetBattleAttackProgress(battle);
+
+    if (distance <= 0.0f || progress <= 0.0f) {
+        return;
+    }
+
+    const float attack_distance = BATTLE_ATTACK_TILES * BATTLE_ISO_DEPTH_STEP * progress;
+    float direction_x = delta_x / distance;
+    float direction_y = delta_y / distance;
+
+    if (battle.current_state == BATTLE_STATE_ATTACKING) {
+        *player_offset_x = direction_x * attack_distance;
+        *player_offset_y = direction_y * attack_distance;
+    } else {
+        *enemy_offset_x = -direction_x * attack_distance;
+        *enemy_offset_y = -direction_y * attack_distance;
+    }
+}
+
 void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenHeight, BattleSystem battle) {
     OponentsPositioning oponentsPositioning = { 0, 0, 0, 0 };
     
     RenderBattleScreenScenario(renderer, screenWidth, screenHeight, &oponentsPositioning);
+
+    float player_offset_x = 0.0f;
+    float player_offset_y = 0.0f;
+    float enemy_offset_x = 0.0f;
+    float enemy_offset_y = 0.0f;
+    GetBattleAttackOffsets(
+        battle,
+        oponentsPositioning,
+        &player_offset_x,
+        &player_offset_y,
+        &enemy_offset_x,
+        &enemy_offset_y
+    );
 
     // --- Representação Visual das Entidades ---    
 
@@ -249,8 +311,8 @@ void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenH
        RenderVPetSprite(
             renderer, 
             battle.enemy.type,
-            oponentsPositioning.enemy.x - (16.0f * 2.5f), // Centraliza horizontalmente o sprite de 32px
-            oponentsPositioning.enemy.y - (24.0f * 2.5f), // Apoia a base do sprite no centro do tile
+            oponentsPositioning.enemy.x + enemy_offset_x - (16.0f * 2.5f), // Centraliza horizontalmente o sprite de 32px
+            oponentsPositioning.enemy.y + enemy_offset_y - (24.0f * 2.5f), // Apoia a base do sprite no centro do tile
             2.5f
         );
     }
@@ -260,8 +322,8 @@ void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenH
         RenderVPetSprite(
             renderer, 
             battle.player.type,
-            oponentsPositioning.player.x - (15.0f * 2.5f), 
-            oponentsPositioning.player.y - (25.0f * 2.5f), 
+            oponentsPositioning.player.x + player_offset_x - (15.0f * 2.5f), 
+            oponentsPositioning.player.y + player_offset_y - (25.0f * 2.5f), 
             2.5f
         );
     }
@@ -323,7 +385,7 @@ void UpdateNavigation(BattleSystem* battle, PlayerGamePad* gamepad) {
             switch (battle->current_state)
             {
                 case BATTLE_STATE_MENU_ATTACK:
-                    TriggerBattleMessage(battle, BATTLE_STATE_ATTACKING, "Atacando...", 2000);
+                    TriggerBattleMessage(battle, BATTLE_STATE_ATTACKING, "Atacando...", BATTLE_ATTACK_MILIS_DURATION);
                     break;
                 case BATTLE_STATE_MENU_RUN:
                     TriggerBattleMessage(battle, BATTLE_STATE_RUNNING, "Fugindo...", 2000);
@@ -392,7 +454,7 @@ void UpdateBattleState(
                     else
                     {
                         // Após a animação/mensagem do ataque do jogador, passa a vez para o ataque do inimigo
-                        TriggerBattleMessage(battle, BATTLE_STATE_ENEMY_ATACKING, "INIMIGO ATACA!", 2000);
+                        TriggerBattleMessage(battle, BATTLE_STATE_ENEMY_ATACKING, "INIMIGO ATACA!", BATTLE_ATTACK_MILIS_DURATION);
                     }
                     break;
 
