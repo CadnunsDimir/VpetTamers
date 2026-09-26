@@ -11,55 +11,43 @@ void GridToIsometric(int grid_x, int grid_y, float tile_w, float tile_h, float o
 }
 
 void RenderVPetSprite(SDL_Renderer* renderer, VPetType tipo, float x, float y, float scale) {
-    VpetPart* parts = NULL;
-    size_t count = 0;
+    for (size_t i = 0; i < PET_PART_LIST_BATTLE_MODE_COUNT; i++)
+    {
+        if (PET_PART_LIST_BATTLE_MODE[i].type == tipo)
+        {
+            VpetPart* parts = PET_PART_LIST_BATTLE_MODE[i].vparts;
+            size_t count = PET_PART_LIST_BATTLE_MODE[i].vparts_count;
 
-    // 1. Seleciona o array e o tamanho corretos conforme o VPet
-    switch (tipo) {
-        case PET_BK_MBARACAJAMON:
-            parts = PET_BK_MBARACAJAMON_BATTLE_MODE;
-            count = PET_BK_MBARACAJAMON_BATTLE_MODE_COUNT;
-            break;
+            // 2. Garante o modo de transparência ativo para auras/chamas
+            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
-        case PET_JAGUAPIRUMON:
-            parts = PET_JAGUAPIRUMON_BATTLE_MODE;
-            count = PET_JAGUAPIRUMON_BATTLE_MODE_COUNT;
-            break;
+            // 3. Renderiza cada parte do VPet selecionado
+            for (size_t i = 0; i < count; i++) {
+                VpetPart part = parts[i];
+                float y_offset = 0.0f;
 
-        case PET_RUGUASUMON:
-            parts = PET_RUGUASUMON_BATTLE_MODE;
-            count = PET_RUGUASUMON_BATTLE_MODE_COUNT;
-            break;
+                // Animação da chama amarela interna do Jaguapirumon (índice 1 no array)
+                if (tipo == PET_JAGUAPIRUMON && i == 1) {
+                    // printf("criando chama\n");
+                    y_offset = sinf((float)SDL_GetTicks() / 80.0f) * (2.0f * scale);
+                }
 
-        default:
-            return; // VPet desconhecido
+                // Calcula as posições na tela escaladas (incluindo deslocamento de animação)
+                SDL_FRect dst_rect = {
+                    x + (part.rect.x * scale),
+                    y + (part.rect.y * scale) + y_offset,
+                    part.rect.w * scale,
+                    part.rect.h * scale
+                };
+
+                // Usa o mesmo volume estilizado dos VPets do mapa.
+                RenderVpetPartVolume(renderer, dst_rect, part.color, scale);
+            }
+            return;
+        }        
     }
 
-    // 2. Garante o modo de transparência ativo para auras/chamas
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
-    // 3. Renderiza cada parte do VPet selecionado
-    for (size_t i = 0; i < count; i++) {
-        VpetPart part = parts[i];
-        float y_offset = 0.0f;
-
-        // Animação da chama amarela interna do Jaguapirumon (índice 1 no array)
-        if (tipo == PET_JAGUAPIRUMON && i == 1) {
-            // printf("criando chama\n");
-            y_offset = sinf((float)SDL_GetTicks() / 80.0f) * (2.0f * scale);
-        }
-
-        // Calcula as posições na tela escaladas (incluindo deslocamento de animação)
-        SDL_FRect dst_rect = {
-            x + (part.rect.x * scale),
-            y + (part.rect.y * scale) + y_offset,
-            part.rect.w * scale,
-            part.rect.h * scale
-        };
-
-        // Usa o mesmo volume estilizado dos VPets do mapa.
-        RenderVpetPartVolume(renderer, dst_rect, part.color, scale);
-    }
+    printf("[BattleMode][RenderVPetSprite] Vpet id=%d não encontrado em modo de batalha\n", tipo);
 }
 
 void RenderIsoTile(SDL_Renderer* renderer, float centerX, float centerY, float tileW, float tileH, Color color) {

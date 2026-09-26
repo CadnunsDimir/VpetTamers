@@ -10,6 +10,12 @@ typedef struct {
     MapAnimGroup anim_group;
 } VpetPart;
 
+typedef struct {
+    VPetType type;
+    VpetPart* vparts;
+    int vparts_count;
+} VpetPartGroup;
+
 // geral
 const Color MAP_SHADOW                  = {0, 0, 0, 90};
 
@@ -159,7 +165,7 @@ VpetPart PET_RUGUASUMON_BATTLE_MODE[] = {
 // 1. DADOS DE CORES E GEOMETRIA DO MAPA (JAGUAPIRUMON)
 // ============================================================================
 
-static const VpetPart JAGUAPIRUMON_MAP_PARTS[] = {
+const VpetPart JAGUAPIRUMON_MAP_PARTS[] = {
     // 1. Sombra e Aura na Base
     { .color = MAP_SHADOW,             .rect = {  4.0f, 26.0f, 24.0f,  5.0f }, .anim_group = ANIM_STATIC }, // shadow
     { .color = JAGUAPIRUMON_AURA_BASE, .rect = {  2.0f, 22.0f, 28.0f,  6.0f }, .anim_group = ANIM_STATIC }, // flame_aura
@@ -189,7 +195,7 @@ static const VpetPart JAGUAPIRUMON_MAP_PARTS[] = {
 // 2. DADOS DE CORES E GEOMETRIA DO MAPA (RUGUASUMON)
 // ============================================================================
 
-static const VpetPart RUGUASUMON_MAP_PARTS[] = {
+const VpetPart RUGUASUMON_MAP_PARTS[] = {
     // 1. Sombra na Base
     { .color = MAP_SHADOW,  .rect = {  6.0f, 27.0f, 20.0f,  4.0f }, .anim_group = ANIM_STATIC }, // shadow
 
@@ -211,6 +217,97 @@ static const VpetPart RUGUASUMON_MAP_PARTS[] = {
 };
 
 #define RUGUASUMON_MAP_PARTS_COUNT (sizeof(RUGUASUMON_MAP_PARTS) / sizeof(RUGUASUMON_MAP_PARTS[0]))
+
+// ==========================================
+// 4. PET_JAGUARETEMON (Onça Cibernética)
+// ==========================================
+const Color JAGUARETEMON_PELO          = {235, 130, 20, 255};  // Laranja queimado / Onça
+const Color JAGUARETEMON_MANCHAS       = {40, 20, 10, 255};   // Manchas/Rosetas pretas
+const Color JAGUARETEMON_BARRIGA       = {240, 225, 190, 255}; // Bege claro
+const Color JAGUARETEMON_PATAS         = {210, 110, 15, 255};  // Patas orgânicas
+const Color JAGUARETEMON_CYBER_BASE    = {110, 125, 140, 255}; // Metal prateado/azulado
+const Color JAGUARETEMON_CYBER_DARK    = {70, 80, 95, 255};    // Sombras do metal
+const Color JAGUARETEMON_CYBER_CORE    = {235, 30, 30, 255};   // Núcleo vermelho brilhante
+const Color JAGUARETEMON_CYBER_GARRAS  = {190, 205, 220, 255}; // Garras metálicas
+const Color JAGUARETEMON_CABECA        = {235, 130, 20, 255};
+const Color JAGUARETEMON_OLHO          = {255, 215, 0, 255};   // Olho amarelo incandescente
+
+// Modo Batalha (Inimigo)
+VpetPart PET_JAGUARETEMON_BATTLE_MODE[] = {
+    // 1. Cauda (Lá no fundo, projetada para a direita/trás)
+    { .color = JAGUARETEMON_PELO,          .rect = {  18.0f,  -2.0f,  8.0f, 16.0f }, .anim_group = ANIM_STATIC }, // tail_main
+    { .color = JAGUARETEMON_MANCHAS,       .rect = {  22.0f,  -8.0f,  6.0f,  8.0f }, .anim_group = ANIM_STATIC }, // tail_tip
+    { .color = JAGUARETEMON_MANCHAS,       .rect = {  19.0f,   2.0f,  4.0f,  4.0f }, .anim_group = ANIM_STATIC }, // tail_spot
+
+    // 2. Patas Traseiras (Fundo / Direita)
+    { .color = JAGUARETEMON_PATAS,         .rect = {  14.0f,  20.0f,  6.0f, 12.0f }, .anim_group = ANIM_STATIC }, // leg_back_r (fundo)
+    { .color = JAGUARETEMON_PATAS,         .rect = {   8.0f,  22.0f,  6.0f, 12.0f }, .anim_group = ANIM_STATIC }, // leg_back_l (frente)
+
+    // 3. Dorso / Corpo Principal (Inclinado para a esquerda em 135°)
+    { .color = JAGUARETEMON_PELO,          .rect = {   0.0f,   8.0f, 22.0f, 15.0f }, .anim_group = ANIM_STATIC }, // body
+    { .color = JAGUARETEMON_BARRIGA,       .rect = {  -2.0f,  15.0f, 14.0f,  8.0f }, .anim_group = ANIM_STATIC }, // belly_light (visível no peito à esquerda)
+    { .color = JAGUARETEMON_MANCHAS,       .rect = {   4.0f,  10.0f,  4.0f,  4.0f }, .anim_group = ANIM_STATIC }, // spot_1
+    { .color = JAGUARETEMON_MANCHAS,       .rect = {  10.0f,  12.0f,  5.0f,  4.0f }, .anim_group = ANIM_STATIC }, // spot_2
+
+    // 4. Pata Dianteira Direita (Orgânica - Fundo)
+    { .color = JAGUARETEMON_PATAS,         .rect = {   4.0f,  18.0f,  5.0f, 12.0f }, .anim_group = ANIM_STATIC }, // leg_front_r
+
+    // 5. Cabeça e Focinho Felino (Avançados para a esquerda/frente em 135°)
+    { .color = JAGUARETEMON_CABECA,        .rect = {  -8.0f,   2.0f, 16.0f, 13.0f }, .anim_group = ANIM_STATIC }, // head
+    { .color = JAGUARETEMON_BARRIGA,       .rect = { -14.0f,   8.0f, 10.0f,  6.0f }, .anim_group = ANIM_STATIC }, // snout_light (focinho projetado para a esquerda)
+    { .color = JAGUARETEMON_MANCHAS,       .rect = { -15.0f,   8.0f,  3.0f,  3.0f }, .anim_group = ANIM_STATIC }, // nose
+    { .color = JAGUARETEMON_OLHO,          .rect = {  -8.0f,   5.0f,  4.0f,  3.0f }, .anim_group = ANIM_STATIC }, // eye (olhando para a esquerda)
+    { .color = JAGUARETEMON_MANCHAS,       .rect = {  -2.0f,  -4.0f,  4.0f,  7.0f }, .anim_group = ANIM_STATIC }, // ear
+
+    // 6. Braço Cibernético Massivo (No Primeiro Plano absoluto — Sobrepõe o peito)
+    { .color = JAGUARETEMON_CYBER_BASE,    .rect = {  -4.0f,   6.0f, 11.0f, 11.0f }, .anim_group = ANIM_STATIC }, // shoulder_cyber (ombro robótico sobre a junta esquerda)
+    { .color = JAGUARETEMON_CYBER_CORE,    .rect = {  -1.0f,   9.0f,  4.0f,  4.0f }, .anim_group = ANIM_STATIC }, // core_red
+    { .color = JAGUARETEMON_CYBER_DARK,    .rect = {  -6.0f,  16.0f,  8.0f, 11.0f }, .anim_group = ANIM_STATIC }, // arm_cyber (estendido para a frente)
+    { .color = JAGUARETEMON_CYBER_GARRAS,  .rect = { -10.0f,  25.0f, 10.0f,  4.0f }, .anim_group = ANIM_STATIC }  // claws_cyber (garras apontadas para o jogador/inimigo)
+};
+#define PET_JAGUARETEMON_BATTLE_MODE_COUNT (sizeof(PET_JAGUARETEMON_BATTLE_MODE) / sizeof(PET_JAGUARETEMON_BATTLE_MODE[0]))
+
+// ============================================================================
+// DADOS DE CORES E GEOMETRIA DO MAPA (JAGUARETEMON)
+// ============================================================================
+const VpetPart JAGUARETEMON_MAP_PARTS[] = {
+    // 1. Sombra na Base
+    { .color = MAP_SHADOW,                 .rect = {  4.0f, 26.0f, 26.0f,  5.0f }, .anim_group = ANIM_STATIC }, // shadow
+
+    // 2. Pernas Traseiras Animadas
+    { .color = JAGUARETEMON_PATAS,         .rect = { 20.0f, 18.0f,  4.0f,  9.0f }, .anim_group = ANIM_STEP_B }, // leg_back_l
+    { .color = JAGUARETEMON_PATAS,         .rect = { 16.0f, 18.0f,  4.0f,  9.0f }, .anim_group = ANIM_STEP_A }, // leg_back_r
+
+    // 3. Pata Dianteira Direita Animada (Orgânica)
+    { .color = JAGUARETEMON_PATAS,         .rect = { 10.0f, 18.0f,  4.0f,  9.0f }, .anim_group = ANIM_STEP_A }, // leg_front_r
+
+    // 4. Pata Dianteira Esquerda Animada (Cibernética)
+    { .color = JAGUARETEMON_CYBER_DARK,    .rect = {  5.0f, 17.0f,  5.0f,  9.0f }, .anim_group = ANIM_STEP_B }, // leg_front_l_cyber
+    { .color = JAGUARETEMON_CYBER_GARRAS,  .rect = {  4.0f, 25.0f,  6.0f,  3.0f }, .anim_group = ANIM_STEP_B }, // claws_map
+
+    // 5. Corpo, Ombro Metálico e Cabeça
+    { .color = JAGUARETEMON_PELO,          .rect = {  4.0f, 10.0f, 22.0f, 10.0f }, .anim_group = ANIM_STATIC }, // body
+    { .color = JAGUARETEMON_MANCHAS,       .rect = { 12.0f, 12.0f,  4.0f,  4.0f }, .anim_group = ANIM_STATIC }, // body_spot
+    { .color = JAGUARETEMON_CYBER_BASE,    .rect = {  6.0f,  9.0f,  7.0f,  7.0f }, .anim_group = ANIM_STATIC }, // shoulder_map
+    { .color = JAGUARETEMON_CYBER_CORE,    .rect = {  8.0f, 11.0f,  3.0f,  3.0f }, .anim_group = ANIM_STATIC }, // core_map
+    { .color = JAGUARETEMON_CABECA,        .rect = {  2.0f,  6.0f, 12.0f, 10.0f }, .anim_group = ANIM_STATIC }, // head
+    { .color = JAGUARETEMON_MANCHAS,       .rect = {  8.0f,  2.0f,  4.0f,  5.0f }, .anim_group = ANIM_STATIC }, // ears
+    { .color = JAGUARETEMON_OLHO,          .rect = {  4.0f,  8.0f,  3.0f,  3.0f }, .anim_group = ANIM_STATIC }  // eye
+};
+#define JAGUARETEMON_MAP_PARTS_COUNT (sizeof(JAGUARETEMON_MAP_PARTS) / sizeof(JAGUARETEMON_MAP_PARTS[0]))
+
+// ============================================================================
+// DEFINIÇÃO DO INIMIGO
+// ============================================================================
+static const VPet ENEMY_JAGUARETEMON = {
+    .name = "Jaguaretemon", // Onça cibernética
+    .defense = 4,
+    .strength = 5,
+    .hp = 35,
+    .hp_max = 35,
+    .type = PET_JAGUARETEMON,
+    .level = 3
+};
 
 static const VPet ENEMY_JAGUAPIRUMON = {
     .name = "Jaguapirumon", //cachoro feio
@@ -235,7 +332,6 @@ static const VPet ENEMY_RYGUASUMON = {
 
 //TODO: criar vpets (*mon) inspirados nos nomes abaixo:
 /*
-Jaguarete: Onça-pintada (literalmente "cão verdadeiro" ou "fera verdadeira").
 Aguará: Lobo / Lobo-guará.
 Ka'i: Macaco.
 Tapiti: Coelho ou lebre.
@@ -243,9 +339,25 @@ Angujá: Rato.Pira: Peixe.
 Jagua: Cachorro.Maracadá (ou mbarakaja): Gato.Kavaju: Cavalo.Vaca: Vaca.Curé: Porco / Suíno.Ryguasu: Galinha.Ovechá: Ovelha.Cavará: Cabra / Bode.
 */
 
+static const VpetPartGroup ENEMY_PART_LIST[] = {
+    { PET_JAGUAPIRUMON, JAGUAPIRUMON_MAP_PARTS, JAGUAPIRUMON_MAP_PARTS_COUNT },
+    { PET_RUGUASUMON, RUGUASUMON_MAP_PARTS, RUGUASUMON_MAP_PARTS_COUNT },
+    { PET_JAGUARETEMON, JAGUARETEMON_MAP_PARTS, JAGUARETEMON_MAP_PARTS_COUNT }
+};
+#define ENEMY_PART_LIST_COUNT sizeof(ENEMY_PART_LIST) / sizeof(ENEMY_PART_LIST[0])
+
+static const VpetPartGroup PET_PART_LIST_BATTLE_MODE[] = {
+    { PET_BK_MBARACAJAMON, PET_BK_MBARACAJAMON_BATTLE_MODE, PET_BK_MBARACAJAMON_BATTLE_MODE_COUNT },
+    { PET_JAGUAPIRUMON, PET_JAGUAPIRUMON_BATTLE_MODE, PET_JAGUAPIRUMON_BATTLE_MODE_COUNT },
+    { PET_RUGUASUMON, PET_RUGUASUMON_BATTLE_MODE, PET_RUGUASUMON_BATTLE_MODE_COUNT },
+    { PET_JAGUARETEMON, PET_JAGUARETEMON_BATTLE_MODE, PET_JAGUARETEMON_BATTLE_MODE_COUNT }
+};
+#define PET_PART_LIST_BATTLE_MODE_COUNT sizeof(PET_PART_LIST_BATTLE_MODE) / sizeof(PET_PART_LIST_BATTLE_MODE[0])
+
 
 static const VPet ENEMY_LIST[] = {
     ENEMY_JAGUAPIRUMON,
-    ENEMY_RYGUASUMON
+    ENEMY_RYGUASUMON,
+    ENEMY_JAGUARETEMON
 };
 #define ENEMY_LIST_COUNT sizeof(ENEMY_LIST) / sizeof(ENEMY_LIST[0])

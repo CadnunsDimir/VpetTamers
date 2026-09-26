@@ -261,7 +261,7 @@ void RenderMapVpetData(SDL_Renderer* renderer, const VpetPart* parts, size_t cou
     }
 }
 
-void RenderVPet(SDL_Renderer* renderer, int vpet_code, int x, int y, int title_size) {
+void RenderVPet(SDL_Renderer* renderer, VPetType vpet_code, int x, int y, int title_size) {
     // 1. Animação suave para as pernas (ritmo de caminhada)
     float time = (float)SDL_GetTicks() / 100.0f;
     
@@ -277,22 +277,14 @@ void RenderVPet(SDL_Renderer* renderer, int vpet_code, int x, int y, int title_s
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
-    switch (vpet_code) {
-        case PET_JAGUAPIRUMON: {
-            // --- JAGUAPIRUMON (Canídeo de Fogo) ---
-            RenderMapVpetData(renderer, JAGUAPIRUMON_MAP_PARTS, JAGUAPIRUMON_MAP_PARTS_COUNT, pos_x, pos_y, leg_step_A, leg_step_B, scale);
-            break;
-        }
-
-        case PET_RUGUASUMON:
-        default: {
-            // --- RUGUASUMON (Galo Místico / Galo Guerreiro) ---
-            RenderMapVpetData(renderer, RUGUASUMON_MAP_PARTS, RUGUASUMON_MAP_PARTS_COUNT, pos_x, pos_y, leg_step_A, leg_step_B, scale);
-            break;
+    for (int i = 0; i < ENEMY_PART_LIST_COUNT; i++)
+    {
+        if(ENEMY_PART_LIST[i].type == vpet_code) {
+            RenderMapVpetData(renderer, ENEMY_PART_LIST[i].vparts,  ENEMY_PART_LIST[i].vparts_count, pos_x, pos_y, leg_step_A, leg_step_B, scale);
+            return;
         }
     }
+    printf("[RenderVPet] VpetPart not found for %d \n", vpet_code);
 }
 
 void RenderMap(SDL_Renderer* renderer, const int map[MAP_HEIGHT][MAP_WIDTH], int height, int width, int title_size) {

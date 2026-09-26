@@ -45,7 +45,8 @@ typedef enum {
 typedef enum {
     PET_BK_MBARACAJAMON = 4,
     PET_JAGUAPIRUMON = 2,
-    PET_RUGUASUMON = 3
+    PET_RUGUASUMON = 3,
+    PET_JAGUARETEMON = 5
 } VPetType;
 
 typedef struct { 
