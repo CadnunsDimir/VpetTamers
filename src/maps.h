@@ -11,8 +11,8 @@ static const MapPortal MAPS_PORTALS[] = {
     {.origin_map_id = 2, .origin_pos = {.x = 0, .y = 7}, .dest_map_id = 1, .dest_pos = {.x = 18, .y = 11}},
     {.origin_map_id = 2, .origin_pos = {.x = 11, .y = 14}, .dest_map_id = 3, .dest_pos = {.x = 2, .y = 1}},
     {.origin_map_id = 2, .origin_pos = {.x = 12, .y = 14}, .dest_map_id = 3, .dest_pos = {.x = 3, .y = 1}},
-    {.origin_map_id = 3, .origin_pos = {.x = 1, .y = 0}, .dest_map_id = 2, .dest_pos = {.x = 11, .y = 13}},
-    {.origin_map_id = 3, .origin_pos = {.x = 2, .y = 0}, .dest_map_id = 2, .dest_pos = {.x = 12, .y = 13}},
+    {.origin_map_id = 3, .origin_pos = {.x = 2, .y = 0}, .dest_map_id = 2, .dest_pos = {.x = 11, .y = 13}},
+    {.origin_map_id = 3, .origin_pos = {.x = 3, .y = 0}, .dest_map_id = 2, .dest_pos = {.x = 12, .y = 13}},
 };
 
 #define MAPS_PORTALS_COUNT (sizeof(MAPS_PORTALS) / sizeof(MAPS_PORTALS[0]))
