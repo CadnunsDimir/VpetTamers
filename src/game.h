@@ -14,7 +14,8 @@
 static const char *MAP_FILES[] = {
     "assets/Map1.csv",
     "assets/Map2_Village.csv",
-    "assets/Map3_Floresta_Mar.csv"
+    "assets/Map3_Floresta_Mar.csv",
+    "assets/Map4_Village_Inn_Map3.csv",
 };
 
 #define TOTAL_MAPS_COUNT (sizeof(MAP_FILES) / sizeof(MAP_FILES[0]))
@@ -149,7 +150,10 @@ static const Color COLOR_ENEMY_2 = {193, 114, 38, 255};
 static const Color COLOR_ENEMY_3 = {139, 69, 19, 255};
 static const int WALKABLE_TILES[] = {
     300, 301, 302,  304, 306, 308, 309, 310, 
-    348 //agua
+    348, //agua
+    205, 375, //paredes hotel
+    164, 165, 130, //balcão hotel
+    160, 161, //livros hotel
 };
 
 // Define quantos inimigos serão gerados por mapa. podemos gerar zonas seguras como cidades e vilas

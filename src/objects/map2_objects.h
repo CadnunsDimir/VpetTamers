@@ -1,6 +1,6 @@
 static const MapObject map2_hotel =  {
     .map_id = 2, 
-    .pos = { 5, 2 },
+    .pos = { 5, 1 },
     .tiles = {
         {224, 0, 0}, {225, 1, 0}, {226, 2, 0}, {227, 3, 0},
         {228, 0, 1}, {229, 1, 1}, {230, 2, 1}, {231, 3, 1},
@@ -19,6 +19,7 @@ static const MapObject map2_hotel_2 =  {
         {232, 0, 2}, {233, 1, 2}, {234, 2, 2}, {235, 3, 2},
         {236, 0, 3}, {237, 1, 3}, {238, 2, 3}, {239, 3, 3}
     },
-    .title_count = 16
+    // .title_count = 16
+    .title_count = 0 //isso desabilita a criação do objeto
 };
 

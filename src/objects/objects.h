@@ -1,6 +1,7 @@
 #include "map1_objects.h"
 #include "map2_objects.h"
 #include "map3.h"
+#include "map4.h"
 
 static const MapObject ALL_OBJECTS_ON_MAPS[] = {
    map1_tree1,   
@@ -8,7 +9,8 @@ static const MapObject ALL_OBJECTS_ON_MAPS[] = {
    map2_hotel_2,
    map3_tree1,
    map3_tree2,
-   map3_tree3
+   map3_tree3,
+   map4_hotel_bed
 };
 
 #define ALL_OBJECTS_ON_MAPS_COUNT (sizeof(ALL_OBJECTS_ON_MAPS) / sizeof(ALL_OBJECTS_ON_MAPS[0]))
