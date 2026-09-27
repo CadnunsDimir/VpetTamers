@@ -101,7 +101,8 @@ int main(int argc, char* argv[]) {
 
     BattleSystem battle_system = {
         .current_state = BATTLE_STATE_MENU_ATTACK,
-        .player = initial_vpet
+        .player = initial_vpet,
+        .player_vpetcoin_balance = 0
     };
 
     static bool key_pressed = false;
@@ -182,7 +183,8 @@ int main(int argc, char* argv[]) {
                         save_data_file, 
                         &player_coordinates, 
                         &current_map_id,
-                        &battle_system.player
+                        &battle_system.player,
+                        &battle_system.player_vpetcoin_balance
                     );
                     memcpy(current_map, world_map[current_map_id-1], sizeof(current_map));
                     if (spawned_mobs) { free(spawned_mobs); spawned_mobs = NULL; }
@@ -204,19 +206,23 @@ int main(int argc, char* argv[]) {
                 // se for 1, dorme e aparece do lado da cama
                 // se zero, fecha o menu
                 //TODO: usuário escolhe se quer dormir ou não. caso sim, restaura HP e ele acorda do lado da cama. deve mostrar uma tela escura e uma mensagem "Dormindo... Energia restaurada a 100%"
-                if(menu_opcao == 0) {
+                if(menu_opcao == 0 && battle_system.player_vpetcoin_balance >= HOTEL_VPETCOIN_PRICE) {
                     //criar animacao
                     battle_system.player.hp = battle_system.player.hp_max;
+                    battle_system.player_vpetcoin_balance -= HOTEL_VPETCOIN_PRICE;
                     player_coordinates.x = 13;
                     player_coordinates.y = 9;
                     SaveGame(
                         save_data_file,
                         player_coordinates,
                         current_map_id,
-                        battle_system.player);
+                        battle_system.player,
+                        battle_system.player_vpetcoin_balance);
                     sleep_start_time = SDL_GetTicks();
                     // current_state = STATE_MAP;
                     sleeping = true;
+                } else if(menu_opcao == 0) {
+                    printf("TODO: implementar mensagem saldo insuficiente. saldo: %f vpetcoin\n",  battle_system.player_vpetcoin_balance);
                 } else {
                     current_state = STATE_MAP;
                 }
@@ -281,7 +287,7 @@ int main(int argc, char* argv[]) {
             RenderEnemies(renderer, main_camera, spawned_mobs, spawned_mobs_size, SCALED_TILED_SIZE);
 
             if (current_state == STATE_PAUSE) {
-                RenderPauseOverlay(renderer, &battle_system.player, SCREEN_WIDTH, SCREEN_HEIGHT);
+                RenderPauseOverlay(renderer, &battle_system.player, battle_system.player_vpetcoin_balance, SCREEN_WIDTH, SCREEN_HEIGHT);
             }
 
             if(current_state == STATE_STORE_MENU && store_type == STORE_TYPE_HOTEL) {
@@ -308,7 +314,9 @@ int main(int argc, char* argv[]) {
                     save_data_file,
                     player_coordinates,
                     current_map_id,
-                    battle_system.player);
+                    battle_system.player,
+                    battle_system.player_vpetcoin_balance
+                );
             }
             
         } 

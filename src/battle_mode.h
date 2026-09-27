@@ -475,12 +475,13 @@ void UpdateBattleState(
                     int exp = CalculateExp(&battle->enemy);
                     char level_up_msg[25];
                     battle->player.total_exp += exp;
+                    battle->player_vpetcoin_balance += battle->enemy.vpetcoin_reward;
                     if(CheckLevelUp(&battle->player)) {
                         snprintf(level_up_msg, sizeof(level_up_msg), "Subiu para LVL %d!!!", battle->player.level);
                     } else {
                         snprintf(level_up_msg, sizeof(level_up_msg), " ");
                     }                    
-                    snprintf(player_win_message, sizeof(player_win_message), "Ganhou %d EXP! %s", exp, level_up_msg);                    
+                    snprintf(player_win_message, sizeof(player_win_message), "Ganhou %d EXP e %.1f VPETCOINS! %s", exp, battle->enemy.vpetcoin_reward, level_up_msg);
                     TriggerBattleMessage(battle, BATTLE_STATE_WIN_CLOSE_BATTLE, player_win_message, 3000);
                     break;
                 case BATTLE_STATE_WIN_CLOSE_BATTLE:
@@ -491,7 +492,8 @@ void UpdateBattleState(
                         save_data_file,
                         player_pos,
                         current_map_id,
-                        battle->player);
+                        battle->player,
+                        battle->player_vpetcoin_balance);
                     break;
                 default:
                     battle->current_state = BATTLE_STATE_MENU_ATTACK;

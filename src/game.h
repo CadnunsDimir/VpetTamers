@@ -11,6 +11,7 @@
 #define WALKABLE_TILES_COUNT (sizeof(WALKABLE_TILES) / sizeof(WALKABLE_TILES[0]))
 #define STEP_COOLDOWN_MS 150
 #define HOTEL_SLEEPING_MSG_TIMEOUT_MS 2000
+#define HOTEL_VPETCOIN_PRICE 16
 
 static const char *MAP_FILES[] = {
     "assets/Map1.csv",
@@ -65,6 +66,7 @@ typedef struct {
     int strength; 
     int defense;
     int total_exp;
+    float vpetcoin_reward;
     VPetType type;
 } VPet;
 
@@ -114,7 +116,8 @@ typedef struct {
     Uint64 message_duration;   // Duração da mensagem em milissegundos (ex: 2000ms = 2s)
     char current_message[64];  // Texto da mensagem temporizada
     VPet player;
-    VPet enemy;
+    float player_vpetcoin_balance;
+    VPet enemy;    
 } BattleSystem;
 
 typedef struct {
@@ -127,6 +130,7 @@ typedef struct {
     int current_map_id;
     VPet vpt;
     // Adicione outras variáveis de progresso/inventário aqui
+    float vpetcoin;
 } SaveData;
 
 typedef struct {

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-bool SaveGame(const char* filename, Coordinates player_pos, int current_map_id, VPet vpet) {
+bool SaveGame(const char* filename, Coordinates player_pos, int current_map_id, VPet vpet, float vpetcoin) {
     printf("[SaveGame] Salvando estado em %s", filename);
     FILE* file = fopen(filename, "wb"); // "wb" = write binary
     if (!file) {
@@ -12,7 +12,8 @@ bool SaveGame(const char* filename, Coordinates player_pos, int current_map_id, 
     SaveData data = {
         .player_pos = player_pos,
         .current_map_id = current_map_id,        
-        .vpt = vpet
+        .vpt = vpet,
+        .vpetcoin = vpetcoin
     };
 
     // Grava a struct inteira de uma só vez
@@ -27,7 +28,7 @@ bool SaveGame(const char* filename, Coordinates player_pos, int current_map_id, 
     return false;
 }
 
-bool LoadGame(const char* filename, Coordinates* player_pos, int* current_map_id, VPet* vpet) {
+bool LoadGame(const char* filename, Coordinates* player_pos, int* current_map_id, VPet* vpet, float* vpetcoin_balance) {
     FILE* file = fopen(filename, "rb"); // "rb" = read binary
     if (!file) {
         printf("[LoadGame] Nenhum save encontrado em '%s'.\n", filename);
@@ -43,6 +44,7 @@ bool LoadGame(const char* filename, Coordinates* player_pos, int* current_map_id
         *player_pos = data.player_pos;
         *current_map_id = data.current_map_id;
         *vpet = data.vpt;
+        *vpetcoin_balance = data.vpetcoin;
 
         printf("[LoadGame] Sessao carregada com sucesso!\n");
         return true;

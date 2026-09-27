@@ -554,7 +554,19 @@ void RenderVPetStats(SDL_Renderer* renderer, VPet *vpet, float panel_x, float pa
     RenderText(renderer, buffer, COLOR_WHITE, panel_x + 30.0f, panel_y + 240.0f, 3.0f);
 }
 
-void RenderPauseOverlay(SDL_Renderer* renderer, VPet *vpet, float screenWidth, float screenHeight) {
+void RenderPauseDivider(SDL_Renderer* renderer, float pos_y, float panel_x, float panel_w){
+    SDL_FRect line = { panel_x + 20.0f, pos_y, panel_w - 40.0f, 2.0f };
+    SDL_SetRenderDrawColor(renderer, 100, 100, 130, 255);
+    SDL_RenderFillRect(renderer, &line);
+}
+
+void RenderPauseVpetCoinsBalance(SDL_Renderer* renderer, float vpetcoin_balance ,float pos_y, float panel_x) {
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer), "%.1f VPETCOINS", vpetcoin_balance);
+    RenderText(renderer, buffer, COLOR_WHITE, panel_x + 30.0f, pos_y, 3.0f);
+}
+
+void RenderPauseOverlay(SDL_Renderer* renderer, VPet *vpet, float vpetcoin_balance, float screenWidth, float screenHeight) {
     // 1. Escurece a tela toda com um preto semi-transparente (Alpha = 150)
     SDL_FRect overlay = { 0.0f, 0.0f, screenWidth, screenHeight };
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 150);
@@ -562,7 +574,7 @@ void RenderPauseOverlay(SDL_Renderer* renderer, VPet *vpet, float screenWidth, f
 
     // 2. Janela Central de Status (Tamanho: 400x320, Centralizada)
     float panel_w = 400.0f;
-    float panel_h = 320.0f;
+    float panel_h = 330.0f;
     float panel_x = (screenWidth - panel_w) / 2.0f;
     float panel_y = (screenHeight - panel_h) / 2.0f;
 
@@ -580,12 +592,15 @@ void RenderPauseOverlay(SDL_Renderer* renderer, VPet *vpet, float screenWidth, f
     RenderText(renderer, "PAUSE", COLOR_WHITE, panel_x + 160.0f, panel_y + 20.0f, 4.0f);
 
     // Linha Divisória Horizontal sob o Título
-    SDL_FRect line = { panel_x + 20.0f, panel_y + 60.0f, panel_w - 40.0f, 2.0f };
-    SDL_SetRenderDrawColor(renderer, 100, 100, 130, 255);
-    SDL_RenderFillRect(renderer, &line);
-
+    float divider1 = panel_y + 60.0f;
+    RenderPauseDivider(renderer,  divider1, panel_x, panel_w);
     RenderVPetStats(renderer, vpet, panel_x, panel_y);
+    float divider2 = divider1 + 210.0f;
+    RenderPauseDivider(renderer,  divider2, panel_x, panel_w);
+    RenderPauseVpetCoinsBalance(renderer, vpetcoin_balance, divider2+ 20.0f, panel_x);
 }
+
+
 
 void RemoveEnemyFromMap(int map[TILED_MAP_HEIGHT][TILED_MAP_WIDTH], Coordinates* position, MapMob* mobs, int mob_count) {
     for (int i = 0; i < mob_count; i++) {

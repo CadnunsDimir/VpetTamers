@@ -306,7 +306,8 @@ static const VPet ENEMY_JAGUARETEMON = {
     .hp = 35,
     .hp_max = 35,
     .type = PET_JAGUARETEMON,
-    .level = 3
+    .level = 3,
+    .vpetcoin_reward = 10
 };
 
 static const VPet ENEMY_JAGUAPIRUMON = {
@@ -316,7 +317,8 @@ static const VPet ENEMY_JAGUAPIRUMON = {
     .hp = 20,
     .hp_max = 20,
     .type = PET_JAGUAPIRUMON,
-    .level = 2
+    .level = 2,
+    .vpetcoin_reward = 7
 };
 
 static const VPet ENEMY_RYGUASUMON = {
@@ -326,7 +328,8 @@ static const VPet ENEMY_RYGUASUMON = {
     .hp = 10,
     .hp_max = 10,
     .type = PET_RUGUASUMON,
-    .level = 1
+    .level = 1,
+    .vpetcoin_reward = 5
 };
 
 
