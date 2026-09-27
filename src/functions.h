@@ -67,6 +67,8 @@ void RenderText(SDL_Renderer* renderer, const char* texto, const Color color, fl
                 glyph[0] = 0b00000; glyph[1] = 0b00000; glyph[2] = 0b00000; glyph[3] = 0b00000; glyph[4] = 0b00100; break;
             case '!':
                 glyph[0] = 0b00100; glyph[1] = 0b00100; glyph[2] = 0b00100; glyph[3] = 0b00000; glyph[4] = 0b00100; break;
+            case '?':
+                glyph[0] = 0b01110; glyph[1] = 0b00001; glyph[2] = 0b00110; glyph[3] = 0b00000; glyph[4] = 0b00100; break;
             case '0':
                 glyph[0] = 0b01110; glyph[1] = 0b10001; glyph[2] = 0b10001; glyph[3] = 0b10001; glyph[4] = 0b01110; break;
             case '1':

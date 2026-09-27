@@ -86,6 +86,8 @@ int main(int argc, char* argv[]) {
     GameState current_state = STATE_MENU;
     int menu_opcao = 0;
     StoreType store_type = STORE_TYPE_HOTEL;
+    bool sleeping = false;
+    Uint64 sleep_start_time = 0;
 
     VPet initial_vpet = {
         .name = "BkMbaracajamon",
@@ -212,7 +214,9 @@ int main(int argc, char* argv[]) {
                         player_coordinates,
                         current_map_id,
                         battle_system.player);
-                    current_state = STATE_MAP;
+                    sleep_start_time = SDL_GetTicks();
+                    // current_state = STATE_MAP;
+                    sleeping = true;
                 } else {
                     current_state = STATE_MAP;
                 }
@@ -264,6 +268,13 @@ int main(int argc, char* argv[]) {
                 }
             }
             
+            if(sleeping) {
+                if(current_time - sleep_start_time >= HOTEL_SLEEPING_MSG_TIMEOUT_MS) {
+                    current_state = STATE_MAP;
+                    sleeping = false;
+                }
+            }
+
             RenderTilemap(renderer, tileset_texture, current_map_id, main_camera, world_map);
             RenderObjectOnMap(renderer, tileset_texture, main_camera, &object_tiles, current_map_id, &total_objects);
             RenderPlayer(renderer, player_coordinates, main_camera, SCALED_TILED_SIZE, is_moving);
@@ -274,7 +285,11 @@ int main(int argc, char* argv[]) {
             }
 
             if(current_state == STATE_STORE_MENU && store_type == STORE_TYPE_HOTEL) {
-                RenderHotelMenu(renderer, menu_opcao, SCREEN_WIDTH, SCREEN_HEIGHT);
+                if(sleeping) {
+                     ShowHotelSleepingMessage(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
+                } else {
+                    RenderHotelMenu(renderer, menu_opcao, SCREEN_WIDTH, SCREEN_HEIGHT);
+                }                
             }            
 
             //TODO: linhas 240-256 Criar função UpdateMapsTransition(player_coordinates, current_map_id, spawned_mobs);

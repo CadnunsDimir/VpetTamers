@@ -10,6 +10,7 @@
 #define SCALED_TILED_SIZE 64.0f
 #define WALKABLE_TILES_COUNT (sizeof(WALKABLE_TILES) / sizeof(WALKABLE_TILES[0]))
 #define STEP_COOLDOWN_MS 150
+#define HOTEL_SLEEPING_MSG_TIMEOUT_MS 2000
 
 static const char *MAP_FILES[] = {
     "assets/Map1.csv",
