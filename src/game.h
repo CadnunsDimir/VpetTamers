@@ -12,6 +12,7 @@
 #define STEP_COOLDOWN_MS 150
 #define HOTEL_SLEEPING_MSG_TIMEOUT_MS 2000
 #define HOTEL_VPETCOIN_PRICE 16
+#define ALERT_DURATION 4000
 
 static const char *MAP_FILES[] = {
     "assets/Map1.csv",
@@ -160,6 +161,11 @@ static const Color COLOR_MENU_BUTTON_DISABLED = {50, 50, 50, 255};
 static const Color COLOR_MENU_BUTTON_DISABLED_SELECTED = {120, 120, 120, 255};
 static const Color COLOR_ENEMY_2 = {193, 114, 38, 255};
 static const Color COLOR_ENEMY_3 = {139, 69, 19, 255};
+static const Color COLOR_DIALOG_BACKGROUND = {20, 25, 40, 255};
+static const Color COLOR_DIALOG_BORDER = {200, 200, 220, 255};
+static const Color COLOR_MESSAGE_ERROR = {255, 75, 75, 255};
+static const Color COLOR_MESSAGE_WARNING = {255, 200, 40, 255};
+
 static const int WALKABLE_TILES[] = {
     300, 301, 302,  304, 306, 308, 309, 310, 
     348, //agua

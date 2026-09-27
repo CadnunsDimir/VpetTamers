@@ -14,6 +14,7 @@
 #include "battle_mode.h"
 #include "game_logo.h"
 #include "menus/hotel.h"
+#include "menus/alert.h"
 
 
 int main(int argc, char* argv[]) {
@@ -88,6 +89,10 @@ int main(int argc, char* argv[]) {
     StoreType store_type = STORE_TYPE_HOTEL;
     bool sleeping = false;
     Uint64 sleep_start_time = 0;
+    Alert alert = {
+        .duration = 0,
+        .start_time_ms = 0
+    };
 
     VPet initial_vpet = {
         .name = "BkMbaracajamon",
@@ -203,11 +208,10 @@ int main(int argc, char* argv[]) {
             else if (gamepad.left && menu_opcao == 1) {
                 menu_opcao = 0;
             } else if(gamepad.triggered_confirm) {
-                // se for 1, dorme e aparece do lado da cama
-                // se zero, fecha o menu
-                //TODO: usuário escolhe se quer dormir ou não. caso sim, restaura HP e ele acorda do lado da cama. deve mostrar uma tela escura e uma mensagem "Dormindo... Energia restaurada a 100%"
+                Uint64 current_time = SDL_GetTicks();
+                bool showing_alert = current_time <= (alert.start_time_ms + alert.duration);
+                bool have_enough_money = battle_system.player_vpetcoin_balance >= HOTEL_VPETCOIN_PRICE;
                 if(menu_opcao == 0 && battle_system.player_vpetcoin_balance >= HOTEL_VPETCOIN_PRICE) {
-                    //criar animacao
                     battle_system.player.hp = battle_system.player.hp_max;
                     battle_system.player_vpetcoin_balance -= HOTEL_VPETCOIN_PRICE;
                     player_coordinates.x = 13;
@@ -218,11 +222,14 @@ int main(int argc, char* argv[]) {
                         current_map_id,
                         battle_system.player,
                         battle_system.player_vpetcoin_balance);
-                    sleep_start_time = SDL_GetTicks();
-                    // current_state = STATE_MAP;
+                    sleep_start_time = current_time;
                     sleeping = true;
-                } else if(menu_opcao == 0) {
-                    printf("TODO: implementar mensagem saldo insuficiente. saldo: %f vpetcoin\n",  battle_system.player_vpetcoin_balance);
+                } else if(menu_opcao == 0 && !have_enough_money) {
+                    if(!showing_alert) {
+                         char message[50];
+                        snprintf(message, sizeof(message), "Saldo insuficiente! Voce tem %.1f VpetCoins", battle_system.player_vpetcoin_balance);
+                        ShowAlert(&alert, message, MESSAGE_TYPE_ERROR);
+                    }                   
                 } else {
                     current_state = STATE_MAP;
                 }
@@ -333,6 +340,8 @@ int main(int argc, char* argv[]) {
         } else {
             printf("current_state desconhecido: %d", current_state);
         }
+
+        RenderAlert(renderer, alert, SCREEN_WIDTH);
 
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
