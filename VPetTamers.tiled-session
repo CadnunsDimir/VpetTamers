@@ -1,9 +1,9 @@
 {
-    "activeFile": "assets/Map2_Village.tmx",
+    "activeFile": "assets/Map4_Village_Inn_Map3.tmx",
     "expandedProjectPaths": [
+        "assets/maps",
         ".",
-        "assets",
-        "assets/maps"
+        "assets"
     ],
     "fileStates": {
         "assets/Map1.tmx": {
@@ -21,8 +21,8 @@
             "scale": 0.75,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 921.3333333333333,
-                "y": 396
+                "x": 320.66666666666663,
+                "y": 239.33333333333331
             }
         },
         "assets/Map3_Floresta_Mar.tmx": {
@@ -37,8 +37,8 @@
             "scale": 1.7654166666666666,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 319.754543308945,
-                "y": 239.88671229643614
+                "x": 393.6747698843522,
+                "y": 223.1767760207694
             }
         },
         "assets/maps/Map3_Floresta_Mar.tmx": {
@@ -80,8 +80,8 @@
             "scale": 0.9321875,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 319.67817633255106,
-                "y": 239.22225947033192
+                "x": 320.2145491116326,
+                "y": 239.75863224941335
             }
         }
     },
@@ -102,9 +102,9 @@
     "recentFiles": [
         "assets/tile2map32.tsx",
         "assets/Map3_Floresta_Mar.tmx",
-        "assets/Map4_Village_Inn_Map3.tmx",
-        "fase1.tmx",
         "assets/Map2_Village.tmx",
+        "fase1.tmx",
+        "assets/Map4_Village_Inn_Map3.tmx",
         "assets/maps/Map3_Floresta_Mar.tmx",
         "assets/Map1.tmx",
         "assets/tile2map16.tsx",

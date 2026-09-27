@@ -13,6 +13,8 @@
 #include "maps.h"
 #include "battle_mode.h"
 #include "game_logo.h"
+#include "menus/hotel.h"
+
 
 int main(int argc, char* argv[]) {
     // Inicializa a semente do gerador de números aleatórios com o tempo atual
@@ -82,8 +84,9 @@ int main(int argc, char* argv[]) {
     bool running = true;
     SDL_Event event;
     GameState current_state = STATE_MENU;
-
     int menu_opcao = 0;
+    StoreType store_type = STORE_TYPE_HOTEL;
+
     VPet initial_vpet = {
         .name = "BkMbaracajamon",
         .level = 1,
@@ -171,6 +174,7 @@ int main(int argc, char* argv[]) {
                 if (menu_opcao == 0) {
                     current_state = STATE_MAP;
                     spawned_mobs = SpawnMobs(&spawned_mobs_size, SPAWN_ENEMIES_LIMIT_PER_MAP[current_map_id-1], current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
+
                 } else if (menu_opcao == 1) {
                     LoadGame(
                         save_data_file, 
@@ -181,6 +185,35 @@ int main(int argc, char* argv[]) {
                     memcpy(current_map, world_map[current_map_id-1], sizeof(current_map));
                     if (spawned_mobs) { free(spawned_mobs); spawned_mobs = NULL; }
                     spawned_mobs = SpawnMobs(&spawned_mobs_size, SPAWN_ENEMIES_LIMIT_PER_MAP[current_map_id-1], current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
+                    current_state = STATE_MAP;
+                    menu_opcao = 0;
+                }
+            }
+        }
+
+        if(current_state == STATE_STORE_MENU && store_type == STORE_TYPE_HOTEL) {
+            if (gamepad.right && menu_opcao == 0) {
+                menu_opcao = 1;
+                key_pressed = true;               
+            }
+            else if (gamepad.left && menu_opcao == 1) {
+                menu_opcao = 0;
+            } else if(gamepad.triggered_confirm) {
+                // se for 1, dorme e aparece do lado da cama
+                // se zero, fecha o menu
+                //TODO: usuário escolhe se quer dormir ou não. caso sim, restaura HP e ele acorda do lado da cama. deve mostrar uma tela escura e uma mensagem "Dormindo... Energia restaurada a 100%"
+                if(menu_opcao == 0) {
+                    //criar animacao
+                    battle_system.player.hp = battle_system.player.hp_max;
+                    player_coordinates.x = 13;
+                    player_coordinates.y = 9;
+                    SaveGame(
+                        save_data_file,
+                        player_coordinates,
+                        current_map_id,
+                        battle_system.player);
+                    current_state = STATE_MAP;
+                } else {
                     current_state = STATE_MAP;
                 }
             }
@@ -197,7 +230,7 @@ int main(int argc, char* argv[]) {
             float spacing = 80.0f;
             RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, top + spacing, "CONTINUAR", menu_opcao == 1, false);
         }
-        else if (current_state == STATE_MAP || current_state == STATE_PAUSE) {   
+        else if (current_state == STATE_MAP || current_state == STATE_PAUSE || current_state == STATE_STORE_MENU) {   
             Uint64 current_time = SDL_GetTicks();
             bool is_moving = false;         
             if (current_state == STATE_MAP) {
@@ -223,6 +256,12 @@ int main(int argc, char* argv[]) {
                 float player_width = SCALED_TILED_SIZE;
 
                 UpdateCamera(&main_camera, player_coordinates, player_width, player_height, TILED_MAP_WIDTH, TILED_MAP_HEIGHT, SCALED_TILED_SIZE);
+
+                if (is_moving && current_map_id == 4 && player_coordinates.x == 9 && player_coordinates.y == 5)
+                {
+                    current_state = STATE_STORE_MENU;
+                    store_type = STORE_TYPE_HOTEL;
+                }
             }
             
             RenderTilemap(renderer, tileset_texture, current_map_id, main_camera, world_map);
@@ -233,6 +272,10 @@ int main(int argc, char* argv[]) {
             if (current_state == STATE_PAUSE) {
                 RenderPauseOverlay(renderer, &battle_system.player, SCREEN_WIDTH, SCREEN_HEIGHT);
             }
+
+            if(current_state == STATE_STORE_MENU && store_type == STORE_TYPE_HOTEL) {
+                RenderHotelMenu(renderer, menu_opcao, SCREEN_WIDTH, SCREEN_HEIGHT);
+            }            
 
             //TODO: linhas 240-256 Criar função UpdateMapsTransition(player_coordinates, current_map_id, spawned_mobs);
             // printf("player(x=%d, y=%d)\n", player_coordinates.x, player_coordinates.y);
@@ -264,6 +307,8 @@ int main(int argc, char* argv[]) {
             }
 
             RenderBattleScreen(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, battle_system);
+        } else {
+            printf("current_state desconhecido: %d", current_state);
         }
 
         SDL_RenderPresent(renderer);

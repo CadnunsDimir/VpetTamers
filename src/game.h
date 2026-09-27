@@ -28,8 +28,14 @@ typedef enum {
     STATE_MENU,
     STATE_MAP,
     STATE_PAUSE,
-    STATE_BATTLE
+    STATE_BATTLE,
+    STATE_STORE_MENU
 } GameState;
+
+typedef enum {
+   STORE_TYPE_HOTEL
+} StoreType;
+
 
 typedef enum {
     BATTLE_STATE_MENU_ATTACK,
@@ -142,6 +148,7 @@ static const Color COLOR_GREEN_GROUND = {25, 45, 30, 255};
 static const Color COLOR_GREEN_GROUND_DETAILS = {20, 35, 25, 255};
 static const Color COLOR_WHITE = { 255,255,255,255 };
 static const Color COLOR_GREY = {150, 150, 150, 255};
+static const Color COLOR_YELLOW = {255, 220, 0, 255};
 static const Color COLOR_MENU_BUTTON_NOT_SELECTED = {0, 70, 130, 255};
 static const Color COLOR_MENU_BUTTON_SELECTED = {0, 180, 255, 255};
 static const Color COLOR_MENU_BUTTON_DISABLED = {50, 50, 50, 255};

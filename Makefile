@@ -15,14 +15,14 @@ ifeq ($(OS),Windows_NT)
     # Ajuste o caminho da pasta SDL3 se necessario (ex: C:/SDL3 ou C:/mingw64)
     SDL_DIR = C:/mingw64
     INCLUDES = -I"$(SDL_DIR)/include"
-    LIBS = -L"$(SDL_DIR)/lib" -lSDL3 -lSDL3_image
+    LIBS = -L"$(SDL_DIR)/lib" $(LDFLAGS)
     EXE = $(TARGET).exe
     RM = del /Q 2>NUL || clean
 else
     # --- Configurações para Linux ---
     # Usa o pkg-config para obter as flags de compilacao e bibliotecas nativas
     INCLUDES = $(shell pkg-config --cflags sdl3 2>/dev/null)
-    LIBS = $(shell pkg-config --libs sdl3 2>/dev/null || echo "-lSDL3 -lSDL3_image")
+    LIBS = $(shell pkg-config --libs sdl3 2>/dev/null || echo LDFLAGS)
     EXE = $(TARGET)
     RM = rm -f
 endif
