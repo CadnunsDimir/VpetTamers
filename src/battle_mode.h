@@ -218,7 +218,9 @@ void RenderBattleMessage(SDL_Renderer* renderer, float screenWidth, float screen
     SDL_RenderRect(renderer, &msg_box);
 
     // Renderiza o texto centralizado/alinhado no painel
-    RenderText(renderer, message, COLOR_WHITE, 50.0f, screenHeight - 95.0f, 3.0f);
+    size_t msg_len = strlen(message);
+    float text_pixel_size =  msg_len <= 35 ? 3.0f: 2.0f;
+    RenderText(renderer, message, COLOR_WHITE, 50.0f, screenHeight - 95.0f, text_pixel_size);
 }
 
 void TriggerBattleMessage(BattleSystem* battle, BattleState new_state, const char* text, Uint64 duration_ms) {
