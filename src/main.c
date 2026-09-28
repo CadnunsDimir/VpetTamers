@@ -200,6 +200,8 @@ int main(int argc, char* argv[]) {
             }
         }
 
+        bool hotel_free_on_early_game = battle_system.player_vpetcoin_balance < HOTEL_VPETCOIN_PRICE && battle_system.player.level < 3;
+
         if(current_state == STATE_STORE_MENU && store_type == STORE_TYPE_HOTEL) {
             if (gamepad.right && menu_opcao == 0) {
                 menu_opcao = 1;
@@ -211,9 +213,16 @@ int main(int argc, char* argv[]) {
                 Uint64 current_time = SDL_GetTicks();
                 bool showing_alert = current_time <= (alert.start_time_ms + alert.duration);
                 bool have_enough_money = battle_system.player_vpetcoin_balance >= HOTEL_VPETCOIN_PRICE;
-                if(menu_opcao == 0 && battle_system.player_vpetcoin_balance >= HOTEL_VPETCOIN_PRICE) {
+                
+                if(menu_opcao == 0 && (have_enough_money || hotel_free_on_early_game)) {
                     battle_system.player.hp = battle_system.player.hp_max;
-                    battle_system.player_vpetcoin_balance -= HOTEL_VPETCOIN_PRICE;
+                    if(hotel_free_on_early_game) {
+                        char message[100];
+                        snprintf(message, sizeof(message), "Agora Voce pode se hospedar gratuitamente mas no futuro custara %.1f", HOTEL_VPETCOIN_PRICE);
+                        ShowAlert(&alert, message, MESSAGE_TYPE_WARN);
+                    } else {
+                        battle_system.player_vpetcoin_balance -= HOTEL_VPETCOIN_PRICE;
+                    }                    
                     player_coordinates.x = 13;
                     player_coordinates.y = 9;
                     SaveGame(
@@ -224,9 +233,11 @@ int main(int argc, char* argv[]) {
                         battle_system.player_vpetcoin_balance);
                     sleep_start_time = current_time;
                     sleeping = true;
+
+                                      
                 } else if(menu_opcao == 0 && !have_enough_money) {
                     if(!showing_alert) {
-                         char message[50];
+                        char message[50];
                         snprintf(message, sizeof(message), "Saldo insuficiente! Voce tem %.1f VpetCoins", battle_system.player_vpetcoin_balance);
                         ShowAlert(&alert, message, MESSAGE_TYPE_ERROR);
                     }                   
@@ -249,6 +260,15 @@ int main(int argc, char* argv[]) {
         }
         else if (current_state == STATE_MAP || current_state == STATE_PAUSE || current_state == STATE_STORE_MENU) {   
             Uint64 current_time = SDL_GetTicks();
+
+            if(battle_system.player.hp == 0){                
+                battle_system.player.hp = 1;
+                if (battle_system.player.level < 3)
+                {
+                    ShowAlert(&alert, "Seu Vpet esta esgotado! Ele precisa descansar em um hotel.", MESSAGE_TYPE_WARN);   
+                }                
+            }
+
             bool is_moving = false;         
             if (current_state == STATE_MAP) {
                 is_moving = (gamepad.delta_x != 0 || gamepad.delta_y != 0);
@@ -301,7 +321,7 @@ int main(int argc, char* argv[]) {
                 if(sleeping) {
                      ShowHotelSleepingMessage(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
                 } else {
-                    RenderHotelMenu(renderer, menu_opcao, SCREEN_WIDTH, SCREEN_HEIGHT);
+                    RenderHotelMenu(renderer, menu_opcao, SCREEN_WIDTH, SCREEN_HEIGHT, !hotel_free_on_early_game, HOTEL_VPETCOIN_PRICE);
                 }                
             }            
 

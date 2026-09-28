@@ -64,10 +64,6 @@ void RenderAlert(SDL_Renderer* renderer, Alert alert, float screen_w){
     SDL_RenderRect(renderer, &panel);    
 
     RenderText(renderer, alert.message, text_color, text_x, text_y, 1.5f);
-    printf("Mensagem: '%s', CorTexto: { %d, %d, %d, %d }\n", 
-        alert.message,
-        text_color.r, text_color.g, text_color.b, text_color.a
-    );
 }
 
 void ShowAlert(Alert* alert, char* message, MessageType type) {

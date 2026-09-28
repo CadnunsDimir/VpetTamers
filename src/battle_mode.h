@@ -396,19 +396,26 @@ int CalculateExp(VPet* enemy){
     return enemy->level * 2;
 }
 
+int RandomBonus(int max_value) {
+    return rand() % max_value;
+}
+
 bool CheckLevelUp(VPet* vpet){
     int next_level = vpet->level +1;
-    printf("prox nivel: %d\n", next_level);
     int exp_next_level = pow(next_level, 2);
+
+    //para monitorar a evolução do vpet
+    printf("prox nivel: %d\n", next_level);    
     printf("experiencia necessária: %d\n", exp_next_level);
     printf("experiencia atual: %d\n", vpet->total_exp);
+
     if (vpet->total_exp >= exp_next_level)
     {
+
         vpet->level = next_level;
-        vpet->strength += vpet->level*2;
-        vpet->defense += vpet->level*2;
-        vpet->hp_max += vpet->level*5;
-        vpet->hp = vpet->hp_max;
+        vpet->strength += vpet->level+ RandomBonus(3);
+        vpet->defense += vpet->level + RandomBonus(3);
+        vpet->hp_max += vpet->level + 5;
         CheckLevelUp(vpet);
         return true;
     }
@@ -456,7 +463,7 @@ void UpdateBattleState(
                     // 2. Checa se meu VPet fui derrotado
                     if (battle->player.hp == 0)
                     {
-                        TriggerBattleMessage(battle, BATTLE_STATE_LOST, "VOCÊ FOI DERROTADO", 2000);
+                        TriggerBattleMessage(battle, BATTLE_STATE_LOST, "VOCE FOI DERROTADO", 2000);
                     }
                     else
                     {

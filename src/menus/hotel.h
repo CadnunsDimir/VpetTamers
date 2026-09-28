@@ -24,7 +24,7 @@ void Window(SDL_Renderer* renderer, float screenWidth, float screenHeight, Uint8
     SDL_RenderFillRect(renderer, &line);
 }
 
-void RenderHotelMenu(SDL_Renderer* renderer, int current_option, float screenWidth, float screenHeight) {
+void RenderHotelMenu(SDL_Renderer* renderer, int current_option, float screenWidth, float screenHeight, bool show_price, float price) {
     // 2. Janela Central do Hotel (Tamanho: 420x260, Centralizada)
     float panel_w = 420.0f;
     float panel_h = 260.0f;
@@ -36,7 +36,13 @@ void RenderHotelMenu(SDL_Renderer* renderer, int current_option, float screenWid
 
     // 4. Mensagem de Pergunta e Custo
     RenderText(renderer, "DESEJA SE HOSPEDAR?", COLOR_WHITE, panel_x + 70.0f, panel_y + 80.0f, 2.5f);
-    RenderText(renderer, "CUSTO: 16 VPETCOINS", COLOR_YELLOW, panel_x + 45.0f, panel_y + 115.0f, 3.0f);
+
+    if(show_price) {
+        char message[35];
+        snprintf(message, sizeof(message), "CUSTO: %.1f VPETCOINS", price);
+        RenderText(renderer, message, COLOR_YELLOW, panel_x + 45.0f, panel_y + 115.0f, 3.0f);
+    }
+    
 
     // 5. Botões de Opção (SIM / NAO)
     float btn_w = 120.0f;
