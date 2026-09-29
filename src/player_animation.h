@@ -121,45 +121,42 @@ void UpdatePlayerAnimation(PlayerAnimation *player, float delta_time)
     }
 }
 
-void RenderPlayerUsingSprites(
-    SDL_Renderer *renderer, 
-    PlayerAnimation *player, 
+void UpdatePlayerDirection(
+    PlayerAnimation *player,
     PlayerGamePad gamepad,
-    Coordinates player_coordinates,
-    Camera cam,
     float delta_time) {
-    
-    SDL_FRect playerRect = PlayerToRect(player_coordinates, SCALED_TILED_SIZE, cam);
-    playerRect.y -= 55;
-
-    //TODO: verificar por que o codigo abaixo nao funciona
-    // float playerSize = 120.0f;
-    // SDL_FRect playerRect = {
-    //     (player_coordinates.x * playerSize) - cam.x, // Posição X no Mundo - Câmera X
-    //     (player_coordinates.y * playerSize) - cam.y, // Posição Y no Mundo - Câmera Y
-    // };
-
-    player->moving = false;
+    player->moving = (gamepad.delta_x != 0 || gamepad.delta_y != 0);
 
     // Captura entrada (Teclado)
     if (gamepad.left){
         player->direction = DIRECTION_LEFT;
-        player->moving = true;
     }       
     if (gamepad.right){
         player->direction = DIRECTION_RIGHT;
-        player->moving = true;
     }
     if (gamepad.up){
         player->direction = DIRECTION_UP;
-        player->moving = true;
     }
     if (gamepad.down){
         player->direction = DIRECTION_DOWN;
-        player->moving = true;
     }
 
     UpdatePlayerAnimation(player, delta_time);
+}
+
+void RenderPlayerUsingSprites(
+    SDL_Renderer *renderer, 
+    PlayerAnimation *player,
+    Coordinates player_coordinates,
+    Camera cam) {
+
+    float playerSize = SCALED_TILED_SIZE;
+    float adjust_h = MAIN_CHAR_H /2;
+    Coordinates playerRect = {
+        (player_coordinates.x * playerSize) - cam.x,
+        (player_coordinates.y * playerSize) - cam.y - adjust_h,
+    };
+    
     bool flip = player->direction == DIRECTION_LEFT;
 
     SDL_FRect src = GetTileRect(player->frame);

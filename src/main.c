@@ -152,8 +152,6 @@ int main(int argc, char* argv[]) {
 
     // Loop principal
     while (running) {
-        UpdateDeltaAndCurrentTime(&app_time, &delta_time);
-
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 running = false;
@@ -257,8 +255,7 @@ int main(int argc, char* argv[]) {
                         battle_system.player_vpetcoin_balance);
                     sleep_start_time = current_time;
                     sleeping = true;
-
-                                      
+                    player.direction = DIRECTION_UP;                                      
                 } else if(menu_opcao == 0 && !have_enough_money) {
                     if(!showing_alert) {
                         char message[50];
@@ -284,6 +281,7 @@ int main(int argc, char* argv[]) {
         }
         else if (current_state == STATE_MAP || current_state == STATE_PAUSE || current_state == STATE_STORE_MENU) {   
             Uint64 current_time = SDL_GetTicks();
+            UpdateDeltaAndCurrentTime(&app_time, &delta_time);
 
             if(battle_system.player.hp == 0){                
                 battle_system.player.hp = 1;
@@ -295,7 +293,8 @@ int main(int argc, char* argv[]) {
 
             player.moving = false;         
             if (current_state == STATE_MAP) {
-                player.moving = (gamepad.delta_x != 0 || gamepad.delta_y != 0);
+
+                UpdatePlayerDirection(&player, gamepad, delta_time);
 
                 if (player.moving) {
                     if (current_time - last_step_time >= STEP_COOLDOWN_MS) {
@@ -335,9 +334,9 @@ int main(int argc, char* argv[]) {
 
             RenderTilemap(renderer, tileset_texture, current_map_id, main_camera, world_map);
             RenderObjectOnMap(renderer, tileset_texture, main_camera, &object_tiles, current_map_id, &total_objects);
-            // RenderPlayer(renderer, player_coordinates, main_camera, SCALED_TILED_SIZE, player.moving);
+            // RenderPlayerUsingCode(renderer, player_coordinates, main_camera, SCALED_TILED_SIZE, player.moving);
             RenderEnemies(renderer, main_camera, spawned_mobs, spawned_mobs_size, SCALED_TILED_SIZE);
-            RenderPlayerUsingSprites(renderer, &player, gamepad,player_coordinates, main_camera,delta_time);
+            RenderPlayerUsingSprites(renderer, &player, player_coordinates, main_camera);
 
             if (current_state == STATE_PAUSE) {
                 RenderPauseOverlay(renderer, &battle_system.player, battle_system.player_vpetcoin_balance, SCREEN_WIDTH, SCREEN_HEIGHT);

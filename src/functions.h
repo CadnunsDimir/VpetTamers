@@ -125,7 +125,7 @@ SDL_FRect PlayerToRect(Coordinates player, float playerSize, Camera cam) {
     return rect;
 }
 
-void RenderPlayer(SDL_Renderer* renderer, Coordinates player_coordinates, Camera cam, float size, bool is_moving) {
+void RenderPlayerUsingCode(SDL_Renderer* renderer, Coordinates player_coordinates, Camera cam, float size, bool is_moving) {
     // Posição base em pixels do player na tela
     SDL_FRect playerRect = PlayerToRect(player_coordinates, size, cam);
 
