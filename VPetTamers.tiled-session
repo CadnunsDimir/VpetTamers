@@ -2,8 +2,8 @@
     "activeFile": "assets/Map4_Village_Inn_Map3.tmx",
     "expandedProjectPaths": [
         "assets/maps",
-        ".",
-        "assets"
+        "assets",
+        "."
     ],
     "fileStates": {
         "assets/Map1.tmx": {
@@ -21,24 +21,24 @@
             "scale": 0.75,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 320.66666666666663,
-                "y": 239.33333333333331
+                "x": 320,
+                "y": 239.3333333333333
             }
         },
         "assets/Map3_Floresta_Mar.tmx": {
             "scale": 0.89359375,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 357.5450253540829,
-                "y": 240.04196537856274
+                "x": 320.0559538380836,
+                "y": 304.9484175555167
             }
         },
         "assets/Map4_Village_Inn_Map3.tmx": {
             "scale": 1.7654166666666666,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 393.6747698843522,
-                "y": 223.1767760207694
+                "x": 504.97993863582724,
+                "y": 248.10007080481475
             }
         },
         "assets/maps/Map3_Floresta_Mar.tmx": {
@@ -51,6 +51,10 @@
         },
         "assets/maps/tile2map32.tsx": {
             "scaleInDock": 1
+        },
+        "assets/sprites/player.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
         },
         "assets/tile2map16.tsx": {
             "scaleInDock": 1.5,
@@ -80,13 +84,13 @@
             "scale": 0.9321875,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 320.2145491116326,
+                "x": 319.6781763325511,
                 "y": 239.75863224941335
             }
         }
     },
     "last.exportedFilePath": "C:/Users/tiago/dev-projects/GameDev/VPetTamers/assets",
-    "last.imagePath": "C:/Users/tiago/dev-projects/GameDev/VPetTamers/assets",
+    "last.imagePath": "C:/Users/tiago/dev-projects/GameDev/GameLab/assets",
     "map.height": 15,
     "map.lastUsedExportFilter": "Arquivos CSV (*.csv)",
     "map.lastUsedFormat": "tmx",
@@ -105,20 +109,20 @@
         "assets/Map2_Village.tmx",
         "fase1.tmx",
         "assets/Map4_Village_Inn_Map3.tmx",
+        "assets/sprites/player.tsx",
         "assets/maps/Map3_Floresta_Mar.tmx",
         "assets/Map1.tmx",
         "assets/tile2map16.tsx",
         "assets/tile_set2.tsx",
         "assets/tile_set.tsx",
-        "assets/tile_set4.tsx",
-        "assets/tile_set3.tsx"
+        "assets/tile_set4.tsx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.margin": 0,
     "tileset.spacing": 0,
     "tileset.tileSize": {
-        "height": 110,
-        "width": 115
+        "height": 32,
+        "width": 16
     },
     "tileset.transparentColor": "#ffffff",
     "tileset.useTransparentColor": true

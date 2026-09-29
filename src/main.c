@@ -15,6 +15,7 @@
 #include "game_logo.h"
 #include "menus/hotel.h"
 #include "menus/alert.h"
+#include "player_animation.h"
 
 
 int main(int argc, char* argv[]) {
@@ -33,6 +34,7 @@ int main(int argc, char* argv[]) {
     SDL_Texture* tileset_texture = NULL;
     MapMob* spawned_mobs = NULL;
     SDL_Gamepad* gamepad_connection = NULL;
+    SDL_Surface *main_character_surface;
     int world_map[TOTAL_MAPS_COUNT][TILED_MAP_HEIGHT][TILED_MAP_WIDTH];
 
     // 2. Cria Janela e Renderizador
@@ -53,7 +55,9 @@ int main(int argc, char* argv[]) {
         goto cleanup; // Usa rótulo de limpeza para não vazar recursos
     }
 
-    
+    if(!LoadPlayerSurface(&main_character_surface)){
+        goto cleanup;
+    }
 
     for (int i = 0; i < TOTAL_MAPS_COUNT; i++) {
         int map_id = i+1;
@@ -89,6 +93,24 @@ int main(int argc, char* argv[]) {
     StoreType store_type = STORE_TYPE_HOTEL;
     bool sleeping = false;
     Uint64 sleep_start_time = 0;
+    PlayerAnimation player = {
+        .texture = NULL,
+        .frame = 0,
+        .frame_timer = 0.0f,
+        .frame_duration = 0.12f,
+        .direction = DIRECTION_DOWN,
+        .moving = false
+    };
+
+    ApplyTexture(renderer, main_character_surface, &player);
+    if (player.texture == NULL) {
+        printf("[ERRO] Textura do jogador está NULL! Verifique o caminho do arquivo.\n");
+        goto cleanup;
+    }
+
+    float app_time = 0;
+    float delta_time = 0;
+
     Alert alert = {
         .duration = 0,
         .start_time_ms = 0
@@ -130,6 +152,8 @@ int main(int argc, char* argv[]) {
 
     // Loop principal
     while (running) {
+        UpdateDeltaAndCurrentTime(&app_time, &delta_time);
+
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 running = false;
@@ -269,10 +293,11 @@ int main(int argc, char* argv[]) {
                 }                
             }
 
-            bool is_moving = false;         
+            player.moving = false;         
             if (current_state == STATE_MAP) {
-                is_moving = (gamepad.delta_x != 0 || gamepad.delta_y != 0);
-                if (is_moving) {
+                player.moving = (gamepad.delta_x != 0 || gamepad.delta_y != 0);
+
+                if (player.moving) {
                     if (current_time - last_step_time >= STEP_COOLDOWN_MS) {
                         MovePlayer(
                             &player_coordinates, 
@@ -294,7 +319,7 @@ int main(int argc, char* argv[]) {
 
                 UpdateCamera(&main_camera, player_coordinates, player_width, player_height, TILED_MAP_WIDTH, TILED_MAP_HEIGHT, SCALED_TILED_SIZE);
 
-                if (is_moving && current_map_id == 4 && player_coordinates.x == 9 && player_coordinates.y == 5)
+                if (player.moving && current_map_id == 4 && player_coordinates.x == 9 && player_coordinates.y == 5)
                 {
                     current_state = STATE_STORE_MENU;
                     store_type = STORE_TYPE_HOTEL;
@@ -310,8 +335,9 @@ int main(int argc, char* argv[]) {
 
             RenderTilemap(renderer, tileset_texture, current_map_id, main_camera, world_map);
             RenderObjectOnMap(renderer, tileset_texture, main_camera, &object_tiles, current_map_id, &total_objects);
-            RenderPlayer(renderer, player_coordinates, main_camera, SCALED_TILED_SIZE, is_moving);
+            // RenderPlayer(renderer, player_coordinates, main_camera, SCALED_TILED_SIZE, player.moving);
             RenderEnemies(renderer, main_camera, spawned_mobs, spawned_mobs_size, SCALED_TILED_SIZE);
+            RenderPlayerUsingSprites(renderer, &player, gamepad,player_coordinates, main_camera,delta_time);
 
             if (current_state == STATE_PAUSE) {
                 RenderPauseOverlay(renderer, &battle_system.player, battle_system.player_vpetcoin_balance, SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -371,6 +397,7 @@ printf("Finalizando programa...\n");
 cleanup:
     printf("liberando recursos\n");
 
+    if (main_character_surface) SDL_DestroySurface(main_character_surface);
     if (spawned_mobs) free(spawned_mobs);
     if (game_logo) SDL_DestroyTexture(game_logo);
     if (tileset_texture) SDL_DestroyTexture(tileset_texture);
