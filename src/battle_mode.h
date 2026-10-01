@@ -402,7 +402,7 @@ int RandomBonus(int max_value) {
 
 bool CheckLevelUp(VPet* vpet){
     int next_level = vpet->level +1;
-    int exp_next_level = pow(next_level, 2);
+    int exp_next_level = pow(next_level, 3);
 
     //para monitorar a evolução do vpet
     printf("prox nivel: %d\n", next_level);    

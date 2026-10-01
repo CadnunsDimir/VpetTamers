@@ -12,8 +12,9 @@
 #include "objects/objects.h"
 #include "maps.h"
 #include "battle_mode.h"
-#include "game_logo.h"
+#include "menus/game_logo.h"
 #include "menus/home_menu.h"
+#include "menus/pause.h"
 #include "menus/hotel.h"
 #include "menus/alert.h"
 #include "player_animation.h"
@@ -149,6 +150,8 @@ int main(int argc, char* argv[]) {
         .player_vpetcoin_balance = 0
     };
 
+    PlayerGamePad gamepad = {0, 0, false, false, false, false, false, false, false, false};
+
     // Loop principal
     while (state_machine.running) {
         while (SDL_PollEvent(&event)) {
@@ -168,7 +171,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        PlayerGamePad gamepad = GetPlayerGamePad(gamepad_connection);
+        UpdatePlayerGamePad(gamepad_connection, &gamepad);
 
         if (gamepad.triggered_pause && !gamepad.pause_key_pressed) {
             if (state_machine.state == STATE_MAP) {
@@ -188,15 +191,15 @@ int main(int argc, char* argv[]) {
         if (state_machine.state == STATE_MENU) {
             if (gamepad.down && !gamepad.key_pressed) {
                 menu.selected_option = 1;
-                gamepad.pause_key_pressed = true;                
+                gamepad.key_pressed = true;                
             }
             else if (gamepad.up && !gamepad.key_pressed) {
                 menu.selected_option = 0;
-                gamepad.pause_key_pressed = true;
+                gamepad.key_pressed = true;
             }
 
             if (!gamepad.down && !gamepad.up) {
-                gamepad.pause_key_pressed = false;
+                gamepad.key_pressed = false;
             }
 
             if (gamepad.triggered_confirm) {

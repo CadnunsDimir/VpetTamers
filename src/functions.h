@@ -425,23 +425,28 @@ void MovePlayer(
     
 }
 
-PlayerGamePad GetPlayerGamePad(SDL_Gamepad* gamepad_connection) {
+PlayerGamePad UpdatePlayerGamePad(SDL_Gamepad* gamepad_connection, PlayerGamePad* gamepad_delta) {
     const bool *state = SDL_GetKeyboardState(NULL);
 
-    PlayerGamePad gamepad_delta = {0, 0, false, false, false, false, false, false, false, false};
+    gamepad_delta->delta_x = 0;
+    gamepad_delta->delta_y = 0;
+    gamepad_delta->up = false;
+    gamepad_delta->down = false;
+    gamepad_delta->left = false;
+    gamepad_delta->right = false;
 
     // Captura entrada (Teclado)
     if (state[SDL_SCANCODE_LEFT] || state[SDL_SCANCODE_A])
-        gamepad_delta.delta_x = -1;
+        gamepad_delta->delta_x = -1;
     if (state[SDL_SCANCODE_RIGHT] || state[SDL_SCANCODE_D])
-        gamepad_delta.delta_x = 1;
+        gamepad_delta->delta_x = 1;
     if (state[SDL_SCANCODE_UP] || state[SDL_SCANCODE_W])
-        gamepad_delta.delta_y = -1;
+        gamepad_delta->delta_y = -1;
     if (state[SDL_SCANCODE_DOWN] || state[SDL_SCANCODE_S])
-        gamepad_delta.delta_y = 1;
+        gamepad_delta->delta_y = 1;
 
-    gamepad_delta.triggered_pause = state[SDL_SCANCODE_ESCAPE];
-    gamepad_delta.triggered_confirm = state[SDL_SCANCODE_RETURN];
+    gamepad_delta->triggered_pause = state[SDL_SCANCODE_ESCAPE];
+    gamepad_delta->triggered_confirm = state[SDL_SCANCODE_RETURN];
 
     // Captura entrada (Gamepad D-Pad)
     if (gamepad_connection)
@@ -450,132 +455,32 @@ PlayerGamePad GetPlayerGamePad(SDL_Gamepad* gamepad_connection) {
         Sint16 axisY = SDL_GetGamepadAxis(gamepad_connection, SDL_GAMEPAD_AXIS_LEFTY);
 
         if (axisX < -8000)
-            gamepad_delta.delta_x = -1;
+            gamepad_delta->delta_x = -1;
         if (axisX > 8000)
-            gamepad_delta.delta_x = 1;
+            gamepad_delta->delta_x = 1;
         if (axisY < -8000)
-            gamepad_delta.delta_y = -1;
+            gamepad_delta->delta_y = -1;
         if (axisY > 8000)
-            gamepad_delta.delta_y = 1;
+            gamepad_delta->delta_y = 1;
 
         if (SDL_GetGamepadButton(gamepad_connection, SDL_GAMEPAD_BUTTON_DPAD_LEFT))
-            gamepad_delta.delta_x = -1;
+            gamepad_delta->delta_x = -1;
         if (SDL_GetGamepadButton(gamepad_connection, SDL_GAMEPAD_BUTTON_DPAD_RIGHT))
-            gamepad_delta.delta_x = 1;
+            gamepad_delta->delta_x = 1;
         if (SDL_GetGamepadButton(gamepad_connection, SDL_GAMEPAD_BUTTON_DPAD_UP))
-            gamepad_delta.delta_y = -1;
+            gamepad_delta->delta_y = -1;
         if (SDL_GetGamepadButton(gamepad_connection, SDL_GAMEPAD_BUTTON_DPAD_DOWN))
-            gamepad_delta.delta_y = 1;
+            gamepad_delta->delta_y = 1;
         
-         gamepad_delta.triggered_pause |= SDL_GetGamepadButton(gamepad_connection, SDL_GAMEPAD_BUTTON_START);
-         gamepad_delta.triggered_confirm  |= SDL_GetGamepadButton(gamepad_connection, SDL_GAMEPAD_BUTTON_SOUTH);
+         gamepad_delta->triggered_pause |= SDL_GetGamepadButton(gamepad_connection, SDL_GAMEPAD_BUTTON_START);
+         gamepad_delta->triggered_confirm  |= SDL_GetGamepadButton(gamepad_connection, SDL_GAMEPAD_BUTTON_SOUTH);
     }
 
-    gamepad_delta.down = gamepad_delta.delta_y == 1;
-    gamepad_delta.up = gamepad_delta.delta_y == -1;    
-    gamepad_delta.right = gamepad_delta.delta_x == 1;
-    gamepad_delta.left = gamepad_delta.delta_x == -1;
-    
-    return gamepad_delta;
+    gamepad_delta->down = gamepad_delta->delta_y == 1;
+    gamepad_delta->up = gamepad_delta->delta_y == -1;    
+    gamepad_delta->right = gamepad_delta->delta_x == 1;
+    gamepad_delta->left = gamepad_delta->delta_x == -1;
 }
-
-
-void RenderVPetStats(SDL_Renderer* renderer, VPet *vpet, float panel_x, float panel_y) {
-    // Buffer de texto temporário
-    char buffer[32];
-
-    // Nome do V-Pet e Nível
-    snprintf(buffer, sizeof(buffer), "NOME: %s", vpet->name);
-    RenderText(renderer, buffer, COLOR_WHITE, panel_x + 30.0f, panel_y + 80.0f, 3.0f);
-
-    snprintf(buffer, sizeof(buffer), "LVL : %d", vpet->level);
-    RenderText(renderer, buffer, COLOR_WHITE, panel_x + 30.0f, panel_y + 120.0f, 3.0f);
-
-    // HP Numérico
-    snprintf(buffer, sizeof(buffer), "HP  : %d/%d", vpet->hp, vpet->hp_max);
-    RenderText(renderer, buffer, COLOR_WHITE, panel_x + 30.0f, panel_y + 160.0f, 3.0f);
-
-    // --- Barra Visual de HP ---
-    float bar_x = panel_x + 230.0f;
-    float bar_y = panel_y + 160.0f;
-    float bar_w = 140.0f;
-    float bar_h = 16.0f;
-
-    // Fundo da Barra (Vermelho/Escuro - HP Faltante)
-    SDL_FRect hp_bg = {bar_x, bar_y, bar_w, bar_h};
-    SDL_SetRenderDrawColor(renderer, 80, 20, 20, 255);
-    SDL_RenderFillRect(renderer, &hp_bg);
-
-    // Preenchimento da Barra (Verde - HP Atual)
-    float hp_ratio = (float)vpet->hp / (float)vpet->hp_max;
-    if (hp_ratio < 0.0f)
-        hp_ratio = 0.0f;
-    if (hp_ratio > 1.0f)
-        hp_ratio = 1.0f;
-
-    SDL_FRect hp_fill = {bar_x, bar_y, bar_w * hp_ratio, bar_h};
-    SDL_SetRenderDrawColor(renderer, 40, 200, 80, 255);
-    SDL_RenderFillRect(renderer, &hp_fill);
-
-    // Borda da Barra
-    SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
-    SDL_RenderRect(renderer, &hp_bg);
-
-    // Ataque e Defesa
-    snprintf(buffer, sizeof(buffer), "ATK : %d", vpet->strength);
-    RenderText(renderer, buffer, COLOR_WHITE, panel_x + 30.0f, panel_y + 200.0f, 3.0f);
-
-    snprintf(buffer, sizeof(buffer), "DEF : %d", vpet->defense);
-    RenderText(renderer, buffer, COLOR_WHITE, panel_x + 30.0f, panel_y + 240.0f, 3.0f);
-}
-
-void RenderPauseDivider(SDL_Renderer* renderer, float pos_y, float panel_x, float panel_w){
-    SDL_FRect line = { panel_x + 20.0f, pos_y, panel_w - 40.0f, 2.0f };
-    SDL_SetRenderDrawColor(renderer, 100, 100, 130, 255);
-    SDL_RenderFillRect(renderer, &line);
-}
-
-void RenderPauseVpetCoinsBalance(SDL_Renderer* renderer, float vpetcoin_balance ,float pos_y, float panel_x) {
-    char buffer[32];
-    snprintf(buffer, sizeof(buffer), "%.1f VPETCOINS", vpetcoin_balance);
-    RenderText(renderer, buffer, COLOR_WHITE, panel_x + 30.0f, pos_y, 3.0f);
-}
-
-void RenderPauseOverlay(SDL_Renderer* renderer, VPet *vpet, float vpetcoin_balance, float screenWidth, float screenHeight) {
-    // 1. Escurece a tela toda com um preto semi-transparente (Alpha = 150)
-    SDL_FRect overlay = { 0.0f, 0.0f, screenWidth, screenHeight };
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 150);
-    SDL_RenderFillRect(renderer, &overlay);
-
-    // 2. Janela Central de Status (Tamanho: 400x320, Centralizada)
-    float panel_w = 400.0f;
-    float panel_h = 330.0f;
-    float panel_x = (screenWidth - panel_w) / 2.0f;
-    float panel_y = (screenHeight - panel_h) / 2.0f;
-
-    SDL_FRect panel = { panel_x, panel_y, panel_w, panel_h };
-
-    // Fundo da Janela (Azul escuro com transparência)
-    SDL_SetRenderDrawColor(renderer, 20, 25, 40, 230);
-    SDL_RenderFillRect(renderer, &panel);
-
-    // Borda da Janela (Cinza claro/Branco)
-    SDL_SetRenderDrawColor(renderer, 200, 200, 220, 255);
-    SDL_RenderRect(renderer, &panel);
-
-    // Título da Janela
-    RenderText(renderer, "PAUSE", COLOR_WHITE, panel_x + 160.0f, panel_y + 20.0f, 4.0f);
-
-    // Linha Divisória Horizontal sob o Título
-    float divider1 = panel_y + 60.0f;
-    RenderPauseDivider(renderer,  divider1, panel_x, panel_w);
-    RenderVPetStats(renderer, vpet, panel_x, panel_y);
-    float divider2 = divider1 + 210.0f;
-    RenderPauseDivider(renderer,  divider2, panel_x, panel_w);
-    RenderPauseVpetCoinsBalance(renderer, vpetcoin_balance, divider2+ 20.0f, panel_x);
-}
-
-
 
 void RemoveEnemyFromMap(MapState* map) {
     for (int i = 0; i < map->spawned_mobs_size; i++) {
