@@ -1,16 +1,3 @@
-typedef enum {
-    MESSAGE_TYPE_ERROR,
-    MESSAGE_TYPE_INFO,
-    MESSAGE_TYPE_WARN,
-} MessageType;
-
-typedef struct {
-    char message[100];
-    MessageType type;
-    Uint64 start_time_ms;
-    Uint64 duration;
-} Alert;
-
 void SetColor(SDL_Renderer* renderer, Color color) {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 }

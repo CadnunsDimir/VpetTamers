@@ -424,10 +424,9 @@ bool CheckLevelUp(VPet* vpet){
 
 void UpdateBattleState(
     BattleSystem* battle, 
-    GameState* game_state, 
-    const char* save_data_file, 
-    Coordinates player_pos, 
-    int current_map_id) {
+    GameStateMachine* state_machine,
+    MapState* map
+) {
 
     Uint64 current_time = SDL_GetTicks();
 
@@ -474,7 +473,7 @@ void UpdateBattleState(
                         int running_chance = rand() % 100;
                         if (running_chance < BATTLE_RUNNING_CHANCE) {
                             // Volta para o mapa de exploração
-                            *game_state = STATE_MAP;
+                            state_machine->state = STATE_MAP;
                         } else {
                             TriggerBattleMessage(battle, BATTLE_STATE_ENEMY_ATACKING, "Nao foi possivel fugir! Sendo atacado...", 1000);
                         }
@@ -495,12 +494,12 @@ void UpdateBattleState(
                     break;
                 case BATTLE_STATE_WIN_CLOSE_BATTLE:
                 case BATTLE_STATE_LOST: 
-                    *game_state = STATE_MAP;
+                    state_machine->state = STATE_MAP;
                     battle->current_state = BATTLE_STATE_MENU_ATTACK;
                     SaveGame(
-                        save_data_file,
-                        player_pos,
-                        current_map_id,
+                        state_machine->save_data_file,
+                        map->player_coordinates,
+                        map->current_map_id,
                         battle->player,
                         battle->player_vpetcoin_balance);
                     break;

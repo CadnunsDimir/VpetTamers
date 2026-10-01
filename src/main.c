@@ -13,10 +13,11 @@
 #include "maps.h"
 #include "battle_mode.h"
 #include "game_logo.h"
+#include "menus/home_menu.h"
 #include "menus/hotel.h"
 #include "menus/alert.h"
 #include "player_animation.h"
-
+#include "exploration_mode.h"
 
 int main(int argc, char* argv[]) {
     // Inicializa a semente do gerador de números aleatórios com o tempo atual
@@ -32,9 +33,9 @@ int main(int argc, char* argv[]) {
     SDL_Renderer* renderer = NULL;
     SDL_Texture* game_logo = NULL;
     SDL_Texture* tileset_texture = NULL;
-    MapMob* spawned_mobs = NULL;
     SDL_Gamepad* gamepad_connection = NULL;
     SDL_Surface *main_character_surface;
+
     int world_map[TOTAL_MAPS_COUNT][TILED_MAP_HEIGHT][TILED_MAP_WIDTH];
 
     // 2. Cria Janela e Renderizador
@@ -81,25 +82,49 @@ int main(int argc, char* argv[]) {
     }
     if (joysticks) {
         SDL_free(joysticks);
-    }
-
-    Coordinates player_coordinates = { 5, 5 };
-    Coordinates enemy_coordinates = { 0, 0 };
-
-    bool running = true;
+    }    
+    
     SDL_Event event;
-    GameState current_state = STATE_MENU;
-    int menu_opcao = 0;
-    StoreType store_type = STORE_TYPE_HOTEL;
-    bool sleeping = false;
-    Uint64 sleep_start_time = 0;
+
+    GameStateMachine state_machine = {
+        .running = true,
+        .state = STATE_MENU,
+        .app_time = 0,
+        .delta_time = 0,
+        .last_step_time = 0,
+        .sleep_start_time = 0,
+        .save_data_file = "save.dat",
+
+        .alert = {
+            .duration = 0,
+            .start_time_ms = 0
+        }
+    };
+
+    MapState map_state = {
+        .tileset_texture = tileset_texture,
+        .world_map = world_map,
+        .player_coordinates = { 5, 5 }, 
+        .enemy_coordinates = { 0, 0 },
+        .camera = {0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT},
+        .spawned_mobs_size = 0,
+        .width_tiles = TILED_MAP_WIDTH, 
+        .height_tiles = TILED_MAP_HEIGHT
+    };
+
+    MenuState menu = {
+        .selected_option = 0,
+        .store_type = STORE_TYPE_HOTEL
+    };
+
     PlayerAnimation player = {
         .texture = NULL,
         .frame = 0,
         .frame_timer = 0.0f,
         .frame_duration = 0.12f,
         .direction = DIRECTION_DOWN,
-        .moving = false
+        .moving = false,
+        .sleeping = false
     };
 
     ApplyTexture(renderer, main_character_surface, &player);
@@ -107,14 +132,6 @@ int main(int argc, char* argv[]) {
         printf("[ERRO] Textura do jogador está NULL! Verifique o caminho do arquivo.\n");
         goto cleanup;
     }
-
-    float app_time = 0;
-    float delta_time = 0;
-
-    Alert alert = {
-        .duration = 0,
-        .start_time_ms = 0
-    };
 
     VPet initial_vpet = {
         .name = "BkMbaracajamon",
@@ -132,29 +149,11 @@ int main(int argc, char* argv[]) {
         .player_vpetcoin_balance = 0
     };
 
-    static bool key_pressed = false;
-    static bool pause_key_pressed = false;
-
-    int current_map[TILED_MAP_HEIGHT][TILED_MAP_WIDTH];
-    int current_map_id = 1;
-    memcpy(current_map, world_map[current_map_id-1], sizeof(current_map));
-
-    Camera main_camera = {0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT};
-
-    int spawned_mobs_size = 0; // Guarda a quantidade total de mobs no map (ativos e não ativos)
-    
-    static Uint64 last_step_time = 0;
-
-    Coordinates* object_tiles = NULL;
-    int total_objects = 0;
-
-    char save_data_file[10] = "save.dat";
-
     // Loop principal
-    while (running) {
+    while (state_machine.running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
-                running = false;
+                state_machine.running = false;
             }
             else if (event.type == SDL_EVENT_GAMEPAD_ADDED && !gamepad_connection) {
                 gamepad_connection = SDL_OpenGamepad(event.gdevice.which);
@@ -171,99 +170,98 @@ int main(int argc, char* argv[]) {
 
         PlayerGamePad gamepad = GetPlayerGamePad(gamepad_connection);
 
-        if (gamepad.triggered_pause && !pause_key_pressed) {
-            if (current_state == STATE_MAP) {
-                current_state = STATE_PAUSE;
+        if (gamepad.triggered_pause && !gamepad.pause_key_pressed) {
+            if (state_machine.state == STATE_MAP) {
+                state_machine.state = STATE_PAUSE;
             }
-            else if (current_state == STATE_PAUSE) {
-                current_state = STATE_MAP;
+            else if (state_machine.state == STATE_PAUSE) {
+                state_machine.state = STATE_MAP;
             }
-            pause_key_pressed = true;
+           gamepad.pause_key_pressed = true;
         }
 
         if (!gamepad.triggered_pause) {
-            pause_key_pressed = false;
+           gamepad.pause_key_pressed = false;
         }        
 
         // --- Atualização do Menu ---
-        if (current_state == STATE_MENU) {
-            if (gamepad.down && !key_pressed) {
-                menu_opcao = 1;
-                key_pressed = true;                
+        if (state_machine.state == STATE_MENU) {
+            if (gamepad.down && !gamepad.key_pressed) {
+                menu.selected_option = 1;
+                gamepad.pause_key_pressed = true;                
             }
-            else if (gamepad.up && !key_pressed) {
-                menu_opcao = 0;
-                key_pressed = true;
+            else if (gamepad.up && !gamepad.key_pressed) {
+                menu.selected_option = 0;
+                gamepad.pause_key_pressed = true;
             }
 
             if (!gamepad.down && !gamepad.up) {
-                key_pressed = false;
+                gamepad.pause_key_pressed = false;
             }
 
             if (gamepad.triggered_confirm) {
-                if (menu_opcao == 0) {
-                    current_state = STATE_MAP;
-                    spawned_mobs = SpawnMobs(&spawned_mobs_size, SPAWN_ENEMIES_LIMIT_PER_MAP[current_map_id-1], current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
-
-                } else if (menu_opcao == 1) {
+                if (menu.selected_option == 0) {
+                    map_state.current_map_id = 1;
+                    state_machine.state = STATE_MAP;
+                } else if (menu.selected_option == 1) {
                     LoadGame(
-                        save_data_file, 
-                        &player_coordinates, 
-                        &current_map_id,
+                        state_machine.save_data_file, 
+                        &map_state.player_coordinates, 
+                        &map_state.current_map_id,
                         &battle_system.player,
                         &battle_system.player_vpetcoin_balance
                     );
-                    memcpy(current_map, world_map[current_map_id-1], sizeof(current_map));
-                    if (spawned_mobs) { free(spawned_mobs); spawned_mobs = NULL; }
-                    spawned_mobs = SpawnMobs(&spawned_mobs_size, SPAWN_ENEMIES_LIMIT_PER_MAP[current_map_id-1], current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
-                    current_state = STATE_MAP;
-                    menu_opcao = 0;
+
+                    menu.selected_option = 0;
                 }
+
+                UpdateMap(&map_state);
+                state_machine.state = STATE_MAP;
             }
         }
 
-        bool hotel_free_on_early_game = battle_system.player_vpetcoin_balance < HOTEL_VPETCOIN_PRICE && battle_system.player.level < 3;
+        menu.hotel_free_on_early_game = battle_system.player_vpetcoin_balance < HOTEL_VPETCOIN_PRICE && battle_system.player.level < 3;
 
-        if(current_state == STATE_STORE_MENU && store_type == STORE_TYPE_HOTEL) {
-            if (gamepad.right && menu_opcao == 0) {
-                menu_opcao = 1;
-                key_pressed = true;               
+        if(state_machine.state == STATE_STORE_MENU && menu.store_type == STORE_TYPE_HOTEL) {
+            if (gamepad.right && menu.selected_option == 0) {
+                menu.selected_option = 1;
+                gamepad.pause_key_pressed = true;               
             }
-            else if (gamepad.left && menu_opcao == 1) {
-                menu_opcao = 0;
+            else if (gamepad.left && menu.selected_option == 1) {
+                menu.selected_option = 0;
             } else if(gamepad.triggered_confirm) {
                 Uint64 current_time = SDL_GetTicks();
-                bool showing_alert = current_time <= (alert.start_time_ms + alert.duration);
+                bool showing_alert = current_time <= (state_machine.alert.start_time_ms + state_machine.alert.duration);
                 bool have_enough_money = battle_system.player_vpetcoin_balance >= HOTEL_VPETCOIN_PRICE;
                 
-                if(menu_opcao == 0 && (have_enough_money || hotel_free_on_early_game)) {
+                if(menu.selected_option == 0 && (have_enough_money || menu.hotel_free_on_early_game)) {
                     battle_system.player.hp = battle_system.player.hp_max;
-                    if(hotel_free_on_early_game) {
+                    if(menu.hotel_free_on_early_game) {
                         char message[100];
                         snprintf(message, sizeof(message), "Agora Voce pode se hospedar gratuitamente mas no futuro custara %.1f", HOTEL_VPETCOIN_PRICE);
-                        ShowAlert(&alert, message, MESSAGE_TYPE_WARN);
+                        ShowAlert(&state_machine.alert, message, MESSAGE_TYPE_WARN);
                     } else {
                         battle_system.player_vpetcoin_balance -= HOTEL_VPETCOIN_PRICE;
                     }                    
-                    player_coordinates.x = 13;
-                    player_coordinates.y = 9;
+                    map_state.player_coordinates.x = 13;
+                    map_state.player_coordinates.y = 9;
                     SaveGame(
-                        save_data_file,
-                        player_coordinates,
-                        current_map_id,
+                        state_machine.save_data_file,
+                        map_state.player_coordinates,
+                        map_state.current_map_id,
                         battle_system.player,
                         battle_system.player_vpetcoin_balance);
-                    sleep_start_time = current_time;
-                    sleeping = true;
+                    state_machine.sleep_start_time = current_time;
+                    player.sleeping = true;
                     player.direction = DIRECTION_UP;                                      
-                } else if(menu_opcao == 0 && !have_enough_money) {
+                } else if(menu.selected_option == 0 && !have_enough_money) {
                     if(!showing_alert) {
                         char message[50];
                         snprintf(message, sizeof(message), "Saldo insuficiente! Voce tem %.1f VpetCoins", battle_system.player_vpetcoin_balance);
-                        ShowAlert(&alert, message, MESSAGE_TYPE_ERROR);
+                        ShowAlert(&state_machine.alert, message, MESSAGE_TYPE_ERROR);
                     }                   
                 } else {
-                    current_state = STATE_MAP;
+                    state_machine.state = STATE_MAP;
                 }
             }
         }
@@ -272,121 +270,27 @@ int main(int argc, char* argv[]) {
         SDL_SetRenderDrawColor(renderer, 20, 20, 30, 255);
         SDL_RenderClear(renderer);
 
-        if (current_state == STATE_MENU) {
-            RenderMenuLogo(renderer, game_logo, SCREEN_WIDTH, 40.0f);
-            float top = 320.0f;
-            RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, top, "NOVO JOGO", menu_opcao == 0, false);
-            float spacing = 80.0f;
-            RenderMenuButton(renderer, (SCREEN_WIDTH - 300) / 2.0f, top + spacing, "CONTINUAR", menu_opcao == 1, false);
+        if (state_machine.state == STATE_MENU) {
+            HomeMenu(renderer, game_logo, menu.selected_option);            
         }
-        else if (current_state == STATE_MAP || current_state == STATE_PAUSE || current_state == STATE_STORE_MENU) {   
-            Uint64 current_time = SDL_GetTicks();
-            UpdateDeltaAndCurrentTime(&app_time, &delta_time);
-
-            if(battle_system.player.hp == 0){                
-                battle_system.player.hp = 1;
-                if (battle_system.player.level < 3)
-                {
-                    ShowAlert(&alert, "Seu Vpet esta esgotado! Ele precisa descansar em um hotel.", MESSAGE_TYPE_WARN);   
-                }                
-            }
-
-            player.moving = false;         
-            if (current_state == STATE_MAP) {
-
-                UpdatePlayerDirection(&player, gamepad, delta_time);
-
-                if (player.moving) {
-                    if (current_time - last_step_time >= STEP_COOLDOWN_MS) {
-                        MovePlayer(
-                            &player_coordinates, 
-                            &current_state, 
-                            &battle_system.enemy, 
-                            &enemy_coordinates, 
-                            gamepad.delta_x, gamepad.delta_y, 
-                            current_map, spawned_mobs, spawned_mobs_size,
-                            object_tiles, total_objects
-                        );
-                        last_step_time = current_time;
-                    }                    
-                } else {
-                    last_step_time = 0;
-                }
-                        
-                float player_height = SCALED_TILED_SIZE;
-                float player_width = SCALED_TILED_SIZE;
-
-                UpdateCamera(&main_camera, player_coordinates, player_width, player_height, TILED_MAP_WIDTH, TILED_MAP_HEIGHT, SCALED_TILED_SIZE);
-
-                if (player.moving && current_map_id == 4 && player_coordinates.x == 9 && player_coordinates.y == 5)
-                {
-                    current_state = STATE_STORE_MENU;
-                    store_type = STORE_TYPE_HOTEL;
-                }
-            }
-            
-            if(sleeping) {
-                if(current_time - sleep_start_time >= HOTEL_SLEEPING_MSG_TIMEOUT_MS) {
-                    current_state = STATE_MAP;
-                    sleeping = false;
-                }
-            }
-
-            RenderTilemap(renderer, tileset_texture, current_map_id, main_camera, world_map);
-            RenderObjectOnMap(renderer, tileset_texture, main_camera, &object_tiles, current_map_id, &total_objects);
-            // RenderPlayerUsingCode(renderer, player_coordinates, main_camera, SCALED_TILED_SIZE, player.moving);
-            RenderEnemies(renderer, main_camera, spawned_mobs, spawned_mobs_size, SCALED_TILED_SIZE);
-            RenderPlayerUsingSprites(renderer, &player, player_coordinates, main_camera);
-
-            if (current_state == STATE_PAUSE) {
-                RenderPauseOverlay(renderer, &battle_system.player, battle_system.player_vpetcoin_balance, SCREEN_WIDTH, SCREEN_HEIGHT);
-            }
-
-            if(current_state == STATE_STORE_MENU && store_type == STORE_TYPE_HOTEL) {
-                if(sleeping) {
-                     ShowHotelSleepingMessage(renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
-                } else {
-                    RenderHotelMenu(renderer, menu_opcao, SCREEN_WIDTH, SCREEN_HEIGHT, !hotel_free_on_early_game, HOTEL_VPETCOIN_PRICE);
-                }                
-            }            
-
-            //TODO: linhas 240-256 Criar função UpdateMapsTransition(player_coordinates, current_map_id, spawned_mobs);
-            // printf("player(x=%d, y=%d)\n", player_coordinates.x, player_coordinates.y);
-            bool changed_map = false;
-
-            CheckMapPortals(&current_map_id, &player_coordinates, &changed_map);
-
-            if (changed_map)
-            {
-                total_objects = 0;
-                memcpy(current_map, world_map[current_map_id-1], sizeof(current_map));
-                if (spawned_mobs) { free(spawned_mobs); spawned_mobs = NULL; }
-                spawned_mobs = SpawnMobs(&spawned_mobs_size, SPAWN_ENEMIES_LIMIT_PER_MAP[current_map_id-1], current_map, TILED_MAP_WIDTH, TILED_MAP_HEIGHT);
-                SaveGame(
-                    save_data_file,
-                    player_coordinates,
-                    current_map_id,
-                    battle_system.player,
-                    battle_system.player_vpetcoin_balance
-                );
-            }
-            
+        else if (state_machine.state == STATE_MAP || state_machine.state == STATE_PAUSE || state_machine.state == STATE_STORE_MENU) {   
+            ExplorationMode(renderer, &battle_system, &player, &state_machine, gamepad, &map_state, &menu);
         } 
-        else if(current_state == STATE_BATTLE) {
+        else if(state_machine.state == STATE_BATTLE) {
 
             UpdateNavigation(&battle_system, &gamepad);
-            UpdateBattleState(&battle_system, &current_state, save_data_file, player_coordinates, current_map_id);
+            UpdateBattleState(&battle_system, &state_machine, &map_state);
 
             if (battle_system.current_state == BATTLE_STATE_WIN) {
-                RemoveEnemyFromMap(current_map, &enemy_coordinates, spawned_mobs, spawned_mobs_size);
+                RemoveEnemyFromMap(&map_state);
             }
 
             RenderBattleScreen(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, battle_system);
         } else {
-            printf("current_state desconhecido: %d", current_state);
+            printf("state_machine.state desconhecido: %d", state_machine.state);
         }
 
-        RenderAlert(renderer, alert, SCREEN_WIDTH);
+        RenderAlert(renderer, state_machine.alert, SCREEN_WIDTH);
 
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
@@ -397,9 +301,9 @@ cleanup:
     printf("liberando recursos\n");
 
     if (main_character_surface) SDL_DestroySurface(main_character_surface);
-    if (spawned_mobs) free(spawned_mobs);
+    if (map_state.spawned_mobs) free(map_state.spawned_mobs);
     if (game_logo) SDL_DestroyTexture(game_logo);
-    if (tileset_texture) SDL_DestroyTexture(tileset_texture);
+    if (map_state.tileset_texture) SDL_DestroyTexture(map_state.tileset_texture);
     if (gamepad_connection) SDL_CloseGamepad(gamepad_connection);
     if (renderer) SDL_DestroyRenderer(renderer);
     if (window) SDL_DestroyWindow(window);    

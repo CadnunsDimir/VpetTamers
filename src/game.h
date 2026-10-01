@@ -99,6 +99,8 @@ typedef struct {
     bool up;
     bool right;
     bool left;
+    bool key_pressed;
+    bool pause_key_pressed;
 } PlayerGamePad;
 
 //{X, Y}
@@ -110,6 +112,30 @@ typedef struct {
     Coordinates player;
     Coordinates enemy;
 } OponentsPositioning;
+
+typedef enum {
+    MESSAGE_TYPE_ERROR,
+    MESSAGE_TYPE_INFO,
+    MESSAGE_TYPE_WARN,
+} MessageType;
+
+typedef struct {
+    char message[100];
+    MessageType type;
+    Uint64 start_time_ms;
+    Uint64 duration;
+} Alert;
+
+typedef struct {
+    GameState state;
+    bool running;
+    float app_time;
+    float delta_time;
+    Uint64 last_step_time;
+    Uint64 sleep_start_time;
+    Alert alert;
+    char save_data_file[10]
+} GameStateMachine;
 
 typedef struct {
     BattleState current_state;
@@ -147,6 +173,31 @@ typedef struct {
     int dest_map_id;
     Coordinates dest_pos;
 } MapPortal;
+
+typedef struct 
+{
+    SDL_Texture* tileset_texture;
+    int (*world_map)[TILED_MAP_HEIGHT][TILED_MAP_WIDTH];
+    Coordinates player_coordinates;
+    Coordinates enemy_coordinates;
+    int current_map[TILED_MAP_HEIGHT][TILED_MAP_WIDTH];
+    int current_map_id;
+    int width_tiles; 
+    int height_tiles;
+    Camera camera;
+    Coordinates* object_tiles;
+    int object_tiles_total;
+    MapMob* spawned_mobs;
+    int spawned_mobs_size;
+    int spawn_enemies_limit;
+} MapState;
+
+typedef struct {
+    StoreType store_type;
+    int selected_option;
+    bool hotel_free_on_early_game;
+} MenuState;
+
 
 static const Color COLOR_GREY_WALL = {60, 60, 75, 255};
 static const Color COLOR_GREY_WALL_BORDER = { 40, 40, 50, 255};

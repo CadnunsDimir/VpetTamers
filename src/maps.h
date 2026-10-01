@@ -58,7 +58,14 @@ bool LoadMapFromCSV(const char* filepath, int world_map[TOTAL_MAPS_COUNT][TILED_
     return true;
 }
 
-void RenderTilemap(SDL_Renderer* renderer, SDL_Texture* tileset_texture, int map_code, Camera cam, int world_map[TOTAL_MAPS_COUNT][TILED_MAP_HEIGHT][TILED_MAP_WIDTH]) {
+void UpdateMap(MapState *map) {
+    memcpy(map->current_map, map->world_map[map->current_map_id-1], sizeof(map->current_map));
+    if (map->spawned_mobs) { free(map->spawned_mobs); map->spawned_mobs = NULL; }
+    map->spawn_enemies_limit = SPAWN_ENEMIES_LIMIT_PER_MAP[map->current_map_id - 1];
+    map->spawned_mobs = SpawnMobs(map);
+}
+
+void RenderTilemap(SDL_Renderer* renderer, SDL_Texture* tileset_texture, Camera cam, int map[TILED_MAP_HEIGHT][TILED_MAP_WIDTH]) {
     if (!tileset_texture) return;
 
     int tile_size = 32;       // Mantido o seu tamanho
@@ -79,7 +86,7 @@ void RenderTilemap(SDL_Renderer* renderer, SDL_Texture* tileset_texture, int map
 
     for (int row = start_row; row < end_row; row++) {
         for (int col = start_col; col < end_col; col++) {
-            int tile_id = world_map[map_code-1][row][col];
+            int tile_id = map[row][col];
             if (tile_id < 0) continue;
 
             int tile_col = tile_id % tileset_columns;

@@ -428,7 +428,7 @@ void MovePlayer(
 PlayerGamePad GetPlayerGamePad(SDL_Gamepad* gamepad_connection) {
     const bool *state = SDL_GetKeyboardState(NULL);
 
-    PlayerGamePad gamepad_delta = {0, 0, false, false, false, false, false, false};
+    PlayerGamePad gamepad_delta = {0, 0, false, false, false, false, false, false, false, false};
 
     // Captura entrada (Teclado)
     if (state[SDL_SCANCODE_LEFT] || state[SDL_SCANCODE_A])
@@ -479,31 +479,6 @@ PlayerGamePad GetPlayerGamePad(SDL_Gamepad* gamepad_connection) {
     return gamepad_delta;
 }
 
-void RenderMenuButton(SDL_Renderer* renderer, float x, float y, const char *text, bool selected, bool disabled) {
-    SDL_FRect btn_novo_jogo = {
-        x,
-        y,
-        300.0f,
-        60.0f};
-    
-    Color background_color;
-    Color text_color = disabled ? COLOR_GREY: COLOR_WHITE;
-
-    if (selected && !disabled)
-    {
-       background_color = COLOR_MENU_BUTTON_SELECTED;
-    } else if(selected && disabled) {
-        background_color = COLOR_MENU_BUTTON_DISABLED_SELECTED;
-    } else if(disabled) {
-        background_color = COLOR_MENU_BUTTON_DISABLED;
-    } else {
-        background_color = COLOR_MENU_BUTTON_NOT_SELECTED;
-    }
-
-    SDL_SetRenderDrawColor(renderer, background_color.r, background_color.g, background_color.b, background_color.a);
-    SDL_RenderFillRect(renderer, &btn_novo_jogo);
-    RenderText(renderer, text, text_color, x + 40.0f, y + 18.0f, 4.0f);
-}
 
 void RenderVPetStats(SDL_Renderer* renderer, VPet *vpet, float panel_x, float panel_y) {
     // Buffer de texto temporário
@@ -602,11 +577,12 @@ void RenderPauseOverlay(SDL_Renderer* renderer, VPet *vpet, float vpetcoin_balan
 
 
 
-void RemoveEnemyFromMap(int map[TILED_MAP_HEIGHT][TILED_MAP_WIDTH], Coordinates* position, MapMob* mobs, int mob_count) {
-    for (int i = 0; i < mob_count; i++) {
+void RemoveEnemyFromMap(MapState* map) {
+    for (int i = 0; i < map->spawned_mobs_size; i++) {
         // Altera diretamente no array original
-        if (mobs[i].x == position->x && mobs[i].y == position->y) {
-            mobs[i].is_active = false;
+        //TODO: mudar para id, pois se um dia eles andarem sozinhos no mapa nao vou encontrar eles mais
+        if (map->spawned_mobs[i].x == map->enemy_coordinates.x && map->spawned_mobs[i].y == map->enemy_coordinates.y) {
+            map->spawned_mobs[i].is_active = false;
             return;
         }
     }
@@ -643,7 +619,7 @@ void UpdateCamera(Camera* cam, Coordinates player_grid_coords, float player_w, f
     }
 }
 
-MapMob* SpawnMobs(int *tamanho_retorno, int count,int map[TILED_MAP_HEIGHT][TILED_MAP_WIDTH], int map_width_tiles, int map_height_tiles) {
+MapMob* SpawnMobs(MapState *map) {
     int capacidade = 2;
     int mob_array_size = 0;
     
@@ -651,7 +627,7 @@ MapMob* SpawnMobs(int *tamanho_retorno, int count,int map[TILED_MAP_HEIGHT][TILE
     MapMob *mob_array = malloc(capacidade * sizeof(MapMob));
     if (!mob_array) return NULL; // Boa prática: verificar se o malloc falhou
     
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < map->spawn_enemies_limit; i++) {
         if (mob_array_size >= capacidade) {
             capacidade *= 2;
             // CORREÇÃO 2: Usar sizeof(MapMob) no realloc
@@ -672,9 +648,9 @@ MapMob* SpawnMobs(int *tamanho_retorno, int count,int map[TILED_MAP_HEIGHT][TILE
 
         // Sorteia posições até encontrar um tile onde seja possível caminhar
         do {
-            pos_x = rand() % map_width_tiles;
-            pos_y = rand() % map_height_tiles;
-            tile_id = map[pos_y][pos_x];
+            pos_x = rand() % map->width_tiles;
+            pos_y = rand() % map->height_tiles;
+            tile_id = map->current_map[pos_y][pos_x];
         } while (!IsTileWalkable(tile_id));
 
         MapMob mob = {
@@ -689,9 +665,7 @@ MapMob* SpawnMobs(int *tamanho_retorno, int count,int map[TILED_MAP_HEIGHT][TILE
     }
 
     // Não te esqueças de preencher o ponteiro de tamanho no final
-    if (tamanho_retorno) {
-        *tamanho_retorno = mob_array_size;
-    }
+    map->spawned_mobs_size = mob_array_size;
 
     return mob_array;
 }

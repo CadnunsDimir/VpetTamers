@@ -20,6 +20,7 @@ typedef struct {
     float frame_duration;
     PlayerAnimationDirection direction;
     bool moving;
+    bool sleeping;    
 } PlayerAnimation;
 
 // Altere o parâmetro para receber o endereço do ponteiro (SDL_Surface **)
