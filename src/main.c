@@ -12,6 +12,8 @@
 #include "objects/objects.h"
 #include "maps.h"
 #include "battle_mode.h"
+#include "sound/songs.h"
+#include "sound/init.h"
 #include "menus/game_logo.h"
 #include "menus/home_menu.h"
 #include "menus/pause.h"
@@ -29,6 +31,13 @@ int main(int argc, char* argv[]) {
         printf("Erro ao inicializar SDL: %s\n", SDL_GetError());
         return 1;
     }
+
+    //inicializa o audio
+    if (!InitAudio())
+    {
+        printf("[InitAudio] Erro ao inicilizar o audio\n ");
+        goto cleanup;
+    } 
 
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
@@ -60,6 +69,12 @@ int main(int argc, char* argv[]) {
     if(!LoadPlayerSurface(&main_character_surface)){
         goto cleanup;
     }
+    
+    if (!LoadMenuAudio(SONGS_MAIN_THEME))
+    {
+        printf("Erro ao carregar musica do menu\n");
+        goto cleanup;
+    }    
 
     for (int i = 0; i < TOTAL_MAPS_COUNT; i++) {
         int map_id = i+1;
@@ -152,8 +167,12 @@ int main(int argc, char* argv[]) {
 
     PlayerGamePad gamepad = {0, 0, false, false, false, false, false, false, false, false};
 
+    PlayMenuMusic();
+
     // Loop principal
     while (state_machine.running) {
+        UpdateAudioLoop();
+        
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 state_machine.running = false;
@@ -302,7 +321,7 @@ int main(int argc, char* argv[]) {
 printf("Finalizando programa...\n");
 cleanup:
     printf("liberando recursos\n");
-
+    CleanupAudio();
     if (main_character_surface) SDL_DestroySurface(main_character_surface);
     if (map_state.spawned_mobs) free(map_state.spawned_mobs);
     if (game_logo) SDL_DestroyTexture(game_logo);
