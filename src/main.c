@@ -6,14 +6,13 @@
 #include <stdlib.h>
 #include <time.h>
 #include "game.h"
+#include "sound/init.h"
 #include "vpets/vpets.h"
 #include "state/load_save_game.h"
 #include "functions.h"
 #include "objects/objects.h"
 #include "maps.h"
 #include "battle_mode.h"
-#include "sound/songs.h"
-#include "sound/init.h"
 #include "menus/game_logo.h"
 #include "menus/home_menu.h"
 #include "menus/pause.h"

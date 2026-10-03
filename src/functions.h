@@ -415,6 +415,7 @@ void MovePlayer(
             *enemy_found = mobs[i].vpet_data;
             enemy_coordinates->x = next_x;
             enemy_coordinates->y = next_y;
+            ChangeMusic(SONGS_BATTLE_MODE_THEME);
             return;
         }
     }

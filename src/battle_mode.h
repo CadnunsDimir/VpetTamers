@@ -474,6 +474,7 @@ void UpdateBattleState(
                         if (running_chance < BATTLE_RUNNING_CHANCE) {
                             // Volta para o mapa de exploração
                             state_machine->state = STATE_MAP;
+                            ChangeMusic(SONGS_EXPLORATION_THEME);
                         } else {
                             TriggerBattleMessage(battle, BATTLE_STATE_ENEMY_ATACKING, "Nao foi possivel fugir! Sendo atacado...", 1000);
                         }
@@ -497,6 +498,7 @@ void UpdateBattleState(
                     state_machine->state = STATE_MAP;
                     battle->current_state = BATTLE_STATE_MENU_ATTACK;
                     state_machine->pending_save_game = true;
+                    ChangeMusic(SONGS_EXPLORATION_THEME);
                     break;
                 default:
                     battle->current_state = BATTLE_STATE_MENU_ATTACK;

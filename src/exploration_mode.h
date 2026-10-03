@@ -84,12 +84,9 @@ void ExplorationMode(SDL_Renderer* renderer, BattleSystem *battle_system, Player
         }
     }
 
-    // TODO: linhas 240-256 Criar função UpdateMapsTransition(player_coordinates, current_map_id, spawned_mobs);
-    //  printf("player(x=%d, y=%d)\n", player_coordinates.x, player_coordinates.y);
     bool changed_map = false;
 
     CheckMapPortals(&map->current_map_id, &map->player_coordinates, &changed_map);
-    // printf("[ExplorationMode] Mapid: %d\n", map->current_map_id);
 
     if (changed_map)
     {        

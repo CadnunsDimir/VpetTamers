@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
 #include <stdio.h>
+#include "songs.h"
 
 typedef struct {
     float background_volume;
