@@ -70,11 +70,7 @@ int main(int argc, char* argv[]) {
         goto cleanup;
     }
     
-    if (!LoadMenuAudio(SONGS_MAIN_THEME))
-    {
-        printf("Erro ao carregar musica do menu\n");
-        goto cleanup;
-    }    
+       
 
     for (int i = 0; i < TOTAL_MAPS_COUNT; i++) {
         int map_id = i+1;
@@ -167,12 +163,13 @@ int main(int argc, char* argv[]) {
 
     PlayerGamePad gamepad = {0, 0, false, false, false, false, false, false, false, false};
 
-    PlayMenuMusic();
+    ChangeMusic(SONGS_MAIN_THEME);
+    PlayMusic();
 
     // Loop principal
     while (state_machine.running) {
         UpdateAudioLoop();
-        
+
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 state_machine.running = false;
@@ -239,6 +236,7 @@ int main(int argc, char* argv[]) {
 
                 UpdateMap(&map_state);
                 state_machine.state = STATE_MAP;
+                ChangeMusic(SONGS_EXPLORATION_THEME);
             }
         }
 

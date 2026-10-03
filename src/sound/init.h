@@ -1,6 +1,3 @@
-#ifndef SOUND_INIT_H
-#define SOUND_INIT_H
-
 #include <SDL3/SDL.h>
 #include <stdio.h>
 
@@ -19,47 +16,63 @@ static inline bool InitAudio(void) {
     return true;
 }
 
-static inline bool LoadMenuAudio(const char* asset_path) {
-    char asset_full_path[100];
-    snprintf(asset_full_path, sizeof(asset_full_path), "assets/audio/%s", asset_path);
-    printf("[LoadMenuAudio] Abrindo audio '%s'\n", asset_full_path);
 
-    // 2. Carrega o ficheiro WAV (passa o endereço da struct e do ponteiro do buffer)
-    if (!SDL_LoadWAV(asset_full_path, &audio_spec, &audio_buf, &audio_len)) {
-        SDL_Log("Erro ao ler o arquivo '%s': %s", asset_full_path, SDL_GetError());
-        return false;
+static inline void PlayMusic(void) {
+    if (audio_stream) {
+        SDL_ResumeAudioStreamDevice(audio_stream);
+        SDL_Log("[PlayMusic] Tocando o arquivo audio...");
+    } else {
+        SDL_Log("[PlayMusic] Stream não inicializado");
     }
+}
 
-    // 3. Atribui diretamente à variável GLOBAL (sem declarar 'SDL_AudioStream *' aqui dentro)
-    audio_stream = SDL_OpenAudioDeviceStream(
-        SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, 
-        &audio_spec, 
-        NULL, 
-        NULL
-    );
+// Carrega uma nova trilha e reinicia a fila do Stream
+static inline bool ChangeMusic(const char* asset_filename) {
+    char asset_full_path[128];
+    snprintf(asset_full_path, sizeof(asset_full_path), "assets/audio/%s", asset_filename);
 
-    if (!audio_stream) {
-        SDL_Log("[LoadMenuAudio] Erro ao criar o Audio Stream: %s", SDL_GetError());
+    // 1. Limpa o buffer de áudio anterior da memória
+    if (audio_buf) {
         SDL_free(audio_buf);
         audio_buf = NULL;
+    }
+
+    // 2. Limpa os dados restantes que ainda estavam tocando no Stream
+    if (audio_stream) {
+        SDL_ClearAudioStream(audio_stream);
+    }
+
+    // 3. Carrega o novo arquivo WAV
+    if (!SDL_LoadWAV(asset_full_path, &audio_spec, &audio_buf, &audio_len)) {
+        SDL_Log("[ChangeMusic] Erro ao carregar WAV '%s': %s", asset_full_path, SDL_GetError());
         return false;
     }
 
-    // 4. Envia os dados do WAV para a fila do Stream
-    SDL_PutAudioStreamData(audio_stream, audio_buf, audio_len);
-    SDL_Log("[LoadMenuAudio] Audio carregado e Stream inicializado com sucesso!");
+    // 4. Se o Stream ainda não existia (primeira execução), cria agora
+   if (!audio_stream) {
+        audio_stream = SDL_OpenAudioDeviceStream(
+            SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, 
+            &audio_spec, 
+            NULL, 
+            NULL
+        );
 
+        if (!audio_stream) {
+            SDL_Log("[ChangeMusic] Erro ao criar Audio Stream: %s", SDL_GetError());
+            SDL_free(audio_buf);
+            audio_buf = NULL;
+            return false;
+        }
+    }
+
+    // 5. Alimenta a fila do Stream com a nova música e ativa a reprodução
+    SDL_PutAudioStreamData(audio_stream, audio_buf, audio_len);
+    SDL_ResumeAudioStreamDevice(audio_stream);
+
+    SDL_Log("[ChangeMusic] Música alterada com sucesso para: %s", asset_filename);
     return true;
 }
 
-static inline void PlayMenuMusic(void) {
-    if (audio_stream) {
-        SDL_ResumeAudioStreamDevice(audio_stream);
-        SDL_Log("[PlayMenuMusic] Tocando o arquivo audio...");
-    } else {
-        SDL_Log("[PlayMenuMusic] Stream não inicializado");
-    }
-}
 
 static inline void UpdateAudioLoop(void) {
     if (audio_stream && audio_buf) {
@@ -91,5 +104,3 @@ static inline void CleanupAudio(void) {
         audio_buf = NULL;
     }
 }
-
-#endif // SOUND_INIT_H
