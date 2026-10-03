@@ -68,9 +68,7 @@ int main(int argc, char* argv[]) {
 
     if(!LoadPlayerSurface(&main_character_surface)){
         goto cleanup;
-    }
-    
-       
+    }  
 
     for (int i = 0; i < TOTAL_MAPS_COUNT; i++) {
         int map_id = i+1;
@@ -139,6 +137,12 @@ int main(int argc, char* argv[]) {
         .sleeping = false
     };
 
+    //futuamente criar um menu para configurar esses paramtros e salvar na sessão do usuário
+    SoundSetting sound_settings = {
+        .background_volume = 0.2f,
+        .sfx_volume = 0.4f
+    };
+
     ApplyTexture(renderer, main_character_surface, &player);
     if (player.texture == NULL) {
         printf("[ERRO] Textura do jogador está NULL! Verifique o caminho do arquivo.\n");
@@ -163,8 +167,10 @@ int main(int argc, char* argv[]) {
 
     PlayerGamePad gamepad = {0, 0, false, false, false, false, false, false, false, false};
 
+    
     ChangeMusic(SONGS_MAIN_THEME);
     PlayMusic();
+    SetSoundVolume(sound_settings);
 
     // Loop principal
     while (state_machine.running) {

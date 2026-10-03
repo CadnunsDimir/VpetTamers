@@ -32,6 +32,7 @@ void ExplorationMode(SDL_Renderer* renderer, BattleSystem *battle_system, Player
                     map->spawned_mobs, map->spawned_mobs_size,
                     map->object_tiles, map->object_tiles_total);
                 state_machine->last_step_time = current_time;
+                PlaySFX(SFX_STEPS);
             }
         }
         else
