@@ -134,7 +134,8 @@ typedef struct {
     Uint64 last_step_time;
     Uint64 sleep_start_time;
     Alert alert;
-    char save_data_file[10]
+    char save_data_file[10];
+    bool pending_save_game;
 } GameStateMachine;
 
 typedef struct {

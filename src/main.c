@@ -270,13 +270,8 @@ int main(int argc, char* argv[]) {
                         battle_system.player_vpetcoin_balance -= HOTEL_VPETCOIN_PRICE;
                     }                    
                     map_state.player_coordinates.x = 13;
-                    map_state.player_coordinates.y = 9;
-                    SaveGame(
-                        state_machine.save_data_file,
-                        map_state.player_coordinates,
-                        map_state.current_map_id,
-                        battle_system.player,
-                        battle_system.player_vpetcoin_balance);
+                    map_state.player_coordinates.y = 9;                    
+                    state_machine.pending_save_game = true;
                     state_machine.sleep_start_time = current_time;
                     player.sleeping = true;
                     player.direction = DIRECTION_UP;                                      
@@ -317,6 +312,18 @@ int main(int argc, char* argv[]) {
         }
 
         RenderAlert(renderer, state_machine.alert, SCREEN_WIDTH);
+
+        if (state_machine.pending_save_game)
+        {
+            SaveGame(
+                state_machine.save_data_file,
+                map_state.player_coordinates,
+                map_state.current_map_id,
+                battle_system.player,
+                battle_system.player_vpetcoin_balance);
+
+            state_machine.pending_save_game = false;
+        }        
 
         SDL_RenderPresent(renderer);
         SDL_Delay(16);

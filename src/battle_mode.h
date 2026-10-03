@@ -496,12 +496,7 @@ void UpdateBattleState(
                 case BATTLE_STATE_LOST: 
                     state_machine->state = STATE_MAP;
                     battle->current_state = BATTLE_STATE_MENU_ATTACK;
-                    SaveGame(
-                        state_machine->save_data_file,
-                        map->player_coordinates,
-                        map->current_map_id,
-                        battle->player,
-                        battle->player_vpetcoin_balance);
+                    state_machine->pending_save_game = true;
                     break;
                 default:
                     battle->current_state = BATTLE_STATE_MENU_ATTACK;

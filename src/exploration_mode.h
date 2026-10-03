@@ -92,14 +92,8 @@ void ExplorationMode(SDL_Renderer* renderer, BattleSystem *battle_system, Player
     // printf("[ExplorationMode] Mapid: %d\n", map->current_map_id);
 
     if (changed_map)
-    {
-        
+    {        
         UpdateMap(map);
-        SaveGame(
-            state_machine->save_data_file,
-             map->player_coordinates,
-             map->current_map_id,
-            battle_system->player,
-            battle_system->player_vpetcoin_balance);
+        state_machine->pending_save_game = true;
     }
 }
