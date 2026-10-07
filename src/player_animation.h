@@ -24,30 +24,42 @@ typedef struct {
 } PlayerAnimation;
 
 // Altere o parâmetro para receber o endereço do ponteiro (SDL_Surface **)
-bool LoadPlayerSurface(SDL_Surface **main_character_surface) {
+bool LoadSurface(SDL_Surface **main_character_surface,  char* image_file) {
     // 1. Verificação de segurança: o ponteiro para o ponteiro é válido?
     if (!main_character_surface) {
         SDL_Log("Erro interno: Ponteiro de destino inválido (NULL)");
         return false;
     }
 
-    char* main_character_file = "assets/main_character_sprite.png";
+    // char* image_file = "assets/main_character_sprite.png";
 
     // 2. Atribui o retorno do IMG_Load ao ponteiro que está no endereço passado
-    *main_character_surface = IMG_Load(main_character_file);
+    *main_character_surface = IMG_Load(image_file);
 
     // 3. Verifica se a imagem foi carregada com sucesso (se o ponteiro resultante não é NULL)
     if (*main_character_surface == NULL) {
-        SDL_Log("Erro ao carregar '%s': %s", main_character_file, SDL_GetError());
+        SDL_Log("Erro ao carregar '%s': %s", image_file, SDL_GetError());
         return false;
     }
 
-    SDL_Log("Superfície '%s' carregada com sucesso.", main_character_file);
+    SDL_Log("Superfície '%s' carregada com sucesso.", image_file);
     return true;
 }
 
 void ApplyTexture(SDL_Renderer *renderer, SDL_Surface *surface,  PlayerAnimation *player){
     player->texture = SDL_CreateTextureFromSurface(renderer, surface);
+}
+
+bool ApplyTextureFromImage(SDL_Renderer *renderer, SDL_Texture **texture, char* image_file){
+    SDL_Surface *surface;
+    if(LoadSurface(&surface, image_file)){
+        *texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_DestroySurface(surface);
+        if (*texture) {
+            return true;
+        }
+    }
+    return false;
 }
 
 SDL_FRect GetTileRect(int index)

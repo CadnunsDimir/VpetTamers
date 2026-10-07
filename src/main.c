@@ -44,6 +44,7 @@ int main(int argc, char* argv[]) {
     SDL_Texture* tileset_texture = NULL;
     SDL_Gamepad* gamepad_connection = NULL;
     SDL_Surface *main_character_surface;
+    SDL_Texture* myvpet_texture = NULL; 
 
     int world_map[TOTAL_MAPS_COUNT][TILED_MAP_HEIGHT][TILED_MAP_WIDTH];
 
@@ -65,9 +66,13 @@ int main(int argc, char* argv[]) {
         goto cleanup; // Usa rótulo de limpeza para não vazar recursos
     }
 
-    if(!LoadPlayerSurface(&main_character_surface)){
+    if(!LoadSurface(&main_character_surface, "assets/main_character_sprite.png")){
         goto cleanup;
-    }  
+    }
+
+    if(!ApplyTextureFromImage(renderer, &myvpet_texture, "assets/bk_mbaracajmon_bg_transparent_sprite.png")){
+        goto cleanup;
+    }
 
     for (int i = 0; i < TOTAL_MAPS_COUNT; i++) {
         int map_id = i+1;
@@ -305,7 +310,7 @@ int main(int argc, char* argv[]) {
                 RemoveEnemyFromMap(&map_state);
             }
 
-            RenderBattleScreen(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, battle_system);
+            RenderBattleScreen(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, battle_system, myvpet_texture);
         } else {
             printf("state_machine.state desconhecido: %d", state_machine.state);
         }
@@ -332,6 +337,8 @@ printf("Finalizando programa...\n");
 cleanup:
     printf("liberando recursos\n");
     CleanupAudio();
+    if (myvpet_texture) SDL_DestroyTexture(myvpet_texture);
+    if (player.texture) SDL_DestroyTexture(player.texture);
     if (main_character_surface) SDL_DestroySurface(main_character_surface);
     if (map_state.spawned_mobs) free(map_state.spawned_mobs);
     if (game_logo) SDL_DestroyTexture(game_logo);

@@ -10,6 +10,37 @@ void GridToIsometric(int grid_x, int grid_y, float tile_w, float tile_h, float o
     *out_y = (grid_x + grid_y) * (tile_h / 2.0f) + offset_y;
 }
 
+void RenderBkMbarcajamonBySprite(SDL_Renderer *renderer, SDL_Texture *texture, Coordinates position, int column, int row, float scale){
+    int full_image_w = 249;
+    int full_image_h = 1003;
+    int full_image_col = 2;
+    int full_image_row = 5;
+    int sprite_h = full_image_h / full_image_row;
+    int sprite_w = full_image_w / full_image_col;
+    float sprite_scale = 0.4f; 
+
+    SDL_FRect src = {
+        column * sprite_w,
+        row * sprite_h,
+        sprite_w,
+        sprite_h
+    };
+
+    SDL_FRect dst = {
+        position.x,
+        position.y,
+        sprite_w * sprite_scale * scale,
+        sprite_h * sprite_scale * scale
+    };
+
+    SDL_RenderTexture(
+        renderer,
+        texture,
+        &src,
+        &dst
+    );
+}
+
 void RenderVPetSprite(SDL_Renderer* renderer, VPetType tipo, float x, float y, float scale) {
     for (size_t i = 0; i < PET_PART_LIST_BATTLE_MODE_COUNT; i++)
     {
@@ -275,7 +306,7 @@ static void GetBattleAttackOffsets(
     }
 }
 
-void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenHeight, BattleSystem battle) {
+void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenHeight, BattleSystem battle, SDL_Texture *texture) {
     OponentsPositioning oponentsPositioning = { 0, 0, 0, 0 };
     
     RenderBattleScreenScenario(renderer, screenWidth, screenHeight, &oponentsPositioning);
@@ -309,13 +340,27 @@ void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenH
     
     if (battle.current_state != BATTLE_STATE_LOST) {
        // 2. BkMbaracajamon (Renderizado DEPOIS para se sobrepor caso cruzem a linha de visão)
-        RenderVPetSprite(
-            renderer, 
-            battle.player.type,
-            oponentsPositioning.player.x + player_offset_x - (15.0f * 2.5f), 
-            oponentsPositioning.player.y + player_offset_y - (25.0f * 2.5f), 
-            2.5f
-        );
+        // RenderVPetSprite(
+        //     renderer, 
+        //     battle.player.type,
+        //     oponentsPositioning.player.x + player_offset_x - (15.0f * 2.5f), 
+        //     oponentsPositioning.player.y + player_offset_y - (25.0f * 2.5f), 
+        //     2.5f
+        // );
+       
+
+        float dest_w = 64; // Largura final desenhada (80px)
+        float dest_h = 150; // Altura final desenhada (80px)
+
+        // 2. Calcule a posição para alinhar o SPRITE exatamente onde o Retângulo ficava
+        Coordinates pos = {
+            // Alinha o centro horizontal do sprite com a posição base
+            (oponentsPositioning.player.x + player_offset_x) - dest_w,
+            
+            // Alinha a base (pés) do sprite com a posição base
+            (oponentsPositioning.player.y + player_offset_y) - dest_h
+        };
+        RenderBkMbarcajamonBySprite(renderer, texture, pos, 0, 4, 2.5f);
     }
 
     
