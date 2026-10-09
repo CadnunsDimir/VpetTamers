@@ -22,6 +22,9 @@
 #include "exploration_mode.h"
 
 int main(int argc, char* argv[]) {
+    // avisa ao copilador que essas variaveis nao estão sendo usadas
+    (void)argc;
+    (void)argv;
     // Inicializa a semente do gerador de números aleatórios com o tempo atual
     srand((unsigned int)time(NULL));
 
