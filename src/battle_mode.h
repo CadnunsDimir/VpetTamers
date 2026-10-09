@@ -10,7 +10,7 @@ void GridToIsometric(int grid_x, int grid_y, float tile_w, float tile_h, float o
     *out_y = (grid_x + grid_y) * (tile_h / 2.0f) + offset_y;
 }
 
-void RenderBkMbarcajamonBySprite(SDL_Renderer *renderer, SDL_Texture *texture, Coordinates position, int column, int row, float scale){
+void RenderVpetBattleModeFromTexture(SDL_Renderer *renderer, Coordinates position, VPet *vpet, float scale){
     int full_image_w = 249;
     int full_image_h = 1003;
     int full_image_col = 2;
@@ -20,8 +20,8 @@ void RenderBkMbarcajamonBySprite(SDL_Renderer *renderer, SDL_Texture *texture, C
     float sprite_scale = 0.4f; 
 
     SDL_FRect src = {
-        column * sprite_w,
-        row * sprite_h,
+        vpet->texture_col * sprite_w,
+        vpet->texture_row * sprite_h,
         sprite_w,
         sprite_h
     };
@@ -35,7 +35,7 @@ void RenderBkMbarcajamonBySprite(SDL_Renderer *renderer, SDL_Texture *texture, C
 
     SDL_RenderTexture(
         renderer,
-        texture,
+        vpet->texture,
         &src,
         &dst
     );
@@ -46,7 +46,7 @@ void RenderVPetSprite(SDL_Renderer* renderer, VPetType tipo, float x, float y, f
     {
         if (PET_PART_LIST_BATTLE_MODE[i].type == tipo)
         {
-            VpetPart* parts = PET_PART_LIST_BATTLE_MODE[i].vparts;
+            const VpetPart* parts = PET_PART_LIST_BATTLE_MODE[i].vparts;
             size_t count = PET_PART_LIST_BATTLE_MODE[i].vparts_count;
 
             // 2. Garante o modo de transparência ativo para auras/chamas
@@ -160,14 +160,14 @@ void RenderBattleScreenScenario(SDL_Renderer* renderer, float screenWidth, float
     Color color_wall_ne = { 45, 50, 60, 255 }; // Parede Direita (Sombra)
 
     // A) Parede Traseira Esquerda (Trilho X = 0, varia Y)
-    for (int y = 0; y < ARENA_SIZE; y++) {
+    for (size_t y = 0; y < ARENA_SIZE; y++) {
         float iso_x, iso_y;
         GridToIsometric(0, y, tile_w, tile_h, offset_x, offset_y, &iso_x, &iso_y);
         RenderIsoWallNorthWest(renderer, iso_x, iso_y, tile_w, tile_h, wall_height, color_wall_nw);
     }
 
     // B) Parede Traseira Direita (Trilho Y = 0, varia X)
-    for (int x = 0; x < ARENA_SIZE; x++) {
+    for (size_t x = 0; x < ARENA_SIZE; x++) {
         float iso_x, iso_y;
         GridToIsometric(x, 0, tile_w, tile_h, offset_x, offset_y, &iso_x, &iso_y);
         RenderIsoWallNorthEast(renderer, iso_x, iso_y, tile_w, tile_h, wall_height, color_wall_ne);
@@ -177,8 +177,8 @@ void RenderBattleScreenScenario(SDL_Renderer* renderer, float screenWidth, float
     Color color_floor_a = { 70, 80, 75, 255 };
     Color color_floor_b = { 55, 65, 60, 255 };
 
-    for (int y = 0; y < ARENA_SIZE; y++) {
-        for (int x = 0; x < ARENA_SIZE; x++) {
+    for (size_t y = 0; y < ARENA_SIZE; y++) {
+        for (size_t x = 0; x < ARENA_SIZE; x++) {
             float iso_x, iso_y;
             GridToIsometric(x, y, tile_w, tile_h, offset_x, offset_y, &iso_x, &iso_y);
 
@@ -306,8 +306,21 @@ static void GetBattleAttackOffsets(
     }
 }
 
-void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenHeight, BattleSystem battle, SDL_Texture *texture) {
-    OponentsPositioning oponentsPositioning = { 0, 0, 0, 0 };
+void CheckTexture(SDL_Renderer* renderer, VPet *vpet){
+    if (vpet->texture_file[0] != '\0' && vpet->texture == NULL) {
+        if(!ApplyTextureFromImage(renderer, &vpet->texture, vpet->texture_file)) {
+            printf("[CheckTexture] Não foi possivel carregar a textura do '%s' a partir do arquivo '%s' em modo de batalha\n", vpet->name, vpet->texture_file);
+        } else {
+            printf("[CheckTexture] Textura de '%s' carregada em modo de batalha!\n", vpet->name);
+        }
+    }
+}
+
+void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenHeight, BattleSystem *battle) {
+    OponentsPositioning oponentsPositioning = { 
+      .player = {0, 0}, 
+      .enemy =  {0, 0} 
+    };
     
     RenderBattleScreenScenario(renderer, screenWidth, screenHeight, &oponentsPositioning);
 
@@ -316,7 +329,7 @@ void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenH
     float enemy_offset_x = 0.0f;
     float enemy_offset_y = 0.0f;
     GetBattleAttackOffsets(
-        battle,
+        *battle,
         oponentsPositioning,
         &player_offset_x,
         &player_offset_y,
@@ -325,45 +338,42 @@ void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenH
     );
 
     // --- Representação Visual das Entidades ---    
+    float dest_w = 64; // Largura final desenhada (80px)
+    float dest_h = 150; // Altura final desenhada (80px)
+    float sprite_scale = 2.5f;
 
-    if (battle.current_state != BATTLE_STATE_WIN && battle.current_state != BATTLE_STATE_WIN_CLOSE_BATTLE)
+    CheckTexture(renderer, &battle->player);
+    CheckTexture(renderer, &battle->enemy);    
+
+    if (battle->current_state != BATTLE_STATE_WIN && battle->current_state != BATTLE_STATE_WIN_CLOSE_BATTLE)
     {
+
         // 1. Inimigo (Renderizado PRIMEIRO para ficar ao fundo)
-       RenderVPetSprite(
-            renderer, 
-            battle.enemy.type,
-            oponentsPositioning.enemy.x + enemy_offset_x - (16.0f * 2.5f), // Centraliza horizontalmente o sprite de 32px
-            oponentsPositioning.enemy.y + enemy_offset_y - (24.0f * 2.5f), // Apoia a base do sprite no centro do tile
-            2.5f
-        );
+       if(battle->enemy.texture) {
+        Coordinates pos = {
+            (oponentsPositioning.enemy.x + enemy_offset_x) - dest_w,
+            (oponentsPositioning.enemy.y + enemy_offset_y) - dest_h
+        };
+        RenderVpetBattleModeFromTexture(renderer, pos, &battle->enemy, sprite_scale);
+       } else {
+            RenderVPetSprite(
+                renderer, 
+                battle->enemy.type,
+                oponentsPositioning.enemy.x + enemy_offset_x - (16.0f * sprite_scale), // Centraliza horizontalmente o sprite de 32px
+                oponentsPositioning.enemy.y + enemy_offset_y - (24.0f * sprite_scale), // Apoia a base do sprite no centro do tile
+                sprite_scale
+            );
+       }       
     }
     
-    if (battle.current_state != BATTLE_STATE_LOST) {
-       // 2. BkMbaracajamon (Renderizado DEPOIS para se sobrepor caso cruzem a linha de visão)
-        // RenderVPetSprite(
-        //     renderer, 
-        //     battle.player.type,
-        //     oponentsPositioning.player.x + player_offset_x - (15.0f * 2.5f), 
-        //     oponentsPositioning.player.y + player_offset_y - (25.0f * 2.5f), 
-        //     2.5f
-        // );
-       
+    if (battle->current_state != BATTLE_STATE_LOST) {
 
-        float dest_w = 64; // Largura final desenhada (80px)
-        float dest_h = 150; // Altura final desenhada (80px)
-
-        // 2. Calcule a posição para alinhar o SPRITE exatamente onde o Retângulo ficava
         Coordinates pos = {
-            // Alinha o centro horizontal do sprite com a posição base
             (oponentsPositioning.player.x + player_offset_x) - dest_w,
-            
-            // Alinha a base (pés) do sprite com a posição base
             (oponentsPositioning.player.y + player_offset_y) - dest_h
         };
-        RenderBkMbarcajamonBySprite(renderer, texture, pos, 0, 4, 2.5f);
+        RenderVpetBattleModeFromTexture(renderer, pos, &battle->player, sprite_scale);
     }
-
-    
 
     // --- Painéis de Status (HUD) ---
     float hud_width = 380.0f;
@@ -379,7 +389,7 @@ void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenH
         enemy_hud_y, 
         hud_width, 
         hud_height, 
-        &battle.enemy
+        &battle->enemy
     );
 
     // Status do Player (Inferior Esquerdo - Acima do Menu)
@@ -392,14 +402,14 @@ void RenderBattleScreen(SDL_Renderer* renderer, float screenWidth, float screenH
         player_hud_y, 
         hud_width, 
         hud_height, 
-        &battle.player
+        &battle->player
     );
-    bool showing_battle_menu = battle.current_state == BATTLE_STATE_MENU_ATTACK || battle.current_state == BATTLE_STATE_MENU_RUN;
+    bool showing_battle_menu = battle->current_state == BATTLE_STATE_MENU_ATTACK || battle->current_state == BATTLE_STATE_MENU_RUN;
 
     if (showing_battle_menu) {
-        RenderBattleMenu(renderer, screenWidth, screenHeight, battle.current_state);
+        RenderBattleMenu(renderer, screenWidth, screenHeight, battle->current_state);
     } else {
-        RenderBattleMessage(renderer, screenWidth, screenHeight, battle.current_message);
+        RenderBattleMessage(renderer, screenWidth, screenHeight, battle->current_message);
     }
 }
 
@@ -467,10 +477,17 @@ bool CheckLevelUp(VPet* vpet){
     return false;
 }
 
+void DestroyTexture(VPet *vpet){
+    if (vpet->texture != NULL)
+    {
+        SDL_DestroyTexture(vpet->texture);
+        vpet->texture = NULL;
+    }
+}
+
 void UpdateBattleState(
     BattleSystem* battle, 
-    GameStateMachine* state_machine,
-    MapState* map
+    GameStateMachine* state_machine
 ) {
 
     Uint64 current_time = SDL_GetTicks();
@@ -525,7 +542,7 @@ void UpdateBattleState(
                         }
                     break;
                 case BATTLE_STATE_WIN:
-                    char player_win_message[64];
+                    char player_win_message[100];
                     int exp = CalculateExp(&battle->enemy);
                     char level_up_msg[25];
                     battle->player.total_exp += exp;
@@ -544,6 +561,8 @@ void UpdateBattleState(
                     battle->current_state = BATTLE_STATE_MENU_ATTACK;
                     state_machine->pending_save_game = true;
                     ChangeMusic(SONGS_EXPLORATION_THEME);
+                    DestroyTexture(&battle->enemy);
+                    DestroyTexture(&battle->player);
                     break;
                 default:
                     battle->current_state = BATTLE_STATE_MENU_ATTACK;

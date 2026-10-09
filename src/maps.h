@@ -42,8 +42,8 @@ bool LoadMapFromCSV(const char* filepath, int world_map[TOTAL_MAPS_COUNT][TILED_
         return false;
     }
 
-    for (int row = 0; row < TILED_MAP_HEIGHT; row++) {
-        for (int col = 0; col < TILED_MAP_WIDTH; col++) {
+    for (size_t row = 0; row < TILED_MAP_HEIGHT; row++) {
+        for (size_t col = 0; col < TILED_MAP_WIDTH; col++) {
             if (fscanf(file, "%d,", &world_map[map_code-1][row][col]) != 1) {
                 // Se o arquivo acabou antes do esperado ou falhou
                 if (feof(file)) {
@@ -115,7 +115,7 @@ void RenderObject(
     SDL_Texture* tileset_texture, 
     Camera cam, 
     Coordinates coordinates, 
-    int object_definition[16][3], 
+    const int object_definition[16][3], 
     int object_tiles_count, 
     Coordinates** objects_pointer, // Alterado para Coordinates** para atualizar o ponteiro externo
     int* objects_pointer_size
@@ -202,7 +202,7 @@ void RenderObjectOnMap(
 
     // 2. Calcula quantos tiles no total o mapa atual precisa alocar
     int total_needed_tiles = 0;
-    for (int i = 0; i < ALL_OBJECTS_ON_MAPS_COUNT; i++) {
+    for (size_t i = 0; i < ALL_OBJECTS_ON_MAPS_COUNT; i++) {
         if (ALL_OBJECTS_ON_MAPS[i].map_id == current_map_id) {
             total_needed_tiles += ALL_OBJECTS_ON_MAPS[i].title_count; // (Atentar ao typo 'title_count' vs 'tile_count')
         }
@@ -227,7 +227,7 @@ void RenderObjectOnMap(
 
     // 5. Renderiza cada objeto. O RenderObject vai preencher o array sequencialmente
     //    conforme o *total_objects for sendo incrementado (de 0 até total_needed_tiles).
-    for (int i = 0; i < ALL_OBJECTS_ON_MAPS_COUNT; i++)
+    for (size_t i = 0; i < ALL_OBJECTS_ON_MAPS_COUNT; i++)
     {
         if (ALL_OBJECTS_ON_MAPS[i].map_id == current_map_id)
         {        
@@ -248,7 +248,7 @@ void RenderObjectOnMap(
 void CheckMapPortals(int *current_map_id, Coordinates *player_coordinates, bool *changed_map){
     if (!current_map_id || !player_coordinates || !changed_map) return;
 
-    for (int i = 0; i < MAPS_PORTALS_COUNT; i++)
+    for (size_t i = 0; i < MAPS_PORTALS_COUNT; i++)
     {
         if (
             *current_map_id == MAPS_PORTALS[i].origin_map_id &&  // Adicionado '*' aqui

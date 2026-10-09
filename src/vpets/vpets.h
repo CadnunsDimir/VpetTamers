@@ -12,7 +12,7 @@ typedef struct {
 
 typedef struct {
     VPetType type;
-    VpetPart* vparts;
+    const VpetPart* vparts;
     int vparts_count;
 } VpetPartGroup;
 
@@ -307,7 +307,9 @@ static const VPet ENEMY_JAGUARETEMON = {
     .hp_max = 35,
     .type = PET_JAGUARETEMON,
     .level = 3,
-    .vpetcoin_reward = 10
+    .vpetcoin_reward = 10,
+    .texture_file = "",
+    .texture = NULL
 };
 
 static const VPet ENEMY_JAGUAPIRUMON = {
@@ -318,7 +320,9 @@ static const VPet ENEMY_JAGUAPIRUMON = {
     .hp_max = 20,
     .type = PET_JAGUAPIRUMON,
     .level = 2,
-    .vpetcoin_reward = 7
+    .vpetcoin_reward = 7,
+    .texture_file = "",
+    .texture = NULL
 };
 
 static const VPet ENEMY_RYGUASUMON = {
@@ -329,7 +333,11 @@ static const VPet ENEMY_RYGUASUMON = {
     .hp_max = 10,
     .type = PET_RUGUASUMON,
     .level = 1,
-    .vpetcoin_reward = 5
+    .vpetcoin_reward = 5,
+    .texture_col = 0,
+    .texture_row = 3,
+    .texture_file = "assets/ruguasumon_sprite.png",
+    .texture = NULL
 };
 
 

@@ -12,93 +12,25 @@
 #include "functions.h"
 #include "objects/objects.h"
 #include "maps.h"
+#include "player_animation.h"
 #include "battle_mode.h"
 #include "menus/game_logo.h"
 #include "menus/home_menu.h"
 #include "menus/pause.h"
 #include "menus/hotel.h"
 #include "menus/alert.h"
-#include "player_animation.h"
 #include "exploration_mode.h"
 
 int main(int argc, char* argv[]) {
     // Inicializa a semente do gerador de números aleatórios com o tempo atual
     srand((unsigned int)time(NULL));
 
-    // 1. Inicializa o SDL3
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
-        printf("Erro ao inicializar SDL: %s\n", SDL_GetError());
-        return 1;
-    }
-
-    //inicializa o audio
-    if (!InitAudio())
-    {
-        printf("[InitAudio] Erro ao inicilizar o audio\n ");
-        goto cleanup;
-    } 
-
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
     SDL_Texture* game_logo = NULL;
     SDL_Texture* tileset_texture = NULL;
     SDL_Gamepad* gamepad_connection = NULL;
-    SDL_Surface *main_character_surface;
-    SDL_Texture* myvpet_texture = NULL; 
-
-    int world_map[TOTAL_MAPS_COUNT][TILED_MAP_HEIGHT][TILED_MAP_WIDTH];
-
-    // 2. Cria Janela e Renderizador
-    if (!SDL_CreateWindowAndRenderer("VPet Tamers", SCREEN_WIDTH, SCREEN_HEIGHT, 0, &window, &renderer)) {
-        printf("Erro ao criar janela/renderizador: %s\n", SDL_GetError());
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
-    if (!LoadAssets(renderer, &game_logo)) {
-        printf("Erro ao carregar logo\n");
-    }
-
-    if (!LoadTileset(renderer, &tileset_texture, "assets/tile2map32.png")) {
-        printf("Erro ler tileset: %s\n", SDL_GetError());
-        goto cleanup; // Usa rótulo de limpeza para não vazar recursos
-    }
-
-    if(!LoadSurface(&main_character_surface, "assets/main_character_sprite.png")){
-        goto cleanup;
-    }
-
-    if(!ApplyTextureFromImage(renderer, &myvpet_texture, "assets/bk_mbaracajmon_bg_transparent_sprite.png")){
-        goto cleanup;
-    }
-
-    for (int i = 0; i < TOTAL_MAPS_COUNT; i++) {
-        int map_id = i+1;
-        printf("Carregando Map %d (%s)...\n", map_id, MAP_FILES[i]);
-        if (!LoadMapFromCSV(MAP_FILES[i], world_map, map_id)) {
-            printf("Erro ao carregar mapa %d (%s)\n", map_id, MAP_FILES[i]);
-            goto cleanup;
-        } else{
-            printf("Mapa %d (%s) carregado com sucesso!\n", map_id, MAP_FILES[i]);
-        }
-    }    
-
-    // 3. Conecta Gamepad inicial
-    int count = 0;
-    SDL_JoystickID* joysticks = SDL_GetJoysticks(&count);
-    if (count > 0 && joysticks) {
-        gamepad_connection = SDL_OpenGamepad(joysticks[0]);
-        if (gamepad_connection) {
-            printf("Gamepad conectado: %s\n", SDL_GetGamepadName(gamepad_connection));
-        }
-    }
-    if (joysticks) {
-        SDL_free(joysticks);
-    }    
-    
-    SDL_Event event;
+    SDL_Surface *main_character_surface = NULL;
 
     GameStateMachine state_machine = {
         .running = true,
@@ -114,6 +46,8 @@ int main(int argc, char* argv[]) {
             .start_time_ms = 0
         }
     };
+
+    int world_map[TOTAL_MAPS_COUNT][TILED_MAP_HEIGHT][TILED_MAP_WIDTH];
 
     MapState map_state = {
         .tileset_texture = tileset_texture,
@@ -141,6 +75,91 @@ int main(int argc, char* argv[]) {
         .sleeping = false
     };
 
+    VPet initial_vpet = {
+        .name = "BkMbaracajamon",
+        .level = 1,
+        .hp = 20,
+        .hp_max = 20,
+        .strength = 5,
+        .defense = 3,
+        .type = PET_BK_MBARACAJAMON,
+        .texture_file = "assets/bk_mbaracajmon_bg_transparent_sprite.png",
+        .texture_col = 0,
+        .texture_row = 4
+    };
+
+    BattleSystem battle_system = {
+        .current_state = BATTLE_STATE_MENU_ATTACK,
+        .player = initial_vpet,
+        .player_vpetcoin_balance = 0
+    };
+
+    PlayerGamePad gamepad = {0, 0, false, false, false, false, false, false, false, false};
+
+     // 1. Inicializa o SDL3
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
+        printf("Erro ao inicializar SDL: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    //inicializa o audio
+    if (!InitAudio())
+    {
+        printf("[InitAudio] Erro ao inicilizar o audio\n ");
+        goto cleanup;
+    } 
+    
+
+    // 2. Cria Janela e Renderizador
+    if (!SDL_CreateWindowAndRenderer("VPet Tamers", SCREEN_WIDTH, SCREEN_HEIGHT, 0, &window, &renderer)) {
+        printf("Erro ao criar janela/renderizador: %s\n", SDL_GetError());
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+    if (!LoadAssets(renderer, &game_logo)) {
+        printf("Erro ao carregar logo\n");
+    }
+
+    if (!LoadTileset(renderer, &tileset_texture, "assets/tile2map32.png")) {
+        printf("Erro ler tileset: %s\n", SDL_GetError());
+        goto cleanup; // Usa rótulo de limpeza para não vazar recursos
+    }
+
+    if(!LoadSurface(&main_character_surface, "assets/main_character_sprite.png")){
+        goto cleanup;
+    }
+
+    for (size_t i = 0; i < TOTAL_MAPS_COUNT; i++) {
+        int map_id = i+1;
+        printf("Carregando Map %d (%s)...\n", map_id, MAP_FILES[i]);
+        if (!LoadMapFromCSV(MAP_FILES[i], world_map, map_id)) {
+            printf("Erro ao carregar mapa %d (%s)\n", map_id, MAP_FILES[i]);
+            goto cleanup;
+        } else{
+            printf("Mapa %d (%s) carregado com sucesso!\n", map_id, MAP_FILES[i]);
+        }
+    }    
+
+    // 3. Conecta Gamepad inicial
+    int count = 0;
+    SDL_JoystickID* joysticks = SDL_GetJoysticks(&count);
+    if (count > 0 && joysticks) {
+        gamepad_connection = SDL_OpenGamepad(joysticks[0]);
+        if (gamepad_connection) {
+            printf("Gamepad conectado: %s\n", SDL_GetGamepadName(gamepad_connection));
+        }
+    }
+    if (joysticks) {
+        SDL_free(joysticks);
+    }    
+    
+    SDL_Event event;
+
+    
+
     //futuamente criar um menu para configurar esses paramtros e salvar na sessão do usuário
     SoundSetting sound_settings = {
         .background_volume = 0.2f,
@@ -153,23 +172,7 @@ int main(int argc, char* argv[]) {
         goto cleanup;
     }
 
-    VPet initial_vpet = {
-        .name = "BkMbaracajamon",
-        .level = 1,
-        .hp = 20,
-        .hp_max = 20,
-        .strength = 5,
-        .defense = 3,
-        .type = PET_BK_MBARACAJAMON
-    };
-
-    BattleSystem battle_system = {
-        .current_state = BATTLE_STATE_MENU_ATTACK,
-        .player = initial_vpet,
-        .player_vpetcoin_balance = 0
-    };
-
-    PlayerGamePad gamepad = {0, 0, false, false, false, false, false, false, false, false};
+    
 
     
     ChangeMusic(SONGS_MAIN_THEME);
@@ -304,13 +307,13 @@ int main(int argc, char* argv[]) {
         else if(state_machine.state == STATE_BATTLE) {
 
             UpdateNavigation(&battle_system, &gamepad);
-            UpdateBattleState(&battle_system, &state_machine, &map_state);
+            UpdateBattleState(&battle_system, &state_machine);
 
             if (battle_system.current_state == BATTLE_STATE_WIN) {
                 RemoveEnemyFromMap(&map_state);
             }
 
-            RenderBattleScreen(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, battle_system, myvpet_texture);
+            RenderBattleScreen(renderer, SCREEN_WIDTH, SCREEN_HEIGHT, &battle_system);
         } else {
             printf("state_machine.state desconhecido: %d", state_machine.state);
         }
@@ -337,15 +340,14 @@ printf("Finalizando programa...\n");
 cleanup:
     printf("liberando recursos\n");
     CleanupAudio();
-    if (myvpet_texture) SDL_DestroyTexture(myvpet_texture);
-    if (player.texture) SDL_DestroyTexture(player.texture);
-    if (main_character_surface) SDL_DestroySurface(main_character_surface);
-    if (map_state.spawned_mobs) free(map_state.spawned_mobs);
-    if (game_logo) SDL_DestroyTexture(game_logo);
+    if (player.texture != NULL) SDL_DestroyTexture(player.texture);
+    if (main_character_surface != NULL) SDL_DestroySurface(main_character_surface);
+    if (map_state.spawned_mobs != NULL) free(map_state.spawned_mobs);
+    if (game_logo != NULL) SDL_DestroyTexture(game_logo);
     if (map_state.tileset_texture) SDL_DestroyTexture(map_state.tileset_texture);
-    if (gamepad_connection) SDL_CloseGamepad(gamepad_connection);
-    if (renderer) SDL_DestroyRenderer(renderer);
-    if (window) SDL_DestroyWindow(window);    
+    if (gamepad_connection != NULL) SDL_CloseGamepad(gamepad_connection);
+    if (renderer != NULL) SDL_DestroyRenderer(renderer);
+    if (window != NULL) SDL_DestroyWindow(window);
     SDL_Quit();
 
     printf("FIM.\n");    

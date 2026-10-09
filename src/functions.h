@@ -3,7 +3,7 @@
 // Desenha caracteres simples (A-Z, 0-9) usando retângulos de pixels na SDL3
 void RenderText(SDL_Renderer* renderer, const char* texto, const Color color, float startX, float startY, float pixelSize) {
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-    for (int i = 0; texto[i] != '\0'; i++) {
+    for (size_t i = 0; texto[i] != '\0'; i++) {
         char c = texto[i];
         float offsetX = startX + (i * 6 * pixelSize); // Espaçamento entre letras
 
@@ -97,8 +97,8 @@ void RenderText(SDL_Renderer* renderer, const char* texto, const Color color, fl
         }
 
         // Lê cada bit da matriz e desenha retângulos na tela
-        for (int row = 0; row < 5; row++) {
-            for (int col = 0; col < 5; col++) {
+        for (size_t row = 0; row < 5; row++) {
+            for (size_t col = 0; col < 5; col++) {
                 // Checa se o bit na coluna (4 - col) está ligado (1)
                 if ((glyph[row] >> (4 - col)) & 1) {
                     SDL_FRect pixel = {
@@ -279,7 +279,7 @@ void RenderVPet(SDL_Renderer* renderer, VPetType vpet_code, int x, int y, int ti
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
-    for (int i = 0; i < ENEMY_PART_LIST_COUNT; i++)
+    for (size_t i = 0; i < ENEMY_PART_LIST_COUNT; i++)
     {
         if(ENEMY_PART_LIST[i].type == vpet_code) {
             RenderMapVpetData(renderer, ENEMY_PART_LIST[i].vparts,  ENEMY_PART_LIST[i].vparts_count, pos_x, pos_y, leg_step_A, leg_step_B, scale);
@@ -330,7 +330,7 @@ VPetEncounter CheckIfFindEnemy(int enemy_code){
         return encounter;
     }
     
-    for (int i = 0; i < sizeof(ENEMY_LIST); i++)
+    for (size_t i = 0; i < sizeof(ENEMY_LIST); i++)
     {
         VPet enemy = ENEMY_LIST[i];
         if (enemy.type == (VPetType)enemy_code) {
@@ -426,7 +426,7 @@ void MovePlayer(
     
 }
 
-PlayerGamePad UpdatePlayerGamePad(SDL_Gamepad* gamepad_connection, PlayerGamePad* gamepad_delta) {
+void UpdatePlayerGamePad(SDL_Gamepad* gamepad_connection, PlayerGamePad* gamepad_delta) {
     const bool *state = SDL_GetKeyboardState(NULL);
 
     gamepad_delta->delta_x = 0;

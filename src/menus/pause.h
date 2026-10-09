@@ -1,7 +1,7 @@
 
 void RenderVPetStats(SDL_Renderer* renderer, VPet *vpet, float panel_x, float panel_y) {
     // Buffer de texto temporário
-    char buffer[32];
+    char buffer[100];
 
     // Nome do V-Pet e Nível
     snprintf(buffer, sizeof(buffer), "NOME: %s", vpet->name);

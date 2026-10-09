@@ -69,6 +69,10 @@ typedef struct {
     int total_exp;
     float vpetcoin_reward;
     VPetType type;
+    char texture_file[100];
+    SDL_Texture* texture;
+    int texture_col;
+    int texture_row;
 } VPet;
 
 typedef struct {
@@ -142,7 +146,7 @@ typedef struct {
     BattleState current_state;
     Uint64 message_start_time; // Armazena o timestamp de início da mensagem
     Uint64 message_duration;   // Duração da mensagem em milissegundos (ex: 2000ms = 2s)
-    char current_message[64];  // Texto da mensagem temporizada
+    char current_message[100];  // Texto da mensagem temporizada
     VPet player;
     float player_vpetcoin_balance;
     VPet enemy;    
@@ -218,7 +222,7 @@ static const Color COLOR_DIALOG_BORDER = {200, 200, 220, 255};
 static const Color COLOR_MESSAGE_ERROR = {255, 75, 75, 255};
 static const Color COLOR_MESSAGE_WARNING = {255, 200, 40, 255};
 
-static const int WALKABLE_TILES[] = {
+static int WALKABLE_TILES[] = {
     300, 301, 302,  304, 306, 308, 309, 310, 
     348, //agua
     205, 375, //paredes hotel
